@@ -1,2 +1,2 @@
 @echo off
-start "" "%~dp0artifacts\dist\N300Desk\N300Desk.exe"
+start "" "%~dp0artifacts\dist\Release\N300Desk\N300Desk.exe"

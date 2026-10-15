@@ -389,12 +389,16 @@ class App:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--demo', action='store_true', help='Offline preview, no Bluetooth operations')
+    parser.add_argument('--debug', action='store_true', help='Enable diagnostic logging')
     parser.add_argument('--smoke-test', type=Path, help='Construct GUI offline, write result and exit')
     parser.add_argument('--capture', type=Path, help='Capture this application window and exit (offline demo only)')
     args = parser.parse_args()
     logs = application_dir() / 'logs'
     logs.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(level=logging.INFO, handlers=[RotatingFileHandler(logs / 'n300.log', maxBytes=1_000_000, backupCount=2, encoding='utf-8')], format='%(asctime)s %(levelname)s %(message)s')
+    handlers = [RotatingFileHandler(logs / 'n300.log', maxBytes=1_000_000, backupCount=2, encoding='utf-8')]
+    if args.debug and sys.stderr is not None:
+        handlers.append(logging.StreamHandler())
+    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO, handlers=handlers, format='%(asctime)s %(levelname)s %(message)s')
     try:
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
     except Exception:

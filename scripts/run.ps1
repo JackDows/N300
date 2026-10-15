@@ -1,7 +1,15 @@
-param([switch]$Demo)
+param(
+    [ValidateSet('Debug','Release')][string]$Configuration = 'Debug',
+    [Alias('Demo')][switch]$Offline
+)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$pythonPath = Join-Path $projectRoot '.venv\Scripts\python.exe'
-if (-not (Test-Path -LiteralPath $pythonPath)) { throw 'Run scripts/setup.ps1 first' }
-if ($Demo) { & $pythonPath -m n300_desk --demo } else { & $pythonPath -m n300_desk }
-exit $LASTEXITCODE
+$executable = Join-Path $projectRoot "artifacts\dist\$Configuration\N300Desk\N300Desk.exe"
+if (-not (Test-Path -LiteralPath $executable)) { throw "Build $Configuration first" }
+$applicationArguments = @()
+if ($Configuration -eq 'Debug') { $applicationArguments += '--debug' }
+if ($Offline) { $applicationArguments += '--demo' }
+$options = @{FilePath=$executable; WorkingDirectory=(Split-Path -Parent $executable); NoNewWindow=$true; PassThru=$true; Wait=$true}
+if ($applicationArguments.Count) { $options.ArgumentList = $applicationArguments }
+$process = Start-Process @options
+if ($process.ExitCode -ne 0) { throw "Application failed (exit $($process.ExitCode))" }

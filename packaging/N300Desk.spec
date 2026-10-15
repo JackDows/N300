@@ -2,10 +2,15 @@
 from PyInstaller.utils.hooks import collect_submodules
 from pathlib import Path
 import sys
+import os
 
 hiddenimports = []
 hiddenimports += collect_submodules('winrt')
 project_root = Path(SPECPATH).parent
+configuration = os.environ.get('BUILD_CONFIGURATION', 'Release')
+if configuration not in ('Debug', 'Release'):
+    raise ValueError('BUILD_CONFIGURATION must be Debug or Release')
+is_debug = configuration == 'Debug'
 
 
 a = Analysis(
@@ -19,7 +24,7 @@ a = Analysis(
     runtime_hooks=[],
     excludes=['fitz', 'pymupdf', 'zxingcpp', 'numpy'],
     noarchive=False,
-    optimize=0,
+    optimize=0 if is_debug else 1,
 )
 # Conda's base environment can shadow the active environment's Tcl DLLs.
 # Keep the bundled runtime aligned with the Tcl/Tk data found by the hook.
@@ -41,7 +46,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,
+    console=is_debug,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

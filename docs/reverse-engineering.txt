@@ -2,7 +2,7 @@ N300 Windows 控制软件：分析与交付记录
 日期：2026-10-15
 
 交付
-artifacts\dist\N300Desk\N300Desk.exe：免安装 Windows 程序，随目录内 _internal 一起使用。
+artifacts\dist\Release\N300Desk\N300Desk.exe：免安装 Windows 程序，随目录内 _internal 一起使用。
 “离线预览.cmd”：示例界面，不操作蓝牙。
 “docs/user-guide.txt”：操作步骤、当前支持范围和实机验证步骤。
 src/n300_desk/：界面、控制、协议与设置资源源码。
@@ -64,7 +64,7 @@ artifacts\validation\offline-tests.txt：25 项 unittest 全部通过。
 包含按官方代码计算的固定字节向量、全部分包边界、损坏校验恢复、
 两版协议的模拟 GATT 请求/回复、范围限制、读回不一致、名称字节限制、
 自定义 EQ 参数保留、超时清理和连接前服务核对。
-artifacts\validation\gui-packaged-smoke.json：独立 EXE 创建界面、加载设置表及
+artifacts\validation\gui-Release-smoke.json：独立 EXE 创建界面、加载设置表及
 Windows WinRT 蓝牙后端的结果；该检查不扫描、不建立真实连接。
 docs\preview.png：离线示例界面截图。
 
