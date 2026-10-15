@@ -1,0 +1,27 @@
+# Local environments and Python-generated files
+/.venv/
+/.local/
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.bundle
+.pytest_cache/
+.ruff_cache/
+
+# Build products and validation logs
+/artifacts/
+/build/
+/dist/
+
+# Original vendor downloads and machine-local reverse engineering output
+/research/inputs/
+/research/evidence/
+
+# Editor and OS local state
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
+.DS_Store
+.env
+.env.*

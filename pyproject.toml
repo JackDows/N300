@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "n300-desk"
+version = "0.1.0"
+description = "Unofficial local Windows BLE controller for Edifier N300"
+readme = {file = "README.txt", content-type = "text/plain"}
+requires-python = ">=3.12"
+dependencies = ["bleak==3.0.2"]
+
+[project.optional-dependencies]
+build = ["pyinstaller==6.22.3", "pillow==12.3.0"]
+
+[project.gui-scripts]
+n300-desk = "n300_desk.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+n300_desk = ["settings-catalog.json"]

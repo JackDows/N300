@@ -1,0 +1,537 @@
+{
+  "inputs": {
+    "28": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 3
+      },
+      {
+        "value": 3,
+        "label": "同轴",
+        "type": 6
+      },
+      {
+        "value": 4,
+        "label": "光纤",
+        "type": 5
+      },
+      {
+        "value": 5,
+        "label": "AUX",
+        "type": 2
+      }
+    ],
+    "1": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "LINE IN",
+        "type": 7
+      },
+      {
+        "value": 3,
+        "label": "XLR",
+        "type": 4
+      },
+      {
+        "value": 4,
+        "label": "USB 声卡",
+        "type": 3
+      },
+      {
+        "value": 5,
+        "label": "光纤",
+        "type": 5
+      },
+      {
+        "value": 6,
+        "label": "同轴",
+        "type": 6
+      }
+    ],
+    "5": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "AUX",
+        "type": 2
+      },
+      {
+        "value": 3,
+        "label": "USB 声卡",
+        "type": 3
+      }
+    ],
+    "7": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "AUX",
+        "type": 2
+      }
+    ],
+    "11": [
+      {
+        "value": 1,
+        "label": "同轴",
+        "type": 6
+      },
+      {
+        "value": 2,
+        "label": "光纤",
+        "type": 5
+      },
+      {
+        "value": 3,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 4,
+        "label": "LINE IN",
+        "type": 7
+      },
+      {
+        "value": 5,
+        "label": "AUX",
+        "type": 2
+      }
+    ],
+    "14": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "AUX",
+        "type": 2
+      },
+      {
+        "value": 3,
+        "label": "光纤",
+        "type": 5
+      }
+    ],
+    "22": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "同轴",
+        "type": 6
+      },
+      {
+        "value": 3,
+        "label": "AUX",
+        "type": 2
+      },
+      {
+        "value": 4,
+        "label": "USB 声卡",
+        "type": 3
+      }
+    ],
+    "24": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 3
+      },
+      {
+        "value": 3,
+        "label": "LINE IN",
+        "type": 7
+      }
+    ],
+    "25": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "LINE IN",
+        "type": 7
+      },
+      {
+        "value": 3,
+        "label": "同轴",
+        "type": 6
+      },
+      {
+        "value": 4,
+        "label": "光纤",
+        "type": 5
+      },
+      {
+        "value": 5,
+        "label": "USB 声卡",
+        "type": 3
+      }
+    ]
+  },
+  "eq_presets": {
+    "1": [
+      {
+        "value": 0,
+        "label": "经典",
+        "type": "CLASSIC"
+      },
+      {
+        "value": 1,
+        "label": "流行",
+        "type": "POPULAR"
+      },
+      {
+        "value": 2,
+        "label": "古典",
+        "type": "CLASSICAL"
+      },
+      {
+        "value": 3,
+        "label": "摇滚",
+        "type": "ROCK"
+      }
+    ],
+    "3": [
+      {
+        "value": 0,
+        "label": "经典",
+        "type": "CLASSIC"
+      },
+      {
+        "value": 1,
+        "label": "流行",
+        "type": "POPULAR"
+      },
+      {
+        "value": 2,
+        "label": "摇滚",
+        "type": "ROCK"
+      }
+    ],
+    "4": [
+      {
+        "value": 0,
+        "label": "经典",
+        "type": "CLASSIC"
+      },
+      {
+        "value": 1,
+        "label": "流行",
+        "type": "POPULAR"
+      },
+      {
+        "value": 2,
+        "label": "古典",
+        "type": "CLASSICAL"
+      },
+      {
+        "value": 3,
+        "label": "摇滚",
+        "type": "ROCK"
+      },
+      {
+        "value": 4,
+        "label": "自定义",
+        "type": "AUDIOPHILE"
+      }
+    ],
+    "7": [
+      {
+        "value": 0,
+        "label": "纯正",
+        "type": "PURE"
+      },
+      {
+        "value": 1,
+        "label": "动感",
+        "type": "DYNAMIC"
+      },
+      {
+        "value": 2,
+        "label": "自定义",
+        "type": "AUDIOPHILE"
+      }
+    ],
+    "12": [
+      {
+        "value": 0,
+        "label": "音乐",
+        "type": "MUSIC"
+      },
+      {
+        "value": 1,
+        "label": "游戏",
+        "type": "GAME"
+      },
+      {
+        "value": 2,
+        "label": "电影",
+        "type": "MOVIE"
+      },
+      {
+        "value": 3,
+        "label": "自定义",
+        "type": "CUSTOMIZED"
+      }
+    ],
+    "14": [
+      {
+        "value": 0,
+        "label": "音乐",
+        "type": "MUSIC"
+      },
+      {
+        "value": 1,
+        "label": "游戏",
+        "type": "GAME"
+      },
+      {
+        "value": 2,
+        "label": "电影",
+        "type": "MOVIE"
+      }
+    ],
+    "15": [
+      {
+        "value": 0,
+        "label": "音乐",
+        "type": "MUSIC"
+      },
+      {
+        "value": 1,
+        "label": "电影",
+        "type": "MOVIE"
+      },
+      {
+        "value": 2,
+        "label": "游戏",
+        "type": "GAME"
+      },
+      {
+        "value": 3,
+        "label": "自定义",
+        "type": "CUSTOMIZED"
+      }
+    ],
+    "18": [
+      {
+        "value": 0,
+        "label": "经典",
+        "type": "CLASSIC"
+      },
+      {
+        "value": 1,
+        "label": "监听",
+        "type": "MONITOR"
+      },
+      {
+        "value": 2,
+        "label": "游戏",
+        "type": "GAME"
+      },
+      {
+        "value": 3,
+        "label": "人声",
+        "type": "VOCAL"
+      },
+      {
+        "value": 4,
+        "label": "自定义",
+        "type": "CUSTOMIZED"
+      }
+    ],
+    "19": [
+      {
+        "value": 0,
+        "label": "音乐",
+        "type": "MUSIC"
+      },
+      {
+        "value": 1,
+        "label": "监听",
+        "type": "MONITOR"
+      },
+      {
+        "value": 2,
+        "label": "游戏",
+        "type": "GAME"
+      },
+      {
+        "value": 3,
+        "label": "电影",
+        "type": "MOVIE"
+      },
+      {
+        "value": 4,
+        "label": "自定义",
+        "type": "CUSTOMIZED"
+      }
+    ],
+    "24": [
+      {
+        "value": 0,
+        "label": "经典",
+        "type": "CLASSIC"
+      },
+      {
+        "value": 1,
+        "label": "动感",
+        "type": "DYNAMIC"
+      },
+      {
+        "value": 2,
+        "label": "自定义",
+        "type": "CUSTOMIZED"
+      }
+    ],
+    "30": [
+      {
+        "value": 0,
+        "label": "监听",
+        "type": "MONITOR"
+      },
+      {
+        "value": 1,
+        "label": "音乐",
+        "type": "MUSIC"
+      },
+      {
+        "value": 2,
+        "label": "自定义",
+        "type": "CUSTOMIZED"
+      }
+    ],
+    "32": [
+      {
+        "value": 0,
+        "label": "纯正",
+        "type": "PURE"
+      },
+      {
+        "value": 1,
+        "label": "动感",
+        "type": "DYNAMIC"
+      },
+      {
+        "value": 2,
+        "label": "人声",
+        "type": "VOCAL"
+      },
+      {
+        "value": 3,
+        "label": "自定义",
+        "type": "AUDIOPHILE"
+      }
+    ],
+    "33": [
+      {
+        "value": 0,
+        "label": "流行",
+        "type": "POPULAR"
+      },
+      {
+        "value": 1,
+        "label": "古典",
+        "type": "CLASSICAL"
+      },
+      {
+        "value": 2,
+        "label": "摇滚",
+        "type": "ROCK"
+      },
+      {
+        "value": 3,
+        "label": "自定义",
+        "type": "CUSTOMIZED"
+      }
+    ]
+  },
+  "custom_eq": {
+    "1": {
+      "bands": 4,
+      "stride": 6,
+      "freq_offset": 2,
+      "gain_offset": 4,
+      "q_offset": 5,
+      "gain_scale": 1,
+      "gain_offset_value": 6,
+      "gain_min": -6,
+      "gain_max": 6
+    },
+    "2": {
+      "bands": 6,
+      "stride": 4,
+      "freq_offset": 1,
+      "gain_offset": 3,
+      "q_offset": null,
+      "gain_scale": 2,
+      "gain_offset_value": 6,
+      "gain_min": -3,
+      "gain_max": 3
+    },
+    "3": {
+      "bands": 6,
+      "stride": 6,
+      "freq_offset": 2,
+      "gain_offset": 4,
+      "q_offset": 5,
+      "gain_scale": 2,
+      "gain_offset_value": 6,
+      "gain_min": -3,
+      "gain_max": 3
+    },
+    "17": {
+      "bands": 10,
+      "stride": 4,
+      "freq_offset": 1,
+      "gain_offset": 3,
+      "q_offset": null,
+      "gain_scale": 1,
+      "gain_offset_value": 6,
+      "gain_min": -6,
+      "gain_max": 6
+    },
+    "18": {
+      "bands": 10,
+      "stride": 4,
+      "freq_offset": 1,
+      "gain_offset": 3,
+      "q_offset": null,
+      "gain_scale": 1,
+      "gain_offset_value": 4,
+      "gain_min": -4,
+      "gain_max": 4
+    }
+  }
+}

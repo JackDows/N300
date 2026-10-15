@@ -1,0 +1,84 @@
+N300 Windows 控制软件：分析与交付记录
+日期：2026-10-15
+
+交付
+artifacts\dist\N300Desk\N300Desk.exe：免安装 Windows 程序，随目录内 _internal 一起使用。
+“离线预览.cmd”：示例界面，不操作蓝牙。
+“docs/user-guide.txt”：操作步骤、当前支持范围和实机验证步骤。
+src/n300_desk/：界面、控制、协议与设置资源源码。
+
+当前结论
+已从官方 Android App 恢复 N300 的 BLE 服务配置和控制命令，并实现可运行
+的 Windows 首版控制工具。软件包含音量、输入、音效、自定义 EQ 增益、
+指示灯、自动关机、定时关机、改名、固件信息与关机入口。
+
+该结论只说明协议和软件实现已有依据。尚未在真实 N300 上确认连接、指令
+接受情况及 AUX 播放与 BLE 控制并行。按用户“先做软件”的安排暂停实测。
+不能据离线测试声称已经替代手机 App，也不能保证当前固件全部功能可用。
+
+官方来源
+产品支持页：https://www.edifier.com/cn/product/support-727.html
+说明书：https://cn-oss.edifier.com/Uploads/images/2024/05/13/2024051313484517155793255005.pdf
+官方二维码落地页：https://admin-app.edifier.com/edifier_provider/public/appDownload?appTag=EdifierConnect
+版本接口：https://admin-app.edifier.com/home/api/v1/apps?tag=EdifierConnect
+APK：https://edifier-provider-oss.edifier.com/apk/20261010/EC_v8.5.3_300-jiagu_1791626658.apk
+
+下载的 App
+EDIFIER Connect 8.5.3，build 300，官方版本记录日期 2026-10-10。
+包名 com.edifier.edifierconnect；文件 294,968,680 字节。
+SHA-256：346270d7a8d924a204f96f4cb011f9b4819df79fc609454cd651470d75571229
+仅进行了静态解包、反编译和配置解码，没有安装或运行 APK。
+
+控制依据
+assets/products_release.json 经 App 自身配置解码逻辑还原后包含已发布的
+N300（id 363）条目：
+  广播 UUID  00007e00-0000-1000-8000-00805f9b34fb
+  服务 UUID  48097e01-1a48-11e9-ab14-d663bd873d93
+  通知 UUID  48090001-1a48-11e9-ab14-d663bd873d93
+  写入 UUID  48090002-1a48-11e9-ab14-d663bd873d93
+  ProductSPPUuid 为空，App 使用 BLE 控制通道。
+配置中另有尚未发布的 N300-26版记录（id 607）。软件识别该服务地址，
+但未据此宣称支持该型号的真实硬件。
+
+协议来自 CommandBean、CommandManager、CommandParser、BLEManager。
+V1：AA | 长度 | 命令 | 载荷 | (前面字节之和 + 0x2019) 的两字节校验。
+V2：AA | EC | 命令 | 两字节长度 | 载荷 | 一字节累加校验。
+支持广播声明的明文和 XOR 0xA5 载荷，不对未知协议或握手方式猜测回退。
+控制服务和读写特征均匹配后，先查询 D8 功能信息，随后只读当前设置。
+
+App 中核对的菜单
+CommandParserHelper 输入分组 5：1 蓝牙、2 AUX、3 USB 声卡。
+EQ 分组 19：0 音乐、1 监听、2 游戏、3 电影、4 自定义。
+这两组与 N300 的说明书功能相符；本机固件实际分组仍需读取设备确认。
+程序按回复选择分组，不预先假定所有 N300 固件都返回以上数值。
+
+EQ 依据
+EqSelfViewModel 负责频段布局，GainSbAdapter 负责增益单位，
+CommandManager.setSingleCustomEq 负责写入格式；对应 XML 确认滑块步进。
+已适配格式 1、2、3、17、18，编辑增益时保留现有频率和 Q。
+未确认的布局只记录原始回复。频率/Q 编辑、云端 EQ 分享、固件升级、
+恢复出厂和额外校准流程尚未实现。
+
+验证记录
+artifacts\validation\offline-tests.txt：25 项 unittest 全部通过。
+包含按官方代码计算的固定字节向量、全部分包边界、损坏校验恢复、
+两版协议的模拟 GATT 请求/回复、范围限制、读回不一致、名称字节限制、
+自定义 EQ 参数保留、超时清理和连接前服务核对。
+artifacts\validation\gui-packaged-smoke.json：独立 EXE 创建界面、加载设置表及
+Windows WinRT 蓝牙后端的结果；该检查不扫描、不建立真实连接。
+docs\preview.png：离线示例界面截图。
+
+工具和复现
+REA 6.5.0 已接入 Codex。本次使用 REA/JADX 读取 APK 类、方法和引用。
+research\evidence\rea-evidence-bundle.json 保存本次 REA 会话 32 条证据记录。
+补充的定向 JADX 源码导出在 research\evidence\jadx-source，脚本为 research/scripts/DecompileSelected.java。
+research/scripts/extract_catalog.py 从已导出的方法常量生成菜单表，并保留 EQ 提取审计结果。
+scripts/build.ps1 执行离线测试、PyInstaller 打包和独立程序启动检查。
+requirements-dev.lock.txt 保存本地依赖版本。
+打包时显式匹配活动 Python 环境的 Tcl/Tk DLL 与数据目录，避免 Conda
+基础环境的旧 DLL 混入；已在本机实际独立启动验证。
+
+下一次实机核对
+在用户方便时释放手机占用并使 N300 可发现，连接后导出 D8、61、66、D5、43。
+先确认读取，再小幅改动音量并回读；最后切至 AUX 检查控制连接是否仍然有效。
+上述结果将决定是否还需适配固件差异，以及能否实现日常只用电脑控制。

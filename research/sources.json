@@ -1,0 +1,21 @@
+{
+  "app": {
+    "package": "com.edifier.edifierconnect",
+    "version": "8.5.3",
+    "build": 300
+  },
+  "files": [
+    {
+      "path": "inputs/edifier-connect-8.5.3.apk",
+      "url": "https://edifier-provider-oss.edifier.com/apk/20261010/EC_v8.5.3_300-jiagu_1791626658.apk",
+      "bytes": 294968680,
+      "sha256": "346270d7a8d924a204f96f4cb011f9b4819df79fc609454cd651470d75571229"
+    },
+    {
+      "path": "inputs/n300-manual.pdf",
+      "url": "https://cn-oss.edifier.com/Uploads/images/2024/05/13/2024051313484517155793255005.pdf",
+      "bytes": 3771524,
+      "sha256": "682586f53ce5a01b687788a4b99bc5266b8fcd925c06afe37be5358238fd2997"
+    }
+  ]
+}
