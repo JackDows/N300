@@ -8,7 +8,7 @@
 
 打开 [DeskHub.code-workspace](DeskHub.code-workspace)。运行面板固定为：安装依赖、构建 Debug、构建 Release、运行 Debug、运行 Release、运行离线测试版。
 
-基础环境：Windows x64、VS 2022 C++ 桌面开发工具与 Windows SDK、CMake 3.24+、Node.js 24+、PowerShell 5.1/7。缺少 Cargo 时，安装入口会在用户共享缓存 `%USERPROFILE%\.cache\DeskHub` 内安装固定的 Rust 1.99.1，不修改系统 PATH。npm、Cargo 与 C++ 依赖均有锁或下载哈希；共享缓存可通过 `DESKHUB_CACHE_ROOT` 指定位置。
+基础环境：Windows x64、VS 2022 C++ 桌面开发工具与 Windows SDK、CMake 3.24+、Node.js 24+、PowerShell 5.1/7。缺少 Cargo 时，安装入口会在工程依赖目录内安装固定的 Rust 1.99.1，不修改系统 PATH。npm、Cargo 与 C++ 依赖均有锁或下载哈希；工作区共享依赖的位置见 [文件与依赖](docs/storage.md)。
 
 ```powershell
 .\scripts\project.ps1 -Action Install
@@ -59,7 +59,7 @@ artifacts/          全部生成物，不提交
 - [公共 API](docs/api.md) · [模块开发与替换](docs/modules.md)
 - [后端架构](docs/architecture.md) · [验证记录](docs/validation.md)
 - [迁移与发布边界](docs/migration.md) · [逆向资料](research/README.md)
-- [磁盘管理与自动清理](docs/maintenance.md)
+- [文件与依赖](docs/storage.md) · [开发收尾要求](AGENTS.md)
 
 日志可通过 `diagnostics.export` 导出为一个目录，包含运行日志与设备状态摘要。错误里的 `userMessage` 用于界面提示；详细原因、请求编号、设备实例和会话代次留在日志中。
 

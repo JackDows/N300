@@ -10,7 +10,7 @@ $moduleLock=$null
 if(-not $operationLock -or $DeskHubOperationRoot -ne $hubRoot){
     $null=New-Item -ItemType Directory -Force -Path (Join-Path $hubRoot '.local')
     try{$moduleLock=[IO.File]::Open((Join-Path $hubRoot '.local/operation.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}
-    catch{throw 'Another DeskHub build/maintenance task is running.'}
+    catch{throw 'Another DeskHub build is running.'}
 }
 try {
 $logs=Join-Path $Source 'artifacts/validation'

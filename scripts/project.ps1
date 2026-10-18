@@ -1,5 +1,5 @@
 param(
-    [Parameter(Mandatory=$true)][ValidateSet('Install','Build','Run','Test','Clean')][string]$Action,
+    [Parameter(Mandatory=$true)][ValidateSet('Install','Build','Run','Test')][string]$Action,
     [ValidateSet('Debug','Release')][string]$Configuration='Debug',
     [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_.-]*$')][string]$Module='All',
     [switch]$Offline,
@@ -64,32 +64,26 @@ function Build-Project {
         foreach($directory in @('contracts','docs')){
             Copy-Item -LiteralPath (Join-Path $projectRoot $directory) -Destination $package -Recurse -Force
         }
-        if(Test-Path -LiteralPath (Join-Path $projectRoot 'README.md')){Copy-Item -LiteralPath (Join-Path $projectRoot 'README.md') -Destination $package -Force}
+        foreach($file in @('README.md','AGENTS.md')){
+            if(Test-Path -LiteralPath (Join-Path $projectRoot $file)){Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination $package -Force}
+        }
     }
 }
-if($Action -eq 'Clean'){
-    & (Join-Path $PSScriptRoot 'maintenance.ps1') -Action Clean -Mode Build
-    return
-}
-& (Join-Path $PSScriptRoot 'maintenance.ps1') -Action Clean -Mode Expired -Quiet
 $operationLock=$null
 $DeskHubOperationRoot=$projectRoot
 if($Action -in @('Install','Build','Test')){
     $null=New-Item -ItemType Directory -Force -Path (Join-Path $projectRoot '.local')
     try{$operationLock=[IO.File]::Open((Join-Path $projectRoot '.local/operation.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}
-    catch{throw 'Another DeskHub build/maintenance task is running.'}
+    catch{throw 'Another DeskHub workflow is running.'}
 }
-try { switch($Action){
+try {
+switch($Action){
     'Install'{
         Configure-Modules
         if($hostSelected){
             Initialize-DeskHubRust -Install
             Invoke-ProjectTool -Tool cargo -Arguments @('fetch','--locked','--target','x86_64-pc-windows-msvc')
             Invoke-ContractsTool @('ci','--no-audit','--no-fund')
-            if((Test-Path -LiteralPath (Join-Path $projectRoot '.git')) -and $env:DESKHUB_SKIP_SCHEDULE -ne '1'){
-                try{& (Join-Path $PSScriptRoot 'maintenance.ps1') -Action RegisterSchedule}
-                catch{Write-Warning ('Daily cleanup task was not registered: '+$_.Exception.Message)}
-            }
         }
     }
     'Build'{Build-Project}
@@ -98,7 +92,6 @@ try { switch($Action){
         if($hostSelected){
             Invoke-ContractsTool @('run','check:types')
             Invoke-ContractsTool @('run','test:contracts')
-            Invoke-ProjectTool -Tool powershell.exe -Arguments @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $projectRoot 'tests/maintenance.ps1')) -LogPath (Join-Path $logs 'maintenance-tests.log')
             $cargoArguments=@('test','--locked')
             if($Configuration -eq 'Release'){$cargoArguments+='--release'}
             Invoke-ProjectTool -Tool cargo -Arguments $cargoArguments -LogPath (Join-Path $logs "backend-test-$preset.log")
@@ -127,8 +120,5 @@ try { switch($Action){
         }
         if($LASTEXITCODE -ne 0){throw "DeskHub exited with code $LASTEXITCODE"}
     }
-}
-if($Action -in @('Install','Build','Test')){
-    [IO.File]::WriteAllText((Join-Path $projectRoot '.local/last-build.txt'),[DateTime]::UtcNow.ToString('o'))
 }
 } finally {if($operationLock){$operationLock.Dispose()}}

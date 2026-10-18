@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const cacheRoot = process.argv[2] ?? process.env.DESKHUB_CACHE_ROOT ?? resolve(process.env.USERPROFILE, '.cache/DeskHub');
+const cacheRoot = process.argv[2] ?? process.env.DESKHUB_CACHE_ROOT ?? fileURLToPath(new URL('../.local/dependencies/tools/', import.meta.url));
 const output = resolve(cacheRoot,'downloads/rustup-init-1.29.1.exe');
 const expected = '6f4bef66261261fcb43131be8720bab817d403a09edec7455c371974b90bdb7e';
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
