@@ -1,0 +1,63 @@
+/*
+ * 设计变量 —— 换主题只需要改这个文件。
+ * 颜色分三层：背景 / 表面 / 文字，强调色只用于“当前值”和“正在发生的事”。
+ */
+:root {
+  /* 背景 */
+  --bg: #0b0b0c;
+  --bg-elev: #141416;
+  --bg-sunken: #070708;
+
+  /* 表面（叠加在背景上的半透明层） */
+  --surface: rgba(255, 255, 255, 0.035);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-active: rgba(255, 255, 255, 0.09);
+  --hairline: rgba(255, 255, 255, 0.07);
+  --hairline-strong: rgba(255, 255, 255, 0.12);
+
+  /* 文字 */
+  --text: #f3f0ea;
+  --text-2: #9b978f;
+  --text-3: #5d5a55;
+
+  /* 强调色：香槟琥珀 */
+  --accent: #e8ad55;
+  --accent-hi: #f8d9a0;
+  --accent-lo: #c7772b;
+  --accent-soft: rgba(232, 173, 85, 0.14);
+  --accent-glow: rgba(232, 173, 85, 0.38);
+  --on-accent: #1d1409;
+
+  /* 状态 */
+  --ok: #7fd4a4;
+  --warn: #e8ad55;
+  --danger: #f08a7e;
+  --danger-soft: rgba(240, 138, 126, 0.14);
+
+  /* 形状 */
+  --radius-xs: 8px;
+  --radius-s: 12px;
+  --radius-m: 16px;
+  --radius-l: 22px;
+  --radius-pill: 999px;
+
+  /* 阴影 */
+  --shadow-float: 0 12px 32px -8px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  /* 动效 */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-fast: 140ms;
+  --dur: 240ms;
+  --dur-slow: 420ms;
+
+  /* 字体 */
+  --font: "Segoe UI Variable Text", "Segoe UI", "HarmonyOS Sans SC", "MiSans", "PingFang SC",
+    "Microsoft YaHei UI", system-ui, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", "HarmonyOS Sans SC", "MiSans",
+    "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+
+  /* 窗口 */
+  --titlebar-h: 44px;
+}
