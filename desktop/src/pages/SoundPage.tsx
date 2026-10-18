@@ -25,7 +25,8 @@ export function SoundPage() {
   const preset = values.preset;
   const eq = values.eq;
   const current = preset?.choices.find((c) => c.value === preset.value);
-  const custom = preset?.value === "customized";
+  const customChoice = preset?.choices.find((choice) => choice.value === "customized" || choice.value === "audiophile");
+  const custom = preset?.value === "customized" || preset?.value === "audiophile";
   const flat = !eq || eq.value.every((b) => b.gain_db === 0);
 
   return (
@@ -61,8 +62,8 @@ export function SoundPage() {
           ) : (
             <button
               className="btn-ghost is-accent"
-              disabled={!connected || !preset}
-              onClick={() => set("preset", "customized", "自定义音效")}
+              disabled={!connected || !customChoice}
+              onClick={() => { if (customChoice) void set("preset", customChoice.value, customChoice.label); }}
             >
               自定义
             </button>

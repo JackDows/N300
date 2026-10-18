@@ -33,11 +33,9 @@
   },
   "bundle": {
     "active": true,
+    "useLocalToolsDir": true,
     "targets": ["nsis"],
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
-    "resources": {
-      "../../edifier-n300/artifacts/package/Release/n300.exe": "n300/n300.exe",
-      "../../edifier-n300/artifacts/package/Release/n300.dll": "n300/n300.dll"
-    }
+    "resources": {}
   }
 }

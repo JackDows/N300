@@ -1,7 +1,7 @@
 import type { Transport } from "./transport";
 import { DeviceRequestError, type DeviceEvent, type DeviceState, type Values } from "./types";
 
-// 浏览器预览用的模拟音响：数据取自 `n300.exe --offline status --full` 的实际输出。
+// 浏览器预览的示例状态；桌面离线测试使用真正的 n300.exe --offline。
 
 const TARGET = {
   address: "00:11:22:33:44:55",
@@ -179,6 +179,8 @@ export function createMockTransport(): Transport {
         emitState();
         return clone(state) as T;
       }
+      case "tick":
+        return clone(state) as T;
       case "get":
         requireConnected();
         return publish(params.property as keyof Values) as T;
@@ -187,12 +189,13 @@ export function createMockTransport(): Transport {
         return setProperty(String(params.property), params.value) as T;
       case "eq.set": {
         requireConnected();
+        if (device.preset.value !== "customized" && device.preset.value !== "audiophile") {
+          throw new DeviceRequestError({ code: "invalid_argument", message: "请先选择自定义音效" });
+        }
         const band = device.eq.value[Number(params.band)];
         const gain = Number(params.gain);
-        if (!band || Number.isNaN(gain)) throw new DeviceRequestError({ code: "invalid_argument", message: "无效的 EQ 参数" });
-        band.gain_db = Math.max(device.eq.gain_min, Math.min(device.eq.gain_max, gain));
-        device.preset.value = "customized";
-        device.preset.raw = 4;
+        if (!band || !Number.isInteger(params.band) || !Number.isFinite(gain) || gain < device.eq.gain_min || gain > device.eq.gain_max || gain % device.eq.gain_step !== 0) throw new DeviceRequestError({ code: "invalid_argument", message: "无效的 EQ 参数" });
+        band.gain_db = gain;
         (state.values as Values).preset = clone(device.preset);
         return publish("eq") as T;
       }
@@ -220,5 +223,6 @@ export function createMockTransport(): Transport {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    dispose() { clearTimeout(connectTimer); listeners.clear(); },
   };
 }

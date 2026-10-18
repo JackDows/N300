@@ -8,12 +8,13 @@ function ConvertTo-ProjectArguments {
     }) -join ' '
 }
 function Invoke-ProjectTool {
-    param([Parameter(Mandatory=$true)][string]$Tool, [string[]]$Arguments, [string]$LogPath)
+    param([Parameter(Mandatory=$true)][string]$Tool, [string[]]$Arguments, [string]$LogPath,
+        [string]$WorkingDirectory = (Split-Path -Parent $PSScriptRoot))
     $command = Get-Command $Tool -ErrorAction Stop
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $command.Source
     $info.Arguments = ConvertTo-ProjectArguments $Arguments
-    $info.WorkingDirectory = Split-Path -Parent $PSScriptRoot
+    $info.WorkingDirectory = $WorkingDirectory
     $info.UseShellExecute = $false
     $info.CreateNoWindow = $true
     $info.RedirectStandardOutput = $true

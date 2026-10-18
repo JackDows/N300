@@ -3,6 +3,11 @@ name = "n300-desktop"
 version = "0.1.0"
 description = "Edifier N300 desktop control (unofficial)"
 edition = "2021"
+rust-version = "1.99"
+
+[[bin]]
+name = "N300Desk"
+path = "src/main.rs"
 
 [lib]
 name = "n300_desktop_lib"
@@ -13,6 +18,10 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_System_JobObjects", "Win32_System_Threading"] }
 
 [profile.release]
 codegen-units = 1

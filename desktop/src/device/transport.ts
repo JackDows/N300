@@ -6,6 +6,7 @@ export interface Transport {
   start(): Promise<void>;
   request<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T>;
   subscribe(listener: (event: DeviceEvent) => void): () => void;
+  dispose?(): void;
 }
 
 export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -18,3 +19,5 @@ export function getTransport(): Promise<Transport> {
     : import("./mockTransport").then((m) => m.createMockTransport());
   return instance;
 }
+
+if (import.meta.hot) import.meta.hot.dispose(() => { void instance?.then((transport) => transport.dispose?.()); });

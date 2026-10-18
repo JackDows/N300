@@ -2,6 +2,21 @@
   "cmake.useCMakePresets": "always",
   "cmake.configureOnOpen": false,
   "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-  "files.exclude": {"**/__pycache__": true, "**/*.egg-info": true},
-  "search.exclude": {".venv": true, ".local": true, "artifacts": true, "research/inputs": true, "research/evidence": true}
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.egg-info": true
+  },
+  "search.exclude": {
+    ".venv": true,
+    ".local": true,
+    "artifacts": true,
+    "research/inputs": true,
+    "research/evidence": true,
+    "desktop/node_modules": true,
+    "desktop/dist": true,
+    "desktop/src-tauri/gen": true
+  },
+  "rust-analyzer.linkedProjects": [
+    "desktop/src-tauri/Cargo.toml"
+  ]
 }

@@ -45,7 +45,14 @@ export function VolumeDial({ value, min, max, step, loading, onCommit }: Props) 
 
   // 设备回读的值在用户没操作时同步到界面。
   useEffect(() => {
-    if (value == null || commitTimer.current || drag.current) return;
+    if (value == null) {
+      clearTimeout(commitTimer.current ?? undefined);
+      commitTimer.current = null;
+      drag.current = null;
+      setActive(false);
+      return;
+    }
+    if (commitTimer.current || drag.current) return;
     draftRef.current = value;
     setDraft(value);
   }, [value]);

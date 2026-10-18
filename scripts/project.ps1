@@ -3,13 +3,14 @@
 param(
     [Parameter(Mandatory=$true)][ValidateSet('Install','Build','Run','Test')][string]$Action,
     [ValidateSet('Debug','Release')][string]$Configuration = 'Debug',
+    [ValidateSet('Desktop','Core')][string]$Component = 'Desktop',
     [switch]$Offline,
     [string[]]$CommandArguments = @('shell')
 )
 $ErrorActionPreference = 'Stop'
 switch ($Action) {
-    'Install' { & (Join-Path $PSScriptRoot 'setup.ps1') }
-    'Build' { & (Join-Path $PSScriptRoot 'build.ps1') -Configuration $Configuration }
-    'Run' { & (Join-Path $PSScriptRoot 'run.ps1') -Configuration $Configuration -Offline:$Offline -CommandArguments $CommandArguments }
-    'Test' { & (Join-Path $PSScriptRoot 'test.ps1') -Configuration $Configuration }
+    'Install' { & (Join-Path $PSScriptRoot 'setup.ps1') -Component $Component }
+    'Build' { & (Join-Path $PSScriptRoot 'build.ps1') -Configuration $Configuration -Component $Component }
+    'Run' { & (Join-Path $PSScriptRoot 'run.ps1') -Configuration $Configuration -Component $Component -Offline:$Offline -CommandArguments $CommandArguments }
+    'Test' { & (Join-Path $PSScriptRoot 'test.ps1') -Configuration $Configuration -Component $Component }
 }

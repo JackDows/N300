@@ -25,7 +25,7 @@ const initialTab = (): Tab => {
 };
 
 export default function App() {
-  const { phase, error, toast } = useDevice();
+  const { phase, state, error, toast } = useDevice();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [dir, setDir] = useState(1);
 
@@ -37,7 +37,7 @@ export default function App() {
 
   const status =
     phase === "connected"
-      ? ({ tone: "ok", text: "已连接" } as const)
+      ? ({ tone: "ok", text: state?.offline ? "离线演示" : "已连接" } as const)
       : phase === "disconnected"
         ? ({ tone: "off", text: error ? errorText(error) : "未连接" } as const)
         : ({ tone: "busy", text: error ? `${errorText(error)}，重试中` : "连接中" } as const);

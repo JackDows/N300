@@ -91,6 +91,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const toastId = useRef(0);
   const stateRef = useRef(state);
+  const revisions = useRef<Record<string, number>>({});
+  const epoch = useRef(0);
   stateRef.current = state;
 
   const showToast = useCallback((text: string, kind: Toast["kind"] = "ok") => {
@@ -108,27 +110,38 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       transportRef.current = t;
       unsubscribe = t.subscribe((event) => {
         switch (event.type) {
+          case "ready":
+            sequenceRef.current = 0;
+            loadedRef.current = false;
+            break;
           case "state":
             if (event.sequence <= sequenceRef.current) return;
             sequenceRef.current = event.sequence;
             setState(event.state);
+            if (!event.state.connected) epoch.current++;
             if (event.state.connected) setError(null);
             break;
           case "connection_error":
             setError(event.error);
             break;
           case "core_exit":
+            epoch.current++;
             sequenceRef.current = 0;
             setState(null);
             setError({ code: "core_exit", message: "控制核心已退出" });
             break;
         }
       });
-      t.start().catch((e) => setError(errorInfo(e)));
-    });
+      // A renderer reload can attach to a core that has already emitted its state.
+      const before = sequenceRef.current;
+      t.start().then(() => t.request<DeviceState>("tick")).then((snapshot) => {
+        if (!disposed && sequenceRef.current === before) setState(snapshot);
+      }).catch((e) => { if (!disposed) setError(errorInfo(e)); });
+    }).catch((e) => { if (!disposed) setError(errorInfo(e)); });
     return () => {
       disposed = true;
       unsubscribe();
+      clearTimeout(toastTimer.current);
     };
   }, []);
 
@@ -141,29 +154,57 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     }
     if (loadedRef.current) return;
     loadedRef.current = true;
-    transportRef.current?.request("status", { full: true }).catch((e) => showToast(errorText(e), "error"));
+    let disposed = false;
+    transportRef.current?.request<DeviceState>("status", { full: true }).then((snapshot) => {
+      if (!disposed) setState(snapshot);
+    }).catch((e) => { if (!disposed) showToast(errorText(e), "error"); });
+    return () => { disposed = true; };
   }, [connected, showToast]);
+
+  const updateValue = useCallback((property: keyof Values, value: unknown) => {
+    setState((s) => {
+      if (!s?.connected) return s;
+      const values = { ...s.values };
+      if (value === undefined) delete values[property];
+      else (values as Record<string, unknown>)[property] = value;
+      return { ...s, values };
+    });
+  }, []);
+
+  const recoverValue = useCallback(async (t: Transport, property: keyof Values, revision: number, connection: number) => {
+    if (epoch.current !== connection || !stateRef.current?.connected) return;
+    let confirmed: unknown;
+    try { confirmed = await t.request("get", { property }); } catch { confirmed = undefined; }
+    if (epoch.current === connection && revisions.current[property] === revision) updateValue(property, confirmed);
+  }, [updateValue]);
 
   const set = useCallback(
     async (property: WritableProperty, value: unknown, label: string) => {
       const t = transportRef.current;
-      if (!t) return;
+      if (!t || !stateRef.current?.connected) return;
+      const revision = revisions.current[property] = (revisions.current[property] ?? 0) + 1;
+      const connection = epoch.current;
       setState((s) => (s ? patchValue(s, property, value) : s));
       try {
-        await t.request("set", { property, value });
-        showToast(label);
+        const confirmed = await t.request("set", { property, value });
+        if (revisions.current[property] === revision && epoch.current === connection) {
+          updateValue(property, confirmed);
+          showToast(label);
+        }
       } catch (e) {
         showToast(errorText(e), "error");
-        t.request("get", { property }).catch(() => {});
+        await recoverValue(t, property, revision, connection);
       }
     },
-    [showToast],
+    [showToast, updateValue, recoverValue],
   );
 
   const setEqBand = useCallback(
     async (band: number, gain: number) => {
       const t = transportRef.current;
-      if (!t) return;
+      if (!t || !stateRef.current?.connected) return;
+      const revision = revisions.current.eq = (revisions.current.eq ?? 0) + 1;
+      const connection = epoch.current;
       const hz = stateRef.current?.values.eq?.value.find((b) => b.index === band)?.frequency_hz ?? 0;
       setState((s) => {
         const eq = s?.values.eq;
@@ -174,27 +215,33 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         };
       });
       try {
-        await t.request("eq.set", { band, gain });
-        showToast(`${formatHz(hz)}Hz  ${signed(gain)} dB`);
+        const confirmed = await t.request("eq.set", { band, gain });
+        if (revisions.current.eq === revision && epoch.current === connection) {
+          updateValue("eq", confirmed);
+          showToast(`${formatHz(hz)}Hz  ${signed(gain)} dB`);
+        }
       } catch (e) {
         showToast(errorText(e), "error");
-        t.request("get", { property: "eq" }).catch(() => {});
+        await recoverValue(t, "eq", revision, connection);
       }
     },
-    [showToast],
+    [showToast, updateValue, recoverValue],
   );
 
   const resetEq = useCallback(async () => {
     const t = transportRef.current;
     const bands = stateRef.current?.values.eq?.value.filter((b) => b.gain_db !== 0) ?? [];
     if (!t || !bands.length) return;
+    const revision = revisions.current.eq = (revisions.current.eq ?? 0) + 1;
+    const connection = epoch.current;
     try {
       for (const b of bands) await t.request("eq.set", { band: b.index, gain: 0 });
       showToast("均衡器已复位");
     } catch (e) {
       showToast(errorText(e), "error");
+      await recoverValue(t, "eq", revision, connection);
     }
-  }, [showToast]);
+  }, [showToast, recoverValue]);
 
   const call = useCallback(
     async (method: string, okText?: string) => {

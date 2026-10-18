@@ -1,33 +1,14 @@
-# N300 Desktop
+# N300 桌面界面
 
-Edifier N300 的桌面控制界面（非官方）。Tauri 2 + React + TypeScript，
-设备控制由相邻工程 [edifier-n300](../edifier-n300) 的 `n300.exe serve` 负责，本工程只做界面。
+Tauri 2 + React + TypeScript。设备控制通过同仓库的 C++ 核心完成。
 
-```text
-React 界面 ──invoke/event──▶ Tauri（Rust，约 150 行）──stdin/stdout──▶ n300.exe serve ──BLE──▶ N300
-```
+安装、Debug/Release 构建、运行和离线测试使用 [仓库根目录的通用入口](../README.md)。
+构建会先生成对应配置的核心，再将 n300.exe / n300.dll 放入桌面分发目录和安装包。
 
-## 运行
+浏览器预览：npm run dev（模拟数据）；桌面热更新：npm run app:dev。
+离线桌面热更新在根目录执行 scripts/dev.ps1 -Offline。
 
-```powershell
-npm install
-
-# 只看界面：浏览器 + 内存模拟音响，不需要 Rust
-npm run dev                  # 打开 http://localhost:1420
-
-# 桌面版（需要 Rust 工具链，见下）
-npm run app:dev              # 连接真实音箱
-$env:N300_OFFLINE = "1"; npm run app:dev   # 桌面窗口 + n300 内置模拟设备
-npm run app:build            # 生成 NSIS 安装包，自动附带 n300.exe / n300.dll
-```
-
-桌面版第一次运行前需要安装 Rust：`winget install Rustlang.Rustup`，然后重开终端。
-Visual Studio 的 C++ 工具链和 WebView2 在构建 edifier-n300 时已经具备。
-
-`n300.exe` 的查找顺序：环境变量 `N300_EXE` → 安装目录下的 `n300/n300.exe` →
-开发时的 `../edifier-n300/artifacts/package/Release/n300.exe`。打包前先构建一次 edifier-n300 的 Release。
-
-浏览器预览参数：`?tab=sound`、`?tab=settings` 直接打开对应页面；`?preset=customized` 让模拟音箱以自定义音效启动。
+设备连接和错误约定见 [API 文档](../docs/api.md)，成品用法见 [桌面说明](../docs/desktop.md)。
 
 ## 设计
 
@@ -49,14 +30,15 @@ src-tauri/
   src/lib.rs               启动并托管 n300.exe serve，逐行转发 JSON-RPC
   tauri.conf.json          窗口、CSP、打包资源
   capabilities/            前端可用的最小权限
-app-icon.svg               图标源文件（npx tauri icon app-icon.svg -o src-tauri/icons 重新生成）
+app-icon.svg               图标源文件（npm run tauri -- icon app-icon.svg -o src-tauri/icons 重新生成）
 ```
 
-## 交互约定（对齐 n300 接口）
 
-- 音量范围取设备返回的 `min/max/step`；旋钮按相对角度拖动，按下不会跳值，停止 160 ms 后才写入。
-- 输入源、音效菜单由设备回复的 `choices` 生成，未知值用通用图标。
-- 写入先乐观更新界面，成功后弹出轻提示；失败则提示错误，并重新读取该属性纠正界面。
-- 断开后不显示旧值；连上后自动 `status {full:true}` 读一次全部设置。
-- 关机需要长按 1.1 秒；接口返回 `power_state: "unverified"`，界面只提示“指令已发送”。
-- EQ 曲线是按对数频率画的示意曲线，不是设备实际频响。
+## 接口与生命周期
+
+- RPC 响应按请求 ID 匹配，消息携带核心进程代次，旧进程的退出通知不会干扰新进程。
+- 写入返回核心回读后的确认值；失败重新读取，不能继续把乐观值当作设备实际值。
+- 断线后隐藏旧值，连接后加载设置；渲染器热更新能恢复已运行核心的状态。
+- 窗口关闭先发送 stdin EOF，超时后终止核心；Windows Job Object 在桌面异常退出时也释放核心进程。
+- 核心退出可手动重新连接，不自动重放可能已执行的写入。
+- 通过 --offline 运行的是原生模拟设备，标题栏会明确显示“离线演示”。

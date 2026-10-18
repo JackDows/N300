@@ -29,3 +29,10 @@ Desktop.ini
 .DS_Store
 .env
 .env.*
+node_modules/
+*.tsbuildinfo
+/desktop/dist/
+/desktop/src-tauri/target/
+/desktop/src-tauri/gen/
+/desktop/test-results/
+/desktop/playwright-report/

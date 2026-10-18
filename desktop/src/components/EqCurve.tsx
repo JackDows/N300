@@ -80,7 +80,7 @@ export function EqCurve({ eq, editable, onCommit }: Props) {
       viewBox={`0 0 ${W} ${H}`}
       onPointerMove={onMove}
       onPointerUp={onUp}
-      onPointerCancel={onUp}
+      onPointerCancel={() => { setDragging(null); setGains(eq?.value.map((b) => b.gain_db) ?? []); }}
     >
       <defs>
         <linearGradient id="eq-fill" x1="0" y1="0" x2="0" y2="1">
