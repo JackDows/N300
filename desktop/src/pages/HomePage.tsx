@@ -11,7 +11,7 @@ const PLACEHOLDER_INPUTS: Choice[] = [
 ];
 
 export function HomePage() {
-  const { phase, state, values, error, stopping, set, connect, disconnect } = useDevice();
+  const { phase, state, values, error, stopping, pendingInput, set, connect, disconnect } = useDevice();
   const volume = values.volume;
   const input = values.input;
   const preset = values.preset;
@@ -41,7 +41,7 @@ export function HomePage() {
         step={volume?.step ?? 1}
         loading={phase === "connecting" || phase === "starting"}
         statusLabel={phase === "waiting" ? "等待重试" : phase === "disconnected" ? "未连接" : undefined}
-        onCommit={(v) => set("volume", v, `音量 ${v}`)}
+        onCommit={(v) => set("volume", v)}
       />
 
       <div className="home__source">
@@ -64,20 +64,21 @@ export function HomePage() {
             </div>
           </div>
         ) : (
-          <Segmented
-            ariaLabel="输入源"
-            options={(input?.choices ?? PLACEHOLDER_INPUTS).map((c) => ({
-              value: c.value,
-              label: c.label,
-              icon: inputIcon(c.value, 16),
-            }))}
-            value={input?.value}
-            disabled={!input}
-            onChange={(v) => {
-              const label = input?.choices.find((c) => c.value === v)?.label ?? String(v);
-              set("input", v, `已切换到 ${label}`);
-            }}
-          />
+          <>
+            <Segmented
+              ariaLabel="输入源"
+              options={(input?.choices ?? PLACEHOLDER_INPUTS).map((c) => ({
+                value: c.value,
+                label: c.label,
+                icon: inputIcon(c.value, 16),
+              }))}
+              value={pendingInput ?? input?.value}
+              disabled={!input || pendingInput !== null}
+              busy={pendingInput !== null}
+              onChange={(v) => set("input", v)}
+            />
+            {pendingInput !== null && <span className="home__source-status" role="status">正在切换…</span>}
+          </>
         )}
       </div>
     </div>

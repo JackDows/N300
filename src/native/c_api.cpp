@@ -75,7 +75,7 @@ uint32_t N300_CALL n300_abi_version() {
     return 1;
 }
 const char *N300_CALL n300_version() {
-    return "0.3.0";
+    return "0.3.1";
 }
 int N300_CALL n300_thread_initialize(char **error) {
     if (!error)

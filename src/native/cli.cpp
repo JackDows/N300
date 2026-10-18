@@ -24,6 +24,7 @@ HANDLE input_thread = nullptr;
 struct Options {
     json config = json::object();
     json saved_target;
+    json active_request_id;
     fs::path cache;
     bool cache_enabled = true, rpc = false, autoconnect = true, debug = false;
     std::vector<std::string> command;
@@ -134,6 +135,7 @@ void save_target(Options &options, const json &state) {
 void N300_CALL event_callback(const char *data, void *context) {
     auto &options = *static_cast<Options *>(context);
     auto event = json::parse(data);
+    if (!options.active_request_id.is_null()) event["request_id"] = options.active_request_id;
     if (event.value("type", std::string()) == "state")
         save_target(options, event["state"]);
     if (options.rpc)
@@ -234,14 +236,14 @@ json rpc_error(const json &id, int code, const std::string &message, json data =
         error["data"] = data;
     return {{"jsonrpc", "2.0"}, {"id", id}, {"error", error}};
 }
-json rpc(n300_handle *handle, const json &request) {
+json rpc(n300_handle *handle, const json &request, Options &options) {
     if (request.is_array()) {
         if (request.empty())
             return rpc_error(nullptr, -32600, "Invalid Request");
         json results = json::array();
         for (auto &item : request) {
             auto result =
-                item.is_array() ? rpc_error(nullptr, -32600, "Invalid Request") : rpc(handle, item);
+                item.is_array() ? rpc_error(nullptr, -32600, "Invalid Request") : rpc(handle, item, options);
             if (!result.is_null())
                 results.push_back(result);
         }
@@ -254,6 +256,8 @@ json rpc(n300_handle *handle, const json &request) {
         return rpc_error(nullptr, -32600, "Invalid Request");
     bool notification = !request.contains("id");
     auto id = request.value("id", json(nullptr));
+    options.active_request_id = id;
+    struct ClearRequestId { Options &options; ~ClearRequestId() { options.active_request_id = nullptr; } } scope{options};
     auto response = call(handle, {{"method", request["method"]},
                                   {"params", request.value("params", json::object())}});
     if (notification)
@@ -268,7 +272,7 @@ json rpc(n300_handle *handle, const json &request) {
                      response["error"]["message"], response["error"]);
 }
 void help() {
-    std::cout << "N300 native device core 0.3.0\n"
+    std::cout << "N300 native device core 0.3.1\n"
                  "n300 [options] command\n"
                  "  shell (default)       Persistent interactive commands; exit quits\n"
                  "  serve                 UTF-8 JSON-RPC 2.0 over stdio\n"
@@ -361,6 +365,7 @@ void persistent(n300_handle *handle, Options &options) {
                 {"params",
                  {{"type", "ready"},
                   {"api_version", 1},
+                  {"core_version", n300_version()},
                   {"offline", options.config.value("offline", false)}}}});
     else
         std::cerr << "N300 command shell. help = commands; exit = quit. "
@@ -393,7 +398,7 @@ void persistent(n300_handle *handle, Options &options) {
                         auto request = json::parse(line, nullptr, false);
                         auto response = request.is_discarded()
                                             ? rpc_error(nullptr, -32700, "Parse error")
-                                            : rpc(handle, request);
+                                            : rpc(handle, request, options);
                         if (!response.is_null())
                             output(response);
                     } else {

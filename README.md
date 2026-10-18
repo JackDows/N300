@@ -1,6 +1,7 @@
 # N300 桌面控制工程
 
 Edifier N300 的非官方 Windows x64 控制台。桌面界面、设备核心、依赖锁和构建脚本在同一个 Git 仓库中。
+本项目与 EDIFIER 无关联。
 
 直接使用可下载 [GitHub Releases 安装包](https://github.com/JackDows/N300/releases/latest)。后续在应用内检查更新并覆盖升级。
 
@@ -8,7 +9,7 @@ Edifier N300 的非官方 Windows x64 控制台。桌面界面、设备核心、
 - **设备核心**：C++20 DLL 与 CLI，负责 BLE、协议、回读验证和重连。
 - **连接方式**：桌面程序托管一个 n300.exe serve 进程，经 JSON-RPC 传递状态和命令。
 
-[桌面使用说明](docs/desktop.md) · [命令行说明](docs/user-guide.md) · [C ABI / JSON-RPC API](docs/api.md) · [逆向依据](docs/reverse-engineering.md)
+[桌面使用说明](docs/desktop.md) · [命令行说明](docs/user-guide.md) · [C ABI / JSON-RPC API](docs/api.md) · [诊断与问题追溯](docs/diagnostics.md) · [逆向依据](docs/reverse-engineering.md)
 
 ## VS Code
 
@@ -64,6 +65,7 @@ Visual Studio 2022 的“使用 C++ 的桌面开发”（含 Windows SDK）。�
 仅预览前端，在 desktop 内执行 npm run dev，浏览器使用内存示例。
 桌面热更新执行根目录 scripts/dev.ps1；加 -Offline 即通过真实核心的模拟设备联调。
 窗口热更新、普通桌面运行和测试均使用相同的设备接口。
+桌面程序实行单实例；运行离线测试前先关闭正在运行的程序。Debug / Release / 离线版不会同时占用设备控制会话。
 
 只构建设备核心可在通用入口加 -Component Core：
 
@@ -99,11 +101,12 @@ artifacts/             全部生成物（不提交）
 Test 会运行 C++ 协议/API/stdio 测试、前端 RPC 生命周期测试、Rust 进程托管测试，
 并启动构建好的桌面 EXE，通过 WebView2 执行离线界面联调。
 覆盖音量回读、失败恢复、输入、EQ、名称、灯光、定时、断开重连、核心崩溃重启和窗口关闭。
-也覆盖未发现设备时的重试与停止、Windows 减少动画设置、更新检查及损坏安装包的拒绝。
+也覆盖延迟切换、错误溯源、多开唤起、未发现设备时的重试与停止、Windows 减少动画设置、更新检查及损坏安装包的拒绝。
 自动测试只使用 --offline，不控制真实音响。
 
 此前底层已在本机读取真实 N300 的固件 1.5.1、音量、输入、名称和音效；
 2026-10-18 已在 AUX 输入下验证发现、连接、状态读取和音量原值写入回读；无需先切换蓝牙输入。
+0.2.1 另已实测桌面切换蓝牙、切回 AUX，确认期间没有误报，保留了关联请求的诊断记录。
 其他固件及其余写入功能仍需逐项实机验证。
 
 签名、发布目录、GitHub Releases 及升级验证见[版本发布与应用内更新](docs/releases.md)。

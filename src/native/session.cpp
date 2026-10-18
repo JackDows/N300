@@ -44,11 +44,13 @@ Session::Session(const json &config) : catalog(json::parse(n300_catalog)) {
                                            "connect_timeout_ms",
                                            "request_timeout_ms",
                                            "ack_timeout_ms",
+                                           "input_settle_timeout_ms",
                                            "offline_protocol",
                                            "offline_drop_ack",
                                            "offline_reject_writes",
                                            "offline_silent_commands",
                                            "offline_input_group",
+                                           "offline_input_delay_reads",
                                            "offline_disconnect_on_command"};
     for (const auto &[key, value] : config.items())
         if (!allowed.contains(key))
@@ -60,6 +62,8 @@ Session::Session(const json &config) : catalog(json::parse(n300_catalog)) {
     request_ms =
         integer(config.value("request_timeout_ms", json(2000)), 1, 60000, "request_timeout_ms");
     ack_ms = integer(config.value("ack_timeout_ms", json(250)), 1, 60000, "ack_timeout_ms");
+    input_settle_ms = integer(config.value("input_settle_timeout_ms", json(5000)), 1, 30000,
+                              "input_settle_timeout_ms");
     if (config.contains("address"))
         address_filter = format_address(parse_address(text(config["address"], "address")));
     if (config.contains("target")) {
@@ -311,17 +315,26 @@ void Session::supported(const std::string &property) const {
     if (!yes)
         throw Error("unsupported", "This firmware does not advertise " + property + ".");
 }
-json Session::read(const std::string &property) {
+json Session::read(const std::string &property, int reply_timeout) {
     supported(property);
     values.erase(property);
     raw.erase(cmd_hex(queries.at(property)));
-    request(queries.at(property));
+    request(queries.at(property), {}, reply_timeout);
     if (!values.contains(property))
         throw Error("unsupported_response", "Unknown or malformed " + property + " response.");
     return values[property];
 }
 void Session::set_and_verify(uint8_t cmd, const Bytes &payload, const std::string &property,
                              const json &expected) {
+    const auto started = Clock::now();
+    json observations = json::array();
+    auto report = [&](const char *outcome, const json &error = nullptr) {
+        events.push_back({{"type", "operation"}, {"sequence", ++event_sequence},
+                          {"method", "set"}, {"property", property}, {"expected", expected},
+                          {"outcome", outcome},
+                          {"elapsed_ms", std::chrono::duration_cast<Ms>(Clock::now() - started).count()},
+                          {"readbacks", observations}, {"error", error}});
+    };
     try {
         try {
             request(cmd, payload, ack_ms);
@@ -329,18 +342,36 @@ void Session::set_and_verify(uint8_t cmd, const Bytes &payload, const std::strin
             if (e.code != "timeout")
                 throw;
         }
-        auto actual = read(property);
-        auto received =
-            (property == "input" || property == "preset") ? actual["raw"] : actual["value"];
-        bool matches = received == expected;
-        if (property == "timer")
-            matches = received >= std::max(0, expected.get<int>() - 1) && received <= expected;
-        if (!matches)
-            throw Error("verification_failed", "Device readback differs from the requested value.",
-                        false, {{"expected", expected}, {"actual", actual}, {"write_sent", true}});
+        const auto deadline = Clock::now() + Ms(property == "input" ? input_settle_ms : 0);
+        for (;;) {
+            check_cancel(cancelled);
+            try {
+                const auto remaining = std::max<int64_t>(1, std::chrono::duration_cast<Ms>(deadline - Clock::now()).count());
+                auto actual = read(property, property == "input" ? static_cast<int>(std::min<int64_t>(request_ms, remaining)) : -1);
+                auto received = (property == "input" || property == "preset") ? actual["raw"] : actual["value"];
+                observations.push_back({{"after_ms", std::chrono::duration_cast<Ms>(Clock::now() - started).count()}, {"value", received}});
+                bool matches = received == expected;
+                if (property == "timer")
+                    matches = received >= std::max(0, expected.get<int>() - 1) && received <= expected;
+                if (matches) { report("confirmed"); return; }
+                if (property != "input" || Clock::now() >= deadline)
+                    throw Error("verification_failed", "Device readback differs from the requested value.",
+                                false, {{"expected", expected}, {"actual", actual}, {"write_sent", true}});
+            } catch (const Error &e) {
+                if (property != "input" || e.code != "timeout" || Clock::now() >= deadline) throw;
+                observations.push_back({{"after_ms", std::chrono::duration_cast<Ms>(Clock::now() - started).count()}, {"error", e.data()}});
+            }
+            // Input switching is asynchronous on the speaker. Only poll the query;
+            // never repeat the write. Cancellation wakes this wait immediately.
+            std::unique_lock lock(transport->inbox->mutex);
+            transport->inbox->changed.wait_until(lock, std::min(deadline, Clock::now() + Ms(150)),
+                                                [&] { return cancelled.load(); });
+        }
     } catch (Error &e) {
         e.retryable = false;
         e.details["write_may_have_been_sent"] = true;
+        e.details["readbacks"] = observations;
+        report("failed", e.data());
         throw;
     }
 }
@@ -452,14 +483,14 @@ json Session::describe() {
         inventory[name] = params;
     return {
         {"api_version", 1},
-        {"software_version", "0.3.0"},
+        {"software_version", "0.3.1"},
         {"device", "edifier.n300"},
         {"methods", inventory},
         {"readable_properties",
          {"name", "firmware", "volume", "input", "preset", "eq", "led", "idle_shutdown", "timer"}},
         {"writable_properties",
          {"name", "volume", "input", "preset", "led", "idle_shutdown", "timer"}},
-        {"events", {"state", "connection_error"}},
+        {"events", {"state", "connection_error", "operation"}},
         {"unsupported", {"firmware_update", "factory_reset", "eq_frequency", "eq_q", "cloud_eq"}}};
 }
 json Session::tick() {

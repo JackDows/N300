@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 
 pub enum Event {
     Line(String),
+    Diagnostic(String),
     Exit,
 }
 pub struct CoreProcess {
@@ -85,6 +86,7 @@ impl CoreProcess {
         let input = child.stdin.take();
         let stdout = child.stdout.take().ok_or("无法读取控制程序输出")?;
         let stderr = child.stderr.take().ok_or("无法读取控制程序诊断")?;
+        let diagnostic = emit.clone();
         let readers = vec![
             std::thread::spawn(move || {
                 for line in BufReader::new(stdout).lines() {
@@ -98,7 +100,7 @@ impl CoreProcess {
             }),
             std::thread::spawn(move || {
                 for line in BufReader::new(stderr).lines().map_while(Result::ok) {
-                    eprintln!("[n300] {line}");
+                    diagnostic(Event::Diagnostic(line));
                 }
             }),
         ];

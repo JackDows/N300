@@ -249,6 +249,45 @@ int main() {
         require(tf.ok("set", {{"property", "input"}, {"value", "tf"}})["raw"] == 4,
                 "TF option retained");
     });
+    test("delayed input switch is confirmed without replaying the write", [] {
+        std::vector<json> events;
+        Device d({{"offline", true}, {"offline_input_delay_reads", 3}});
+        n300_set_event_callback(d.handle, [](const char *event, void *context) {
+            static_cast<std::vector<json> *>(context)->push_back(json::parse(event));
+        }, &events);
+        auto result = d.ok("set", {{"property", "input"}, {"value", "bluetooth"}});
+        require(result["value"] == "bluetooth", "wait for settled input");
+        int writes = 0;
+        auto requests = d.ok("diagnostics")["requests"];
+        for (const auto &item : requests)
+            if (item["command"] == "62") ++writes;
+        require(writes == 1, "input command sent exactly once");
+        bool recorded = false;
+        for (const auto &event : events)
+            if (event.value("type", "") == "operation")
+                recorded = event["outcome"] == "confirmed" && event["readbacks"].size() == 4;
+        require(recorded, "transitional readbacks retained for diagnosis");
+        n300_set_event_callback(d.handle, nullptr, nullptr);
+    });
+    test("input that never changes reports a bounded, traceable failure", [] {
+        Device d({{"offline", true}, {"offline_reject_writes", true}, {"input_settle_timeout_ms", 350}});
+        auto started = Clock::now();
+        auto result = d.call("set", {{"property", "input"}, {"value", "bluetooth"}});
+        require(result["error"]["code"] == "verification_failed", "failure preserved");
+        require(result["error"]["details"]["readbacks"].size() >= 2, "failure observations");
+        require(Clock::now() - started < Ms(1000), "bounded verification");
+        require(d.ok("get", {{"property", "input"}})["value"] == "aux", "actual input preserved");
+    });
+    test("cancel interrupts input settling", [] {
+        Device d({{"offline", true}, {"offline_input_delay_reads", 100}});
+        d.ok("connect");
+        auto task = std::async(std::launch::async, [&] { return d.call("set", {{"property", "input"}, {"value", "bluetooth"}}); });
+        std::this_thread::sleep_for(Ms(50));
+        const auto started = Clock::now();
+        n300_cancel(d.handle);
+        require(task.get()["error"]["code"] == "cancelled", "input cancellation");
+        require(Clock::now() - started < Ms(500), "input cancellation is prompt");
+    });
     test("boolean false is valid", [] {
         Device d;
         require(d.ok("set", {{"property", "led"}, {"value", false}})["value"] == false, "LED off");

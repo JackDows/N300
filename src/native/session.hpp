@@ -7,6 +7,7 @@ namespace n300 {
 class Session {
     bool offline = false, verified = false;
     int scan_ms = 5000, connect_ms = 15000, request_ms = 2000, ack_ms = 250;
+    int input_settle_ms = 5000;
     std::string address_filter;
     std::optional<Target> target;
     std::unique_ptr<Transport> transport;
@@ -27,7 +28,7 @@ class Session {
     void apply(const Frame &frame);
     Frame request(uint8_t command, const Bytes &payload = {}, int reply_timeout = -1);
     void drain();
-    json read(const std::string &property);
+    json read(const std::string &property, int reply_timeout = -1);
     json set(const std::string &property, const json &value);
     json set_gain(const json &params);
     json choices(const std::string &property) const;

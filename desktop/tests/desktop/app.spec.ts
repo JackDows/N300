@@ -3,13 +3,14 @@ import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:net";
 import { createServer as createHttpServer, type Server } from "node:http";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 
 const root = resolve(import.meta.dirname, "../../..");
 const config = process.env.N300_TEST_CONFIGURATION ?? "Debug";
 const exe = process.env.N300_DESKTOP_TEST_EXE ?? join(root, "artifacts/desktop", config, "N300Desk.exe");
 let app: ChildProcess;
+let appEnv: NodeJS.ProcessEnv;
 let browser: Browser;
 let page: Page;
 const errors: string[] = [];
@@ -64,6 +65,12 @@ function children() {
 function coreChildren(): { ProcessId: number; CommandLine: string }[] {
   const result = children(); return Array.isArray(result) ? result : [result];
 }
+function journal() {
+  const directory = join(process.env.LOCALAPPDATA!, "local.n300.desktop", "logs");
+  return readdirSync(directory).filter((name) => /^n300(?:\.\d+)?\.jsonl$/.test(name))
+    .flatMap((name) => readFileSync(join(directory, name), "utf8").trim().split("\n").filter(Boolean).map((line) => JSON.parse(line)))
+    .filter((row) => row.process_id === app.pid);
+}
 
 test.beforeAll(async () => {
   expect(existsSync(exe), "Run Build before Test").toBe(true);
@@ -88,6 +95,7 @@ test.beforeAll(async () => {
   const env = { ...process.env, N300_OFFLINE: "1", N300_UPDATE_URL: feedUrl + "/latest.json", WEBVIEW2_USER_DATA_FOLDER: profile,
     WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port} --remote-debugging-address=127.0.0.1` };
   delete env.N300_EXE;
+  appEnv = env;
   app = spawn(exe, ["--offline"], { env, cwd: resolve(exe, ".."), stdio: "ignore", windowsHide: true });
   app.on("error", (error) => errors.push(error.message));
   const endpoint = `http://127.0.0.1:${port}`;
@@ -117,7 +125,8 @@ test("volume, readback, write failure recovery and input selection", async () =>
   const volume = page.getByRole("slider", { name: "音量" });
   await volume.press("ArrowUp");
   await expect(volume).toHaveAttribute("aria-valuenow", "9");
-  await expect(page.locator(".toast")).toContainText("音量 9");
+  await expect.poll(async () => (await coreRequest("get", { property: "volume" })).result.value).toBe(9);
+  await expect(page.locator(".toast")).toHaveCount(0);
   // Force one out-of-range native write. The subsequent get returns the unchanged value,
   // which the native core intentionally does not repeat as a state event.
   await page.evaluate(() => {
@@ -136,11 +145,51 @@ test("volume, readback, write failure recovery and input selection", async () =>
     };
   });
   await volume.press("ArrowUp");
-  await expect(page.locator(".toast.is-error")).toBeVisible();
+  await expect(page.locator(".toast.is-error")).toHaveText("操作未完成，请重试");
   await expect(volume).toHaveAttribute("aria-valuenow", "9");
+  const failure = journal().find((row) => row.data.message?.error?.data?.code === "invalid_argument");
+  expect(failure.data.message.error.data.message).toContain("volume");
+  expect(journal().some((row) => row.event === "core.request"
+    && row.data.generation === failure.data.generation && row.data.message.id === failure.data.message.id
+    && row.data.message.params.value === 999)).toBe(true);
   await page.getByRole("radio", { name: "USB", exact: true }).click();
   await expect(page.getByRole("radio", { name: "USB", exact: true })).toHaveAttribute("aria-checked", "true");
+  expect((await coreRequest("get", { property: "input" })).result.value).toBe("usb");
+  await expect(page.locator(".toast")).toHaveCount(0);
   await screenshot("home");
+});
+
+test("input switching stays pending until confirmed, with correlated engineering records", async () => {
+  await page.evaluate(() => {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async (url, options) => {
+      if (String(url).endsWith("/core_send") && options?.body) {
+        const message = JSON.parse(JSON.parse(String(options.body)).line);
+        if (message.method === "set" && message.params.property === "input") {
+          window.fetch = originalFetch;
+          await new Promise((resolve) => setTimeout(resolve, 700));
+        }
+      }
+      return originalFetch(url, options);
+    };
+  });
+  const inputs = page.getByRole("radiogroup", { name: "输入源" });
+  await inputs.getByRole("radio", { name: "蓝牙", exact: true }).click();
+  await expect(inputs).toHaveAttribute("aria-busy", "true");
+  for (const option of await inputs.getByRole("radio").all()) await expect(option).toBeDisabled();
+  await expect(page.getByRole("status")).toContainText("正在切换");
+  await expect(page.locator(".toast")).toHaveCount(0);
+  await expect(inputs).not.toHaveAttribute("aria-busy", "true");
+  await expect(inputs.getByRole("radio", { name: "蓝牙", exact: true })).toHaveAttribute("aria-checked", "true");
+  expect((await coreRequest("get", { property: "input" })).result.value).toBe("bluetooth");
+  await expect(page.locator(".home__source-status")).toHaveCount(0);
+  await expect(page.locator(".toast")).toHaveCount(0);
+  const rows = journal();
+  const request = rows.findLast((row) => row.event === "core.request" && row.data.message?.params?.value === "bluetooth");
+  const operation = rows.find((row) => row.data.generation === request.data.generation
+    && row.data.message?.params?.type === "operation" && row.data.message.params.request_id === request.data.message.id);
+  expect(operation.data.message.params.outcome).toBe("confirmed");
+  expect(operation.data.message.params.readbacks.length).toBeGreaterThan(0);
 });
 
 test("presets and equalizer are connected to the native simulator", async () => {
@@ -152,14 +201,17 @@ test("presets and equalizer are connected to the native simulator", async () => 
   const box = await handle.boundingBox(); expect(box).not.toBeNull();
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
   await page.mouse.down(); await page.mouse.move(box!.x + box!.width / 2, box!.y - 25); await page.mouse.up();
-  await expect(page.locator(".toast")).toContainText("dB");
+  await expect.poll(async () => (await coreRequest("get", { property: "eq" })).result.value[0].gain_db).toBeGreaterThan(0);
+  await expect(page.locator(".toast")).toHaveCount(0);
   await page.getByRole("button", { name: "复位", exact: true }).click();
   await expect(page.getByRole("button", { name: "复位", exact: true })).toBeDisabled();
+  expect((await coreRequest("get", { property: "eq" })).result.value.every((band: { gain_db: number }) => band.gain_db === 0)).toBe(true);
   await screenshot("sound");
 });
 
 test("settings, disconnect and reconnect preserve confirmed simulator state", async () => {
   await page.getByRole("navigation", { name: "页面" }).getByRole("button", { name: "设置" }).click();
+  await expect(page.getByText(/非官方控制程序|与 EDIFIER 无关联/)).toHaveCount(0);
   const led = page.getByRole("switch", { name: "指示灯", exact: true });
   await led.click(); await expect(led).toHaveAttribute("aria-checked", "false");
   await page.getByRole("button", { name: "重命名", exact: true }).click();
@@ -179,7 +231,7 @@ test("settings, disconnect and reconnect preserve confirmed simulator state", as
 test("a crashed core can be restarted, and reloading the renderer restores its state", async () => {
   const current = coreChildren(); expect(current).toHaveLength(1);
   process.kill(current[0].ProcessId);
-  await expect(page.locator(".titlebar__status")).toHaveText("控制核心已退出");
+  await expect(page.locator(".titlebar__status")).toHaveText("连接已中断");
   await page.getByRole("button", { name: /^连接音箱/ }).click();
   await expect(page.getByRole("switch", { name: "指示灯", exact: true })).toBeEnabled();
   const next = coreChildren(); expect(next).toHaveLength(1);
@@ -283,7 +335,9 @@ test("update checks, prompts and a rejected package keep the running app usable"
   await expect(page.getByRole("complementary", { name: "更新提醒" })).toHaveCount(0);
   const core = coreChildren()[0].ProcessId;
   await panel.getByRole("button", { name: "下载并更新", exact: true }).click();
-  await expect(panel.getByRole("status")).toContainText("下载或校验失败");
+  await expect(panel.getByRole("status")).toHaveText("更新未完成，当前版本保持不变，请重试");
+  await expect.poll(() => journal().some((row) => row.event === "ui.error" && row.data.context === "update.install"
+    && /signature/i.test(row.data.detail))).toBe(true);
   await expect(panel.getByRole("button", { name: "重试更新", exact: true })).toBeEnabled();
   expect(app.exitCode).toBeNull();
   expect(coreChildren()[0].ProcessId).toBe(core);
@@ -294,6 +348,23 @@ test("update checks, prompts and a rejected package keep the running app usable"
   await page.getByRole("navigation", { name: "页面" }).getByRole("button", { name: "音量" }).click();
   await expect(page.getByRole("slider", { name: "音量" })).toHaveAttribute("aria-valuenow", "8");
   expect(errors).toEqual([]);
+});
+
+test("a second launch restores the existing window and explains that it is already running", async () => {
+  const core = coreChildren()[0].ProcessId;
+  await page.getByRole("button", { name: "最小化", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).__TAURI_INTERNALS__.invoke("plugin:window|is_minimized", { label: "main" }))).toBe(true);
+  const duplicate = spawn(exe, ["--offline"], { env: appEnv, cwd: resolve(exe, ".."), stdio: "ignore", windowsHide: true });
+  try {
+    await expect.poll(() => duplicate.exitCode).toBe(0);
+    await expect(page.locator(".toast")).toHaveText("程序已在运行");
+    await expect.poll(() => page.evaluate(() => (window as any).__TAURI_INTERNALS__.invoke("plugin:window|is_minimized", { label: "main" }))).toBe(false);
+    expect(coreChildren()).toHaveLength(1);
+    expect(coreChildren()[0].ProcessId).toBe(core);
+    expect(journal().some((row) => row.event === "app.already_running")).toBe(true);
+  } finally {
+    if (duplicate.exitCode === null) duplicate.kill();
+  }
 });
 
 test("closing the window releases its native control process", async () => {

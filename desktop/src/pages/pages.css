@@ -133,6 +133,7 @@
 }
 
 .home__source {
+  position: relative;
   display: flex;
   justify-content: center;
   width: 100%;
@@ -142,6 +143,12 @@
 
 .home__source .seg {
   width: 100%;
+}
+.home__source-status {
+  position: absolute;
+  top: calc(100% + 8px);
+  color: var(--text-2);
+  font-size: 12px;
 }
 
 .connection-panel {
@@ -321,11 +328,4 @@
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--text-2);
-}
-
-.footnote {
-  margin: 26px 0 0;
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-3);
 }

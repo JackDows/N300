@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(edifier_n300 VERSION 0.3.0 LANGUAGES CXX)
+project(edifier_n300 VERSION 0.3.1 LANGUAGES CXX)
 if(NOT WIN32 OR NOT MSVC)
     message(FATAL_ERROR "The BLE backend requires Windows x64 and Visual Studio 2022 C++ tools.")
 endif()

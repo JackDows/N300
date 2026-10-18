@@ -4,6 +4,7 @@ import App from "./App";
 import { DeviceProvider } from "./device/DeviceContext";
 import { UpdateProvider } from "./updates/UpdateContext";
 import { isTauri } from "./device/transport";
+import { recordUiError } from "./diagnostics";
 import "./styles/tokens.css";
 import "./styles/base.css";
 
@@ -12,6 +13,8 @@ if (!isTauri) document.documentElement.classList.add("is-browser");
 
 // 桌面版屏蔽 WebView 默认右键菜单。
 if (isTauri && !import.meta.env.DEV) window.addEventListener("contextmenu", (e) => e.preventDefault());
+window.addEventListener("error", (event) => recordUiError(event.error ?? event.message, "window.error"));
+window.addEventListener("unhandledrejection", (event) => recordUiError(event.reason, "window.unhandledrejection"));
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

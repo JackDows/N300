@@ -44,7 +44,7 @@ export function SoundPage() {
         choices={preset?.choices ?? PLACEHOLDER}
         value={preset?.value}
         disabled={!connected || !preset}
-        onChange={(c) => set("preset", c.value, `${c.label}音效`)}
+        onChange={(c) => set("preset", c.value)}
       />
 
       <section className={`eq-card${connected && eq ? "" : " is-disabled"}`}>
@@ -63,7 +63,7 @@ export function SoundPage() {
             <button
               className="btn-ghost is-accent"
               disabled={!connected || !customChoice}
-              onClick={() => { if (customChoice) void set("preset", customChoice.value, customChoice.label); }}
+              onClick={() => { if (customChoice) void set("preset", customChoice.value); }}
             >
               自定义
             </button>

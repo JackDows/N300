@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { isTauri } from "../device/transport";
+import { recordUiError } from "../diagnostics";
 
 type Stage = "idle" | "checking" | "current" | "available" | "downloading" | "installing" | "error";
 interface Release { version: string; notes: string }
@@ -11,7 +12,6 @@ interface UpdateState {
 interface UpdateActions { check(): Promise<void>; install(): Promise<void>; dismiss(): void }
 const Context = createContext<(UpdateState & UpdateActions) | null>(null);
 const initial: UpdateState = { version: "", stage: "idle", release: null, message: "", downloaded: 0, dismissed: false };
-const readableError = (error: unknown) => String(error).split("（")[0];
 
 export function UpdateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(initial);
@@ -26,7 +26,8 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
       const release = await invoke<Release | null>("update_check");
       if (alive.current) setState((s) => ({ ...s, release, stage: release ? "available" : "current", dismissed: release?.version === s.release?.version && s.dismissed }));
     } catch (error) {
-      if (alive.current) setState((s) => ({ ...s, stage: "error", message: readableError(error) }));
+      recordUiError(error, "update.check");
+      if (alive.current) setState((s) => ({ ...s, stage: "error", message: "暂时无法检查更新，请稍后重试" }));
     } finally { busy.current = false; }
   }, []);
 
@@ -41,7 +42,8 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
       });
       await invoke("update_install", { onProgress });
     } catch (error) {
-      if (alive.current) setState((s) => ({ ...s, stage: "error", message: readableError(error) }));
+      recordUiError(error, "update.install");
+      if (alive.current) setState((s) => ({ ...s, stage: "error", message: "更新未完成，当前版本保持不变，请重试" }));
     } finally { busy.current = false; }
   }, []);
 
@@ -54,7 +56,7 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
         if (disposed) return;
         setState((s) => ({ ...s, version: info.version, message: info.lastResult ?? "" }));
         timer = setTimeout(check, 8000);
-      }).catch((error) => { if (!disposed) setState((s) => ({ ...s, stage: "error", message: readableError(error) })); });
+      }).catch((error) => { recordUiError(error, "update.info"); if (!disposed) setState((s) => ({ ...s, stage: "error", message: "暂时无法读取版本信息" })); });
     return () => { disposed = true; alive.current = false; clearTimeout(timer); };
   }, [check]);
   return <Context.Provider value={{ ...state, check, install, dismiss: () => setState((s) => ({ ...s, dismissed: true })) }}>{children}</Context.Provider>;

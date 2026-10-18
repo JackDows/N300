@@ -68,6 +68,7 @@ context 的生命周期必须覆盖所有工作线程调用，不能在仍有回
   "connect_timeout_ms": 15000,
   "request_timeout_ms": 2000,
   "ack_timeout_ms": 250,
+  "input_settle_timeout_ms": 5000,
   "offline": false
 }
 ```
@@ -85,6 +86,11 @@ App 可保存成功连接后的 `state.target` 对象，下次通过 `{"target":
 服务枚举优先使用 Windows 缓存；缓存缺少所需通道时重新发现。
 同一 handle 保留 GATT 对象、通知订阅与能力信息，后续 `get/set` 直接复用连接。
 连续设置音量复用已确认的范围，每次写入仍回读验证。断线后才重新建立连接和握手。
+
+输入源切换是异步操作：只发送一次写入，在 `input_settle_timeout_ms`（默认 5000 ms）内
+持续查询，查询之间等待 150 ms。回读达到目标才返回成功；过渡期间的旧值不立即判为失败。
+等待支持取消，不重新发送写入。超时、断线或最终值不符仍返回原始错误，并保留回读过程。
+离线配置 `offline_input_delay_reads` 可模拟指定次数的旧值，用于验证这个时序。
 
 ## 命令
 
@@ -140,6 +146,10 @@ capabilities 表示设备声明，并非所有字段都已实机确认。
 
 事件为 `{"type":"state","sequence":1,"state":...}` 或
 `{"type":"connection_error","sequence":2,"error":...,"retry_in_ms":1000}`。
+`set` 的写入确认过程还产生 `operation` 事件，包含 `method`、`property`、`expected`、
+`outcome`（`confirmed` / `failed`）、`elapsed_ms`、`readbacks` 和失败时的 `error`。
+每条 readback 包含 `after_ms` 与回读 `value` 或查询 `error`；输入源使用当前分组的 raw 值。
+参数校验阶段失败没有写入确认事件，错误仍通过请求响应返回。
 事件 sequence 在同一实例内递增。通知在 execute/tick 中处理，因此 App 必须持续调度 tick。
 
 error 包含稳定的 `code`、说明 `message`、`retryable` 和 `details`。
@@ -152,7 +162,8 @@ error 包含稳定的 `code`、说明 `message`、`retryable` 和 `details`。
 
 启动 `n300.exe serve`；每行一个 UTF-8 JSON 消息，最大 1 MiB，支持标准请求、通知和 batch。
 方法与 DLL 相同；有 id 返回 response，无 id 的请求不返回 response。
-设备事件作为 `method:"event"` 通知输出，首条 `ready` 通知说明进程已经就绪。
+设备事件作为 `method:"event"` 通知输出，首条 `ready` 通知说明进程已经就绪，并带 `core_version`。
+处理带 id 的请求期间产生的事件附带 `request_id`，可与请求、响应关联。后台 tick 事件没有请求编号。
 stdout 不混入日志，stderr 用于诊断；关闭 stdin 后处理已接受请求，停止连接并退出。
 
 ```json

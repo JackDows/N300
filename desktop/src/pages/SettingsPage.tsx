@@ -35,7 +35,7 @@ function NameField() {
   const commit = () => {
     const next = draft.trim();
     setDraft(null);
-    if (valid && next !== name) set("name", next, "名称已更新");
+    if (valid && next !== name) set("name", next);
   };
 
   return (
@@ -102,14 +102,14 @@ export function SettingsPage() {
 
       <Group label="音箱">
         <Row icon={<IconLight />} title="指示灯" disabled={led == null}>
-          <Toggle label="指示灯" on={!!led} disabled={led == null} onChange={(v) => set("led", v, v ? "指示灯已打开" : "指示灯已关闭")} />
+          <Toggle label="指示灯" on={!!led} disabled={led == null} onChange={(v) => set("led", v)} />
         </Row>
         <Row icon={<IconMoon />} title="无信号自动关机" desc="长时间没有音频输入时关机" disabled={idle == null}>
           <Toggle
             label="无信号自动关机"
             on={!!idle}
             disabled={idle == null}
-            onChange={(v) => set("idle_shutdown", v, v ? "已开启自动关机" : "已关闭自动关机")}
+            onChange={(v) => set("idle_shutdown", v)}
           />
         </Row>
         <ExpandRow
@@ -125,7 +125,7 @@ export function SettingsPage() {
             ariaLabel="定时关机"
             options={TIMER_OPTIONS.map((m) => ({ value: m, label: m === 0 ? "关闭" : `${m}′` }))}
             value={timer}
-            onChange={(v) => set("timer", v, v === 0 ? "已取消定时关机" : `${v} 分钟后关机`)}
+            onChange={(v) => set("timer", v)}
           />
         </ExpandRow>
       </Group>
@@ -142,7 +142,6 @@ export function SettingsPage() {
       </Group>
 
       <UpdatePanel />
-      <p className="footnote">非官方控制程序，与 EDIFIER 无关联</p>
     </div>
   );
 }

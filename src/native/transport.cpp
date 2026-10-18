@@ -342,6 +342,8 @@ class SimulatedTransport final : public Transport {
     Codec codec;
     std::map<int, Bytes> values;
     std::vector<int> silence;
+    int input_delay_reads = 0, input_reads_remaining = 0;
+    std::optional<Bytes> pending_input;
 
   public:
     explicit SimulatedTransport(const json &config) : codec(config.value("offline_protocol", 1)) {
@@ -349,6 +351,8 @@ class SimulatedTransport final : public Transport {
         reject = config.value("offline_reject_writes", false);
         disconnect_command = config.value("offline_disconnect_on_command", -1);
         silence = config.value("offline_silent_commands", std::vector<int>{});
+        input_delay_reads = integer(config.value("offline_input_delay_reads", json(0)), 0, 1000,
+                                    "offline_input_delay_reads");
         Bytes caps(20);
         for (int i : {2, 3, 5, 8, 9, 10})
             caps[i] = 1;
@@ -408,6 +412,12 @@ class SimulatedTransport final : public Transport {
             if (std::find(silence.begin(), silence.end(), cmd) != silence.end())
                 continue;
             Bytes answer;
+            if (cmd == 0x61 && pending_input) {
+                if (input_reads_remaining == 0) {
+                    values[0x61] = *pending_input;
+                    pending_input.reset();
+                } else --input_reads_remaining;
+            }
             if (values.contains(cmd))
                 answer = values[cmd];
             else {
@@ -415,7 +425,10 @@ class SimulatedTransport final : public Transport {
                     static const std::map<int, int> mapping = {{0x62, 0x61}, {0xC4, 0xD5},
                                                                {0xF8, 0xF7}, {0xD6, 0xD7},
                                                                {0xD1, 0xD3}, {0xCA, 0xC9}};
-                    if (mapping.contains(cmd))
+                    if (cmd == 0x62 && input_delay_reads > 0) {
+                        pending_input = payload;
+                        input_reads_remaining = input_delay_reads;
+                    } else if (mapping.contains(cmd))
                         values[mapping.at(cmd)] = payload;
                     else if (cmd == 0x67)
                         values[0x66] = {16, payload.at(0)};
