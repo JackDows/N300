@@ -10,7 +10,7 @@ async function windowAction(action: "minimize" | "close") {
 }
 
 /** 无边框窗口的标题栏：整条可拖动，只保留最小化和关闭。 */
-export function TitleBar({ status }: { status: { tone: "ok" | "busy" | "off"; text: string } }) {
+export function TitleBar({ status }: { status: { tone: "ok" | "busy" | "warn" | "off"; text: string } }) {
   return (
     <header className="titlebar" data-tauri-drag-region>
       <div className="titlebar__brand">

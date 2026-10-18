@@ -2,7 +2,8 @@ import { chromium, expect, test, type Browser, type Page } from "@playwright/tes
 import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:net";
-import { existsSync, mkdirSync } from "node:fs";
+import { createServer as createHttpServer, type Server } from "node:http";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 
 const root = resolve(import.meta.dirname, "../../..");
@@ -12,7 +13,38 @@ let app: ChildProcess;
 let browser: Browser;
 let page: Page;
 const errors: string[] = [];
+let rpcId = -1;
+let feed: Server;
+let feedUrl = "";
+let updateMode: "current" | "new" | "error" = "current";
+const appVersion = JSON.parse(readFileSync(join(root, "desktop/src-tauri/tauri.conf.json"), "utf8")).version;
 test.describe.configure({ mode: "serial" });
+
+// Use the packaged core's real JSON-RPC channel, including its native error paths.
+async function coreRequest(method: string, params: Record<string, unknown> = {}) {
+  return page.evaluate(async (request) => {
+    const ipc = (window as any).__TAURI_INTERNALS__;
+    let complete!: (reply: any) => void;
+    const reply = new Promise<any>((resolve) => { complete = resolve; });
+    const callback = ipc.transformCallback((event: { payload: { line: string } }) => {
+      const message = JSON.parse(event.payload.line);
+      if (message.id === request.id) complete(message);
+    });
+    let eventId: number | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      eventId = await ipc.invoke("plugin:event|listen", { event: "n300://line", target: { kind: "Any" }, handler: callback });
+      await ipc.invoke("core_send", { line: JSON.stringify(request) });
+      return await Promise.race([reply, new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`Native ${request.method} timed out`)), 5000);
+      })]);
+    } finally {
+      clearTimeout(timer);
+      if (eventId !== undefined) await ipc.invoke("plugin:event|unlisten", { event: "n300://line", eventId });
+      ipc.unregisterCallback(callback);
+    }
+  }, { jsonrpc: "2.0", id: rpcId--, method, params });
+}
 
 function alive(pid: number) {
   try { process.kill(pid, 0); return true; } catch { return false; }
@@ -35,11 +67,25 @@ function coreChildren(): { ProcessId: number; CommandLine: string }[] {
 
 test.beforeAll(async () => {
   expect(existsSync(exe), "Run Build before Test").toBe(true);
+  feed = createHttpServer((request, response) => {
+    if (request.url === "/update.exe") {
+      // The signature matches the original fixture, but these downloaded bytes do not.
+      response.end("Tampered update package");
+    } else if (updateMode === "current") { response.writeHead(204).end(); }
+    else if (updateMode === "error") { response.writeHead(503).end("Unavailable"); }
+    else {
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify({ version: "99.0.0", notes: "更新回归测试", url: feedUrl + "/update.exe",
+        signature: readFileSync(join(root, "desktop/tests/fixtures/update-payload.sig"), "utf8").trim() }));
+    }
+  });
+  feed.listen(0, "127.0.0.1"); await once(feed, "listening");
+  feedUrl = `http://127.0.0.1:${(feed.address() as { port: number }).port}`;
   const server = createServer(); server.listen(0, "127.0.0.1"); await once(server, "listening");
   const port = (server.address() as { port: number }).port; await new Promise<void>((done) => server.close(() => done()));
   const profile = join(root, "artifacts/validation/webview", `${config}-${Date.now()}`);
   mkdirSync(profile, { recursive: true });
-  const env = { ...process.env, N300_OFFLINE: "1", WEBVIEW2_USER_DATA_FOLDER: profile,
+  const env = { ...process.env, N300_OFFLINE: "1", N300_UPDATE_URL: feedUrl + "/latest.json", WEBVIEW2_USER_DATA_FOLDER: profile,
     WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port} --remote-debugging-address=127.0.0.1` };
   delete env.N300_EXE;
   app = spawn(exe, ["--offline"], { env, cwd: resolve(exe, ".."), stdio: "ignore", windowsHide: true });
@@ -64,6 +110,7 @@ test.afterAll(async () => {
   }
   if (app && app.exitCode === null) app.kill();
   await browser?.close();
+  await new Promise<void>((done) => feed?.close(() => done()));
 });
 
 test("volume, readback, write failure recovery and input selection", async () => {
@@ -132,7 +179,7 @@ test("settings, disconnect and reconnect preserve confirmed simulator state", as
 test("a crashed core can be restarted, and reloading the renderer restores its state", async () => {
   const current = coreChildren(); expect(current).toHaveLength(1);
   process.kill(current[0].ProcessId);
-  await expect(page.getByText("控制核心已退出", { exact: true })).toBeVisible();
+  await expect(page.locator(".titlebar__status")).toHaveText("控制核心已退出");
   await page.getByRole("button", { name: /^连接音箱/ }).click();
   await expect(page.getByRole("switch", { name: "指示灯", exact: true })).toBeEnabled();
   const next = coreChildren(); expect(next).toHaveLength(1);
@@ -140,6 +187,112 @@ test("a crashed core can be restarted, and reloading the renderer restores its s
   await page.reload();
   await expect(page.getByRole("slider", { name: "音量" })).toHaveAttribute("aria-valuenow", "8");
   expect(coreChildren()[0].ProcessId).toBe(next[0].ProcessId);
+  expect(errors).toEqual([]);
+});
+
+test("reduced motion disables loading animations instead of accelerating their infinite loops", async () => {
+  // Exercise the production loading selectors even though the offline device connects instantly.
+  await page.evaluate(() => {
+    const fixture = document.createElement("div");
+    fixture.id = "motion-regression";
+    fixture.style.cssText = "position:fixed;left:-2000px;pointer-events:none";
+    fixture.innerHTML = '<div class="dial is-loading"><span class="dial__caption">连接中</span><svg><g class="dial__spinner"></g></svg></div><span class="status-dot is-busy"></span>';
+    document.body.append(fixture);
+  });
+  const motion = () => page.locator("#motion-regression .dial__caption, #motion-regression .dial__spinner, #motion-regression .status-dot")
+    .evaluateAll((elements) => elements.map((element) => {
+      const style = getComputedStyle(element);
+      return { name: style.animationName, duration: parseFloat(style.animationDuration), iterations: style.animationIterationCount };
+    }));
+  try {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    expect(await motion()).toEqual(Array(3).fill({ name: "none", duration: 0, iterations: "1" }));
+    await page.getByRole("navigation", { name: "页面" }).getByRole("button", { name: "音效" }).click();
+    await expect(page.locator(".page-head h2")).toHaveText("音效");
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+    await page.getByRole("navigation", { name: "页面" }).getByRole("button", { name: "音量" }).click();
+    await expect(page.getByRole("slider", { name: "音量" })).toHaveAttribute("aria-valuenow", "8");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    for (const animation of await motion()) {
+      expect(animation.name).not.toBe("none");
+      expect(animation.duration).toBeGreaterThanOrEqual(1.2);
+      expect(animation.iterations).toBe("infinite");
+    }
+  } finally {
+    await page.locator("#motion-regression").evaluate((element) => element.remove());
+    await page.emulateMedia({ reducedMotion: null });
+  }
+});
+
+test("a missing speaker remains still during native retries and can be stopped or reconnected", async () => {
+  for (const reducedMotion of ["reduce", "no-preference"] as const) {
+    await page.emulateMedia({ reducedMotion });
+    const before = (await coreRequest("diagnostics")).result.scan_count;
+    // The native simulator advertises only 00:11:22:33:44:55. This goes through
+    // the same not_found and exponential retry code as a missing physical speaker.
+    const missing = await coreRequest("connect", { address: "00:00:00:00:00:00" });
+    expect(missing.error.data.code).toBe("not_found");
+    await expect(page.locator(".titlebar__status")).toHaveText("等待重试");
+    await expect(page.locator(".home__eyebrow")).toHaveText("没有找到音箱");
+    await expect(page.locator(".dial__caption")).toHaveText("等待重试");
+    await expect(page.locator(".dial__spinner")).toHaveCount(0);
+    await expect.poll(async () => (await coreRequest("diagnostics")).result.scan_count).toBeGreaterThanOrEqual(before + 3);
+    await expect(page.locator(".dial__caption")).toHaveText("等待重试");
+    expect(await page.evaluate(() => document.getAnimations()
+      .filter((animation) => animation.effect?.getComputedTiming().iterations === Infinity).length)).toBe(0);
+    await screenshot(`missing-${reducedMotion}`);
+
+    await page.getByRole("navigation", { name: "页面" }).getByRole("button", { name: "音效" }).click();
+    await expect(page.locator(".offline-banner")).toContainText("没有找到音箱");
+    await expect(page.locator(".offline-banner").getByRole("button", { name: "停止", exact: true })).toBeEnabled();
+    await page.getByRole("navigation", { name: "页面" }).getByRole("button", { name: "音量" }).click();
+
+    const retried = (await coreRequest("diagnostics")).result.scan_count;
+    await page.getByRole("button", { name: "重新连接", exact: true }).click();
+    await expect.poll(async () => (await coreRequest("diagnostics")).result.scan_count).toBeGreaterThan(retried);
+    await expect(page.getByRole("button", { name: "停止重试", exact: true })).toBeEnabled();
+    await page.getByRole("button", { name: "停止重试", exact: true }).click();
+    await expect(page.locator(".dial__caption")).toHaveText("未连接");
+    expect((await coreRequest("tick")).result.auto_reconnect).toBe(false);
+    const stopped = (await coreRequest("diagnostics")).result.scan_count;
+    await page.waitForTimeout(1300); // Cross the next retry deadline; stopping must cancel it.
+    expect((await coreRequest("diagnostics")).result.scan_count).toBe(stopped);
+    await expect(page.getByRole("button", { name: "连接音箱", exact: true })).toBeEnabled();
+
+    expect((await coreRequest("connect", { address: "00:11:22:33:44:55" })).result.connected).toBe(true);
+    await expect(page.getByRole("slider", { name: "音量" })).toHaveAttribute("aria-valuenow", "8");
+    await expect(page.locator(".titlebar__status")).toHaveText("离线演示");
+  }
+  await page.emulateMedia({ reducedMotion: null });
+  expect(errors).toEqual([]);
+});
+
+test("update checks, prompts and a rejected package keep the running app usable", async () => {
+  await page.getByRole("navigation", { name: "页面" }).getByRole("button", { name: "设置" }).click();
+  const panel = page.getByRole("region", { name: "软件更新" });
+  await expect(panel).toContainText(`当前版本 ${appVersion}`);
+  await panel.getByRole("button", { name: "检查更新", exact: true }).click();
+  await expect(panel).toContainText("已是最新版本");
+  updateMode = "error";
+  await panel.getByRole("button", { name: "检查更新", exact: true }).click();
+  await expect(panel.getByRole("status")).toContainText("暂时无法检查更新");
+  updateMode = "new";
+  await panel.getByRole("button", { name: "检查更新", exact: true }).click();
+  await expect(page.getByRole("complementary", { name: "更新提醒" })).toContainText("99.0.0");
+  await page.getByRole("button", { name: "稍后", exact: true }).click();
+  await expect(page.getByRole("complementary", { name: "更新提醒" })).toHaveCount(0);
+  const core = coreChildren()[0].ProcessId;
+  await panel.getByRole("button", { name: "下载并更新", exact: true }).click();
+  await expect(panel.getByRole("status")).toContainText("下载或校验失败");
+  await expect(panel.getByRole("button", { name: "重试更新", exact: true })).toBeEnabled();
+  expect(app.exitCode).toBeNull();
+  expect(coreChildren()[0].ProcessId).toBe(core);
+  await screenshot("update-failure");
+  updateMode = "current";
+  await panel.getByRole("button", { name: "检查更新", exact: true }).click();
+  await expect(panel).toContainText("已是最新版本");
+  await page.getByRole("navigation", { name: "页面" }).getByRole("button", { name: "音量" }).click();
+  await expect(page.getByRole("slider", { name: "音量" })).toHaveAttribute("aria-valuenow", "8");
   expect(errors).toEqual([]);
 });
 

@@ -144,6 +144,27 @@
   width: 100%;
 }
 
+.connection-panel {
+  width: 100%;
+  text-align: center;
+}
+
+.connection-panel__hint {
+  margin: 0 0 14px;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.connection-panel__actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.home__eyebrow.is-waiting { color: var(--text-2); }
+
 /* ---------- 音效页 ---------- */
 
 .eq-card {

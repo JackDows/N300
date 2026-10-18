@@ -1,12 +1,23 @@
 //! Own one native control process. Hardware state remains in n300 core.
 mod process;
+mod updates;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
 
 #[derive(Default)]
 struct Core {
     current: Mutex<(u64, Option<process::CoreProcess>)>,
+    shutting_down: AtomicBool,
+}
+
+fn shutdown_core(app: &AppHandle) {
+    let core = app.state::<Core>();
+    core.shutting_down.store(true, Ordering::SeqCst);
+    if let Ok(mut slot) = core.current.lock() {
+        slot.1.take();
+    };
 }
 #[derive(Clone, serde::Serialize)]
 struct CoreLine {
@@ -47,6 +58,9 @@ async fn core_start(app: AppHandle) -> Result<u64, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<Core>();
         let mut slot = state.current.lock().map_err(|error| error.to_string())?;
+        if state.shutting_down.load(Ordering::SeqCst) {
+            return Err("应用正在更新或退出".into());
+        }
         if slot.1.as_mut().is_some_and(|child| child.alive()) {
             return Ok(slot.0);
         }
@@ -85,16 +99,28 @@ async fn core_send(app: AppHandle, line: String) -> Result<(), String> {
     .map_err(|error| error.to_string())?
 }
 pub fn run() {
+    let mut context = tauri::generate_context!();
+    updates::configure(&mut context).expect("invalid update configuration");
     tauri::Builder::default()
         .manage(Core::default())
-        .invoke_handler(tauri::generate_handler![core_start, core_send])
-        .build(tauri::generate_context!())
+        .manage(updates::Updates::default())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .setup(|app| {
+            updates::initialize(app.handle());
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            core_start,
+            core_send,
+            updates::update_info,
+            updates::update_check,
+            updates::update_install
+        ])
+        .build(context)
         .expect("failed to build N300 desktop")
         .run(|app, event| {
             if let RunEvent::Exit = event {
-                if let Ok(mut slot) = app.state::<Core>().current.lock() {
-                    slot.1.take();
-                }
+                shutdown_core(app);
             }
         });
 }

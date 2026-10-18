@@ -173,7 +173,9 @@ html.is-browser #root {
   *,
   *::before,
   *::after {
-    animation-duration: 1ms !important;
-    transition-duration: 1ms !important;
+    /* Shortening an infinite animation makes it strobe. Disable it instead. */
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }

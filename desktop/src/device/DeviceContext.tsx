@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { getTransport, type Transport } from "./transport";
 import { DeviceRequestError, type DeviceErrorInfo, type DeviceState, type Values, type WritableProperty } from "./types";
 
-export type Phase = "starting" | "connecting" | "connected" | "disconnected";
+export type Phase = "starting" | "connecting" | "waiting" | "connected" | "disconnected";
 
 export interface Toast {
   id: number;
@@ -16,6 +16,7 @@ interface DeviceContextValue {
   values: Values;
   error: DeviceErrorInfo | null;
   toast: Toast | null;
+  stopping: boolean;
   set(property: WritableProperty, value: unknown, label: string): Promise<void>;
   setEqBand(band: number, gain: number): Promise<void>;
   resetEq(): Promise<void>;
@@ -85,6 +86,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DeviceState | null>(null);
   const [error, setError] = useState<DeviceErrorInfo | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [stopping, setStopping] = useState(false);
   const transportRef = useRef<Transport | null>(null);
   const sequenceRef = useRef(0);
   const loadedRef = useRef(false);
@@ -264,8 +266,23 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     : state.connected
       ? "connected"
       : state.auto_reconnect
-        ? "connecting"
+        ? error ? "waiting" : "connecting"
         : "disconnected";
+
+  const connect = useCallback(async () => {
+    setError(null);
+    try {
+      const t = transportRef.current;
+      if (!t) throw new DeviceRequestError({ code: "core_unavailable", message: "控制核心未启动" });
+      await t.request("start");
+    } catch (e) {
+      setError(errorInfo(e));
+    }
+  }, []);
+  const disconnect = useCallback(async () => {
+    setStopping(true);
+    try { await call("stop"); } finally { setStopping(false); }
+  }, [call]);
 
   const value = useMemo<DeviceContextValue>(
     () => ({
@@ -274,14 +291,15 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       values: state?.connected ? state.values : {},
       error,
       toast,
+      stopping,
       set,
       setEqBand,
       resetEq,
-      connect: () => call("start"),
-      disconnect: () => call("stop"),
+      connect,
+      disconnect,
       powerOff: () => call("power.off", "关机指令已发送"),
     }),
-    [phase, state, error, toast, set, setEqBand, resetEq, call],
+    [phase, state, error, toast, stopping, set, setEqBand, resetEq, call, connect, disconnect],
   );
 
   return <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>;

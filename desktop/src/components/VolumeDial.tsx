@@ -7,6 +7,7 @@ interface Props {
   max: number;
   step: number;
   loading?: boolean;
+  statusLabel?: string;
   onCommit(value: number): void;
 }
 
@@ -32,7 +33,7 @@ const arcPath = (from: number, to: number, r: number) => {
  * 音量旋钮。拖动采用“相对旋转”：按下时不跳值，只按转过的角度增减，避免误触把音量拉满。
  * 同时支持滚轮和方向键；停止操作 160 ms 后才提交写入。
  */
-export function VolumeDial({ value, min, max, step, loading, onCommit }: Props) {
+export function VolumeDial({ value, min, max, step, loading, statusLabel, onCommit }: Props) {
   const disabled = value == null;
   const [draft, setDraft] = useState(value ?? min);
   const [active, setActive] = useState(false);
@@ -209,7 +210,7 @@ export function VolumeDial({ value, min, max, step, loading, onCommit }: Props) 
         </div>
         <div className="dial__readout">
           <span className="dial__value-text">{disabled ? "–" : draft}</span>
-          <span className="dial__caption">{loading ? "连接中" : "音量"}</span>
+          <span className="dial__caption">{statusLabel ?? (loading ? "连接中" : "音量")}</span>
         </div>
       </div>
     </div>

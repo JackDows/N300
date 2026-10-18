@@ -49,6 +49,10 @@
   animation: dot-pulse 1.2s ease-in-out infinite;
 }
 
+.status-dot.is-warn {
+  background: var(--warn);
+}
+
 @keyframes dot-pulse {
   50% {
     opacity: 0.3;

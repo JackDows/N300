@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { DeviceProvider } from "./device/DeviceContext";
+import { UpdateProvider } from "./updates/UpdateContext";
 import { isTauri } from "./device/transport";
 import "./styles/tokens.css";
 import "./styles/base.css";
@@ -15,7 +16,7 @@ if (isTauri && !import.meta.env.DEV) window.addEventListener("contextmenu", (e) 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <DeviceProvider>
-      <App />
+      <UpdateProvider><App /></UpdateProvider>
     </DeviceProvider>
   </StrictMode>,
 );

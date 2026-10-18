@@ -1,7 +1,7 @@
 import { Segmented } from "../components/Segmented";
 import { VolumeDial } from "../components/VolumeDial";
 import { inputIcon } from "../components/icons";
-import { useDevice } from "../device/DeviceContext";
+import { errorText, useDevice } from "../device/DeviceContext";
 import type { Choice } from "../device/types";
 
 const PLACEHOLDER_INPUTS: Choice[] = [
@@ -11,7 +11,7 @@ const PLACEHOLDER_INPUTS: Choice[] = [
 ];
 
 export function HomePage() {
-  const { phase, state, values, set, connect } = useDevice();
+  const { phase, state, values, error, stopping, set, connect, disconnect } = useDevice();
   const volume = values.volume;
   const input = values.input;
   const preset = values.preset;
@@ -23,8 +23,8 @@ export function HomePage() {
       ? presetLabel
         ? `${presetLabel}音效`
         : "已连接"
-      : phase === "disconnected"
-        ? "未连接"
+      : phase === "disconnected" || phase === "waiting"
+        ? error ? errorText(error) : "未连接"
         : "正在寻找音箱…";
 
   return (
@@ -40,14 +40,29 @@ export function HomePage() {
         max={volume?.max ?? 16}
         step={volume?.step ?? 1}
         loading={phase === "connecting" || phase === "starting"}
+        statusLabel={phase === "waiting" ? "等待重试" : phase === "disconnected" ? "未连接" : undefined}
         onCommit={(v) => set("volume", v, `音量 ${v}`)}
       />
 
       <div className="home__source">
-        {phase === "disconnected" ? (
-          <button className="btn-primary" onClick={connect}>
-            连接音箱
-          </button>
+        {phase !== "connected" ? (
+          <div className="connection-panel">
+            {(phase === "waiting" || phase === "disconnected") && (
+              <p className="connection-panel__hint">确认音箱已开机、电脑蓝牙已打开。<br />音箱可被发现后再连接。</p>
+            )}
+            <div className="connection-panel__actions">
+              {(phase === "waiting" || phase === "disconnected") && (
+                <button className="btn-primary" onClick={connect} disabled={stopping}>
+                  {phase === "waiting" ? "重新连接" : "连接音箱"}
+                </button>
+              )}
+              {phase !== "disconnected" && (
+                <button className="btn-ghost" onClick={disconnect} disabled={stopping}>
+                  {stopping ? "正在停止…" : phase === "waiting" ? "停止重试" : "取消连接"}
+                </button>
+              )}
+            </div>
+          </div>
         ) : (
           <Segmented
             ariaLabel="输入源"

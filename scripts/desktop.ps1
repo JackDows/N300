@@ -55,7 +55,14 @@ function New-DesktopBuildConfig {
     $configDir = Join-Path $projectRoot '.local/tauri'
     $null = New-Item -ItemType Directory -Path $configDir -Force
     $path = Join-Path $configDir "$Configuration.json"
-    [IO.File]::WriteAllText($path, (@{bundle=@{resources=$resources}} | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
+    $bundle = @{resources=$resources}
+    if ($Configuration -eq 'Release') {
+        $localKey = Join-Path $projectRoot '.local/keys/n300-updater.key'
+        if (-not $env:TAURI_SIGNING_PRIVATE_KEY -and (Test-Path -LiteralPath $localKey)) { $env:TAURI_SIGNING_PRIVATE_KEY = $localKey }
+        $bundle.createUpdaterArtifacts = [bool]$env:TAURI_SIGNING_PRIVATE_KEY
+        if (-not $bundle.createUpdaterArtifacts) { Write-Host 'No release signing key: building installer only. See docs/releases.md to publish updates.' }
+    }
+    [IO.File]::WriteAllText($path, (@{bundle=$bundle} | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
     return $path
 }
 
@@ -71,11 +78,26 @@ function Publish-DesktopPackage {
     Copy-Item -LiteralPath (Join-Path $projectRoot "artifacts/package/$Configuration/licenses") -Destination $output -Recurse -Force
     Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/desktop.md') -Destination (Join-Path $output 'README.md') -Force
     if ($Configuration -eq 'Release') {
-        $installers = @(Get-ChildItem -LiteralPath (Join-Path $cargoOutput 'bundle/nsis') -Filter '*.exe')
+        $version = (Get-Content (Join-Path $desktopNative 'tauri.conf.json') -Raw | ConvertFrom-Json).version
+        $installerName = "N300_${version}_x64-setup.exe"
+        $installers = @(Get-Item -LiteralPath (Join-Path $cargoOutput "bundle/nsis/$installerName"))
+        if ($env:TAURI_SIGNING_PRIVATE_KEY) {
+            $installers += Get-Item -LiteralPath (Join-Path $cargoOutput "bundle/nsis/$installerName.sig")
+        }
         if ($installers.Count -eq 0) { throw 'The Release installer was not produced.' }
         $installerDir = Join-Path $projectRoot 'artifacts/installers/Release'
         $null = New-Item -ItemType Directory -Path $installerDir -Force
         foreach ($installer in $installers) { Copy-Item -LiteralPath $installer.FullName -Destination $installerDir -Force }
+        if ($env:TAURI_SIGNING_PRIVATE_KEY) {
+            Invoke-ProjectTool -Tool node -Arguments @((Join-Path $projectRoot 'scripts/package-update.mjs'))
+        } else {
+            # Do not pair a new unsigned build with a signature from an older build.
+            $stale = @(Join-Path $installerDir "$installerName.sig")
+            foreach ($name in @($installerName,"$installerName.sig",'latest.json','SHA256SUMS')) {
+                $stale += Join-Path $projectRoot "artifacts/updates/$version/$name"
+            }
+            foreach ($file in $stale) { if (Test-Path -LiteralPath $file) { Remove-Item -LiteralPath $file -Force } }
+        }
     }
     Write-Host "Desktop ready: $output\N300Desk.exe"
 }

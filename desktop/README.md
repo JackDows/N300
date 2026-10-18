@@ -26,8 +26,10 @@ src/
   device/                  设备层：类型、Tauri 通道、模拟音箱、状态 Context
   components/              旋钮、分段选择、EQ 曲线、预设、列表/开关、标题栏/导航、图标
   pages/                   三个页面及页面样式
+  updates/                 更新提醒、下载进度与设置入口
 src-tauri/
   src/lib.rs               启动并托管 n300.exe serve，逐行转发 JSON-RPC
+  src/updates.rs           官方更新插件、安装前清理核心、升级包清理
   tauri.conf.json          窗口、CSP、打包资源
   capabilities/            前端可用的最小权限
 app-icon.svg               图标源文件（npm run tauri -- icon app-icon.svg -o src-tauri/icons 重新生成）

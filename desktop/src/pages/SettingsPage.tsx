@@ -5,6 +5,7 @@ import { SpeakerArt } from "../components/SpeakerArt";
 import { IconCheck, IconClose, IconLight, IconLink, IconMoon, IconPencil, IconPower, IconTimer } from "../components/icons";
 import { useDevice } from "../device/DeviceContext";
 import { OfflineBanner } from "./OfflineBanner";
+import { UpdatePanel } from "../updates/UpdatePanel";
 
 const TIMER_OPTIONS = [0, 30, 60, 90, 120];
 const utf8Bytes = (s: string) => new TextEncoder().encode(s).length;
@@ -64,7 +65,7 @@ function NameField() {
 }
 
 export function SettingsPage() {
-  const { phase, state, values, set, connect, disconnect, powerOff } = useDevice();
+  const { phase, state, values, stopping, set, connect, disconnect, powerOff } = useDevice();
   const [timerOpen, setTimerOpen] = useState(false);
   const connected = phase === "connected";
   const led = values.led?.value;
@@ -132,14 +133,15 @@ export function SettingsPage() {
       <Group label="连接">
         <Row
           icon={<IconLink />}
-          title={connected ? "断开连接" : phase === "disconnected" ? "连接音箱" : "正在连接…"}
+          title={stopping ? "正在停止…" : connected ? "断开连接" : phase === "disconnected" ? "连接音箱" : phase === "waiting" ? "停止重试" : "取消连接"}
           desc={target?.address}
-          disabled={phase === "connecting" || phase === "starting"}
-          onClick={connected ? disconnect : connect}
+          disabled={stopping}
+          onClick={phase === "disconnected" ? connect : disconnect}
         />
         <HoldRow icon={<IconPower />} title="关闭音箱" hint="长按" disabled={!connected} onConfirm={powerOff} />
       </Group>
 
+      <UpdatePanel />
       <p className="footnote">非官方控制程序，与 EDIFIER 无关联</p>
     </div>
   );
