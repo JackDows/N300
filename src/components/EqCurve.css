@@ -1,0 +1,92 @@
+.eq {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  touch-action: none;
+}
+
+.eq__grid {
+  stroke: var(--hairline);
+  stroke-dasharray: 2 4;
+}
+
+.eq__grid.is-zero {
+  stroke: var(--hairline-strong);
+  stroke-dasharray: none;
+}
+
+.eq__axis,
+.eq__freq {
+  fill: var(--text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.eq__area {
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease);
+}
+
+.eq.is-editable .eq__area {
+  opacity: 1;
+}
+
+.eq__line {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.eq.is-editable .eq__line {
+  stroke: url(#eq-stroke);
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
+.eq__stem {
+  stroke: var(--accent);
+  stroke-opacity: 0.3;
+  stroke-dasharray: 2 3;
+}
+
+.eq__hit {
+  fill: transparent;
+  cursor: ns-resize;
+}
+
+.eq__handle {
+  fill: var(--bg-elev);
+  stroke: var(--accent);
+  stroke-width: 2;
+  pointer-events: none;
+  transition:
+    r var(--dur) var(--ease-spring),
+    fill var(--dur) var(--ease);
+}
+
+.eq__band:hover .eq__handle,
+.eq__band.is-active .eq__handle {
+  fill: var(--accent);
+}
+
+.eq__gain {
+  fill: var(--text-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  transition: fill var(--dur) var(--ease);
+}
+
+.eq__band.is-active .eq__gain {
+  fill: var(--accent-hi);
+}
+
+.eq__band.is-active .eq__freq {
+  fill: var(--text);
+}
+
+.eq.is-dragging {
+  cursor: ns-resize;
+}
