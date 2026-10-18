@@ -35,13 +35,22 @@ class N300 final : public Device {
         }
         return response["result"];
     }
+    Json valueFor(const std::string& property, const Json& value) const {
+        auto result = reading(value);
+        if (property == "timer") {
+            result["min"] = 0; result["max"] = 240; result["step"] = 1;
+        }
+        if (property == "name" && state_.contains("capabilities"))
+            result["maxBytes"] = state_["capabilities"].value("rename_bytes", 0);
+        return result;
+    }
     Json snapshot() const {
         Json values = Json::object();
         Json unavailable = Json::object();
         const bool connected = state_.value("connected", false);
         if (connected && state_.contains("values")) {
             for (const auto& [capability, property] : properties)
-                if (state_["values"].contains(property)) values[capability] = reading(state_["values"][property]);
+                if (state_["values"].contains(property)) values[capability] = valueFor(property, state_["values"][property]);
         }
         if (state_.contains("unavailable") && state_["unavailable"].is_object()) {
             for (const auto& [capability, property] : properties)
@@ -72,7 +81,7 @@ public:
         Json capabilities = Json::array();
         for (const auto& [capability, property] : properties)
             capabilities.push_back({{"id", capability}, {"read", true}, {"write", property != "firmware" && property != "eq"},
-                                    {"valueType", property == "volume" || property == "timer" ? "integer" : property == "led" || property == "idle_shutdown" ? "boolean" : "device-defined"}});
+                                    {"valueType", property == "volume" || property == "timer" ? "integer" : property == "led" || property == "idle_shutdown" ? "boolean" : property == "name" ? "string" : "device-defined"}});
         capabilities.push_back({{"id", "audio.eq.setBand"}, {"invoke", true}});
         capabilities.push_back({{"id", "device.powerOff"}, {"invoke", true}});
         return {{"id", DESKHUB_MODULE_ID}, {"version", DESKHUB_MODULE_VERSION}, {"protocolVersion", 1}, {"capabilities", capabilities}, {"simulation", true}};
@@ -128,10 +137,10 @@ public:
             if (capability == "device.powerOff") { reconnect_ = false; return call("power.off"); }
         } else if (properties.contains(capability)) {
             const auto& property = properties.at(capability);
-            if (method == "capability.read") return reading(call("get", {{"property", property}}));
+            if (method == "capability.read") return valueFor(property, call("get", {{"property", property}}));
             if (method == "capability.write") {
                 if (!params.contains("value")) throw Error("invalid_argument", "value is required", "缺少设置值。");
-                return reading(call("set", {{"property", property}, {"value", params["value"]}}));
+                return valueFor(property, call("set", {{"property", property}, {"value", params["value"]}}));
             }
         }
         throw Error("unsupported_capability", "Unsupported capability or operation", "此设备暂不支持这项操作。");

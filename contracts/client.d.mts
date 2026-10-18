@@ -2,7 +2,7 @@ export type RequestId = string | number;
 export interface ErrorInfo { code: string; message: string; userMessage: string; details: Record<string, unknown> }
 export class DeskHubError extends Error { code: string; details: Record<string, unknown>; technicalMessage?: string; constructor(info?: Partial<ErrorInfo>); }
 export interface Capability { id: string; read?: boolean; write?: boolean; invoke?: boolean; valueType?: string; min?: number; max?: number; step?: number }
-export interface Reading<T = unknown> { value: T; min?: number; max?: number; step?: number; verified?: boolean; [metadata: string]: unknown }
+export interface Reading<T = unknown> { value: T; min?: number; max?: number; step?: number; maxBytes?: number; verified?: boolean; [metadata: string]: unknown }
 export interface DeviceSnapshot {
   id: string; label: string; moduleId: string; moduleVersion: string | null;
   generation: number; revision: number;

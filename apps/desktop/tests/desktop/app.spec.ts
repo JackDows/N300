@@ -6,7 +6,8 @@ import { createServer as createHttpServer, type Server } from "node:http";
 import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 
-const root = resolve(import.meta.dirname, "../../..");
+const desktopRoot = resolve(import.meta.dirname, "../..");
+const root = resolve(desktopRoot, "../../modules/edifier-n300");
 const config = process.env.N300_TEST_CONFIGURATION ?? "Debug";
 const exe = process.env.N300_DESKTOP_TEST_EXE ?? join(root, "artifacts/desktop", config, "N300Desk.exe");
 let app: ChildProcess;
@@ -18,7 +19,7 @@ let rpcId = -1;
 let feed: Server;
 let feedUrl = "";
 let updateMode: "current" | "new" | "error" = "current";
-const appVersion = JSON.parse(readFileSync(join(root, "desktop/src-tauri/tauri.conf.json"), "utf8")).version;
+const appVersion = JSON.parse(readFileSync(join(desktopRoot, "src-tauri/tauri.conf.json"), "utf8")).version;
 test.describe.configure({ mode: "serial" });
 
 // Use the packaged core's real JSON-RPC channel, including its native error paths.
@@ -83,7 +84,7 @@ test.beforeAll(async () => {
     else {
       response.setHeader("Content-Type", "application/json");
       response.end(JSON.stringify({ version: "99.0.0", notes: "更新回归测试", url: feedUrl + "/update.exe",
-        signature: readFileSync(join(root, "desktop/tests/fixtures/update-payload.sig"), "utf8").trim() }));
+        signature: readFileSync(join(desktopRoot, "tests/fixtures/update-payload.sig"), "utf8").trim() }));
     }
   });
   feed.listen(0, "127.0.0.1"); await once(feed, "listening");

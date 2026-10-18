@@ -40,6 +40,8 @@
 
 `capabilities` 声明模块支持的 read/write/invoke，`values[capability]` 是设备返回的值与范围/选项，不能默认音量为 0–100。`unavailable` 保存当前设备不能读取的功能及原因。模块声明有实现，不等于所有固件均已实测。
 
+数值控制使用读取结果的 `min/max/step`；定时关机的单位是分钟，范围 0–240，0 表示取消。设备重命名使用 `device.name.maxBytes` 检查 UTF-8 编码长度，不按字符个数截断。EQ 的频段列表、范围和步进取自 `audio.eq`；模拟配置与真实固件可能不同。
+
 `valueState` 为 unknown、confirmed、stale。连接断开或模块停止时清除当前值；操作失败后可能保留旧值，但标为 stale。用 `devices.refresh` 更新，不把旧值当作刚刚确认的结果。
 
 | 模块 | 能力 |

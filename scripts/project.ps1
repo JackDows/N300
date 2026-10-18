@@ -100,7 +100,7 @@ switch($Action){
                 if($Configuration -eq 'Release'){$fixtureArguments+='--release'}
                 Invoke-ProjectTool -Tool cargo -Arguments $fixtureArguments
                 $env:DESKHUB_CONFIGURATION=$Configuration
-                Invoke-ProjectTool -Tool node -Arguments @('--test',(Join-Path $projectRoot 'tests/integration.mjs')) -LogPath (Join-Path $logs "integration-$preset.log")
+                Invoke-ProjectTool -Tool node -Arguments @('--test',(Join-Path $projectRoot 'tests/integration.mjs'),(Join-Path $projectRoot 'tests/features.mjs')) -LogPath (Join-Path $logs "integration-$preset.log")
             }
         }
     }

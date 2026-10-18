@@ -2,7 +2,7 @@
 
 DeskHub 的主仓库整合 N300 与 OG98 两条 Git 历史。N300 原生核心迁到 `modules/edifier-n300`，OG98 核心迁到 `modules/flesports-og98`，原 N300 前端迁到 `apps/desktop`。DeskHub 是唯一开发入口，两个旧工程在独立构建验收和本地提交后退役，不长期保留重复工作副本。
 
-迁移起点为 N300 `a3324b77ce2182f270fde3f5b9b3f07cbbe7c31a`、OG98 `d68ede4f3899335c315a967c7b9e9c90cb825d2e`，均作为合并提交的祖先保留。原仓库远程地址继续用于 DeskHub；本次只做本地提交。
+迁移起点为 N300 `a3324b77ce2182f270fde3f5b9b3f07cbbe7c31a`、OG98 `d68ede4f3899335c315a967c7b9e9c90cb825d2e`，均作为合并提交的祖先保留。DeskHub 源码继续使用 `https://github.com/JackDows/N300.git`，本地 `main` 跟踪 `origin/main`。交付时核对本地与远端提交一致，保留两个原项目的历史。
 
 更新私钥迁至根目录 `.local/keys/`，继续由旧桌面打包脚本读取。原厂输入和逆向证据位于各模块 `research/inputs/`、`research/evidence/`；历史实机验收与 0.2.1 发布记录单独归档。上述本地材料逐文件校验后迁移，不提交私钥或原厂二进制。换电脑构建不需要这些材料；发布更新必须另行安全迁移私钥，复查协议则需要迁移证据或按清单重新下载输入。
 
