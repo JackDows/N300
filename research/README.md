@@ -3,9 +3,10 @@
 本目录用于解释和扩展控制协议，不参与应用的正常安装、测试和编译。
 [sources.json](sources.json) 随 Git 提交，记录官方输入文件的来源、文件大小和 SHA-256。
 inputs 与 evidence 保留本机资料，不纳入源码仓库。
-PDF/二维码分析的额外 Python 依赖只在需要时安装：
+PDF/二维码分析、历史扫描脚本的 Python 依赖只在需要时安装，与 C++ 应用构建无关：
 
 ```powershell
+python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r research/requirements.lock.txt
 ```
 
@@ -48,7 +49,7 @@ scripts/extract_catalog.py           从反编译源码生成应用菜单资源
 
 原始 REA 证据中的绝对路径对应分析时的位置，目录整理后仍按原样保存，
 避免改动证据内容与摘要。判断目标文件身份请使用 sources.json 的 SHA-256。
-GUI 预览图在 [preview.png](../docs/preview.png)；当前测试和构建结果在 ../artifacts/validation。
+当前测试和构建结果在 ../artifacts/validation。产品已改为原生 DLL/CLI，不再保留 GUI 预览。
 
 ## 人工实测
 

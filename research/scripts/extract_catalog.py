@@ -54,7 +54,8 @@ for i in range(1, len(parts), 2):
 
 input_text = source[source.index('    public final InputSourceBean getInputSource('):]
 input_text = input_text[:input_text.index('\n    public ', 20)]
-input_labels = {1: '蓝牙', 2: 'AUX', 3: 'USB 声卡', 4: 'XLR', 5: '光纤', 6: '同轴', 7: 'LINE IN'}
+input_labels = {1: '蓝牙', 2: 'AUX', 3: 'USB', 4: 'XLR', 5: '光纤', 6: '同轴', 7: 'LINE IN',
+                8: 'USB 声卡', 9: 'LINE IN 1', 10: 'LINE IN 2', 11: 'AirPlay', 12: '2.4 GHz', 14: 'TF 卡'}
 inputs = {}
 for match in re.finditer(r'InputSourceBean.Source (\w+) = new InputSourceBean.Source\(\);', input_text):
     var = match[1]
@@ -73,6 +74,6 @@ custom = {}
 for kind, count, stride, gain_scale, gain_offset, low, high in ((1, 4, 6, 1, 6, -6, 6), (2, 6, 4, 2, 6, -3, 3), (3, 6, 6, 2, 6, -3, 3), (17, 10, 4, 1, 6, -6, 6), (18, 10, 4, 1, 4, -4, 4)):
     custom[str(kind)] = {'bands': count, 'stride': stride, 'freq_offset': 2 if stride == 6 else 1, 'gain_offset': 4 if stride == 6 else 3, 'q_offset': 5 if stride == 6 else None, 'gain_scale': gain_scale, 'gain_offset_value': gain_offset, 'gain_min': low, 'gain_max': high}
 catalog = {'inputs': inputs, 'eq_presets': groups, 'custom_eq': custom}
-(ROOT / 'src/n300_desk/settings-catalog.json').write_text(json.dumps(catalog, ensure_ascii=False, indent=2), encoding='utf-8')
+(ROOT / 'resources/settings-catalog.json').write_text(json.dumps(catalog, ensure_ascii=False, indent=2), encoding='utf-8')
 (ROOT / 'research/evidence/eq-catalog-audit.json').write_text(json.dumps(audit, ensure_ascii=False, indent=2), encoding='utf-8')
 print(json.dumps({'input_groups': len(inputs), 'eq_groups': len(groups), 'speaker_eq_candidates': {k: v for k, v in audit.items() if any(i['type'] == 'MONITOR' for i in v)}, 'aux_usb_bluetooth': {k: v for k, v in inputs.items() if {i['type'] for i in v} == {1, 2, 3}}}, ensure_ascii=False, indent=2))

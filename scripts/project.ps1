@@ -4,12 +4,12 @@ param(
     [Parameter(Mandatory=$true)][ValidateSet('Install','Build','Run','Test')][string]$Action,
     [ValidateSet('Debug','Release')][string]$Configuration = 'Debug',
     [switch]$Offline,
-    [string]$Python = 'python'
+    [string[]]$CommandArguments = @('shell')
 )
 $ErrorActionPreference = 'Stop'
 switch ($Action) {
-    'Install' { & (Join-Path $PSScriptRoot 'setup.ps1') -Python $Python }
+    'Install' { & (Join-Path $PSScriptRoot 'setup.ps1') }
     'Build' { & (Join-Path $PSScriptRoot 'build.ps1') -Configuration $Configuration }
-    'Run' { & (Join-Path $PSScriptRoot 'run.ps1') -Configuration $Configuration -Offline:$Offline }
-    'Test' { & (Join-Path $PSScriptRoot 'test.ps1') }
+    'Run' { & (Join-Path $PSScriptRoot 'run.ps1') -Configuration $Configuration -Offline:$Offline -CommandArguments $CommandArguments }
+    'Test' { & (Join-Path $PSScriptRoot 'test.ps1') -Configuration $Configuration }
 }

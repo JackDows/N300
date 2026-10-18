@@ -1,0 +1,2 @@
+#pragma once
+inline constexpr char n300_catalog[] = R"n300json(@N300_CATALOG@)n300json";

@@ -8,7 +8,7 @@
       },
       {
         "value": 2,
-        "label": "USB 声卡",
+        "label": "USB",
         "type": 3
       },
       {
@@ -45,7 +45,7 @@
       },
       {
         "value": 4,
-        "label": "USB 声卡",
+        "label": "USB",
         "type": 3
       },
       {
@@ -57,6 +57,62 @@
         "value": 6,
         "label": "同轴",
         "type": 6
+      }
+    ],
+    "2": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "AUX",
+        "type": 2
+      },
+      {
+        "value": 3,
+        "label": "USB 声卡",
+        "type": 8
+      }
+    ],
+    "3": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "LINE IN 1",
+        "type": 9
+      },
+      {
+        "value": 3,
+        "label": "LINE IN 2",
+        "type": 10
+      },
+      {
+        "value": 4,
+        "label": "光纤",
+        "type": 5
+      },
+      {
+        "value": 5,
+        "label": "同轴",
+        "type": 6
+      }
+    ],
+    "4": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 8
       }
     ],
     "5": [
@@ -72,8 +128,25 @@
       },
       {
         "value": 3,
-        "label": "USB 声卡",
+        "label": "USB",
         "type": 3
+      }
+    ],
+    "6": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "LINE IN 1",
+        "type": 9
+      },
+      {
+        "value": 3,
+        "label": "LINE IN 2",
+        "type": 10
       }
     ],
     "7": [
@@ -86,6 +159,62 @@
         "value": 2,
         "label": "AUX",
         "type": 2
+      }
+    ],
+    "8": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "LINE IN 1",
+        "type": 9
+      },
+      {
+        "value": 3,
+        "label": "LINE IN 2",
+        "type": 10
+      }
+    ],
+    "9": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 8
+      },
+      {
+        "value": 3,
+        "label": "LINE IN",
+        "type": 7
+      }
+    ],
+    "10": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "AUX",
+        "type": 2
+      },
+      {
+        "value": 3,
+        "label": "USB 声卡",
+        "type": 8
+      },
+      {
+        "value": 4,
+        "label": "AirPlay",
+        "type": 11
       }
     ],
     "11": [
@@ -115,6 +244,45 @@
         "type": 2
       }
     ],
+    "12": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "2.4 GHz",
+        "type": 12
+      },
+      {
+        "value": 3,
+        "label": "LINE IN",
+        "type": 7
+      }
+    ],
+    "13": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 8
+      },
+      {
+        "value": 3,
+        "label": "AUX",
+        "type": 2
+      },
+      {
+        "value": 4,
+        "label": "AirPlay",
+        "type": 11
+      }
+    ],
     "14": [
       {
         "value": 1,
@@ -130,6 +298,140 @@
         "value": 3,
         "label": "光纤",
         "type": 5
+      }
+    ],
+    "15": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 8
+      },
+      {
+        "value": 3,
+        "label": "AUX",
+        "type": 2
+      }
+    ],
+    "16": [
+      {
+        "value": 1,
+        "label": "USB",
+        "type": 3
+      },
+      {
+        "value": 2,
+        "label": "LINE IN 1",
+        "type": 9
+      },
+      {
+        "value": 3,
+        "label": "LINE IN 2",
+        "type": 10
+      },
+      {
+        "value": 4,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 5,
+        "label": "光纤",
+        "type": 5
+      },
+      {
+        "value": 6,
+        "label": "同轴",
+        "type": 6
+      }
+    ],
+    "17": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "AUX",
+        "type": 2
+      },
+      {
+        "value": 3,
+        "label": "USB 声卡",
+        "type": 8
+      },
+      {
+        "value": 4,
+        "label": "AirPlay",
+        "type": 11
+      }
+    ],
+    "18": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 8
+      },
+      {
+        "value": 3,
+        "label": "TF 卡",
+        "type": 14
+      }
+    ],
+    "19": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 8
+      },
+      {
+        "value": 3,
+        "label": "AUX",
+        "type": 2
+      }
+    ],
+    "20": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "2.4 GHz",
+        "type": 12
+      }
+    ],
+    "21": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 8
+      },
+      {
+        "value": 3,
+        "label": "TF 卡",
+        "type": 14
       }
     ],
     "22": [
@@ -150,8 +452,20 @@
       },
       {
         "value": 4,
-        "label": "USB 声卡",
+        "label": "USB",
         "type": 3
+      }
+    ],
+    "23": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB 声卡",
+        "type": 8
       }
     ],
     "24": [
@@ -162,7 +476,7 @@
       },
       {
         "value": 2,
-        "label": "USB 声卡",
+        "label": "USB",
         "type": 3
       },
       {
@@ -194,8 +508,30 @@
       },
       {
         "value": 5,
-        "label": "USB 声卡",
+        "label": "USB",
         "type": 3
+      }
+    ],
+    "32": [
+      {
+        "value": 1,
+        "label": "蓝牙",
+        "type": 1
+      },
+      {
+        "value": 2,
+        "label": "USB",
+        "type": 3
+      },
+      {
+        "value": 3,
+        "label": "AUX",
+        "type": 2
+      },
+      {
+        "value": 4,
+        "label": "TF 卡",
+        "type": 14
       }
     ]
   },
