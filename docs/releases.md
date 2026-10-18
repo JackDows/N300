@@ -15,7 +15,8 @@
 1. 同步修改 `desktop/package.json`、`package-lock.json`、`src-tauri/Cargo.toml`、`Cargo.lock` 和 `tauri.conf.json` 的应用版本。
 2. 更新 `packaging/release-notes.md`。
 3. 运行 `scripts/project.ps1 -Action Build -Configuration Release`，再运行 `-Action Test -Configuration Release`。
-4. 运行 `node scripts/publish-release.mjs` 创建或更新草稿，上传安装包、`.sig`、`latest.json` 和 `SHA256SUMS`。确认后用 `node scripts/publish-release.mjs --publish` 发布。
+4. 提交并推送源码，再创建、推送对应的 `v<版本>` Git 标签。
+5. 运行 `node scripts/publish-release.mjs` 创建或更新草稿，上传安装包、`.sig`、`latest.json` 和 `SHA256SUMS`。确认后用 `node scripts/publish-release.mjs --publish` 发布。
 
 发布脚本复用 Git 的 GitHub 登录，CI 可以通过 `GH_TOKEN` 提供凭据；凭据不会进入安装包。已经发布的版本不会覆盖，后续更新必须增加版本号。
 
