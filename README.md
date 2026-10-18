@@ -4,6 +4,8 @@
 
 桌面宿主、整包升级与模块独立下载安装均使用统一后端。`apps/desktop/` 中的现有音响页面已接入公共接口；多设备页面与视觉设计由前端继续开发。接口、TypeScript SDK 和更新流程的离线模拟已提供。
 
+直接使用：[DeskHub 最新安装包](https://github.com/JackDows/N300/releases/latest)。应用内可检查并覆盖升级；设备模块使用独立的签名发布目录。
+
 ## 开发入口
 
 打开 [DeskHub.code-workspace](DeskHub.code-workspace)。运行面板固定为：安装依赖、构建 Debug、构建 Release、运行 Debug、运行 Release、运行离线测试版。

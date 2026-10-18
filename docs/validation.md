@@ -31,6 +31,14 @@ Debug 与 Release 均通过上述 **50 项/组测试**及类型检查。
 
 干净源码重建也通过：从暂存树 `fdd2de9211aff87dda995edf823b5d5e857a4d1e` 导出新目录，不复制依赖工作目录、构建产物或私钥；使用声明的工具缓存执行 `Install`、完整 Release `Test`，50 项/组及类型检查通过，并生成无需私钥的可用安装器。桌面 Cargo 包显式声明独立工作区，可放入其他 Rust 工作区内构建。精简记录保存在 `research/evidence/updates-0.3.0/clean-source/`。
 
+正式发布代码为 `0ec39e0`，GitHub 标签为 `v0.3.0`。发布后再次通过正式 HTTPS 更新地址验收：
+
+- 从空模块目录下载 N300 0.1.0（484,018 字节）与 OG98 0.1.0（441,975 字节），验签、安装、启动原生离线会话并读取能力。安装第二个模块时，第一个模块的进程保持不变。
+- 使用 `tests/verify-upgrade.mjs --published` 从 GitHub 下载 DeskHub 安装器，完成 `0.2.99 → 0.3.0` 的实际覆盖升级，再次确认重启、绑定/配置/页面存储保留、旧模块全部退出、新模块可读及升级包删除。
+- 两次测试安装均通过其卸载器移除；临时源码、构建中间文件、测试副本和浏览器缓存已手动检查并清理。正式安装器、模块包、工具依赖和精简证据保留。
+
+正式渠道记录为 `research/evidence/updates-0.3.0/github-modules.json` 与 `github-upgrade.json`。模块发行页：[N300 0.1.0](https://github.com/JackDows/N300/releases/tag/module-edifier-n300-v0.1.0)、[OG98 0.1.0](https://github.com/JackDows/N300/releases/tag/module-flesports-og98-v0.1.0)。
+
 ## 整合基线 e416e12 的历史验收
 
 该基线的 Debug、Release 均通过当时的 33 项测试及 TypeScript 类型检查。后端控制台入口也实际执行了列表、音量读取、键盘亮度写入、单独重启键盘、再次读取音响和退出。
