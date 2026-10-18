@@ -15,7 +15,7 @@ export function TitleBar({ status }: { status: { tone: "ok" | "busy" | "warn" | 
     <header className="titlebar" data-tauri-drag-region>
       <div className="titlebar__brand">
         <span className="brand-mark" />
-        <span className="titlebar__name">N300</span>
+        <span className="titlebar__name">DeskHub</span>
         <span className={`status-dot is-${status.tone}`} />
         <span className="titlebar__status">{status.text}</span>
       </div>

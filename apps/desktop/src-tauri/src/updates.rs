@@ -1,128 +1,89 @@
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Mutex,
+use crate::Desktop;
+use deskhub_backend::{
+    downloads::{checked_url, update_error, Artifact, UpdateConfig},
+    error::{self, Error, Result},
+    storage::atomic_json,
 };
-use std::time::Duration;
-use tauri::{ipc::Channel, AppHandle, Manager, State};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    path::{Path, PathBuf},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Mutex,
+    },
+    time::Duration,
+};
+use tauri::{AppHandle, Manager};
 use tauri_plugin_updater::{Update, UpdaterExt};
 
+pub const METHODS: &[&str] = &[
+    "app.updates.info",
+    "app.updates.check",
+    "app.updates.download",
+    "app.updates.install",
+];
 #[derive(Default)]
 pub struct Updates {
-    pending: Mutex<Option<Update>>,
-    busy: AtomicBool,
-    last_result: Mutex<Option<String>>,
+    checking: AtomicBool,
+    candidate: Mutex<Option<Update>>,
+    downloads: Mutex<BTreeMap<String, Update>>,
+    last_result: Mutex<Value>,
 }
-
-struct Busy<'a>(&'a AtomicBool);
-impl<'a> Busy<'a> {
-    fn acquire(value: &'a AtomicBool) -> Result<Self, String> {
-        value
-            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
-            .map_err(|_| "更新操作正在进行，请稍候".to_string())?;
-        Ok(Self(value))
-    }
-}
-impl Drop for Busy<'_> {
+struct CheckGuard<'a>(&'a AtomicBool);
+impl Drop for CheckGuard<'_> {
     fn drop(&mut self) {
         self.0.store(false, Ordering::SeqCst);
     }
 }
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Info {
-    version: String,
-    last_result: Option<String>,
-}
-#[derive(Serialize)]
-pub struct Available {
-    version: String,
-    notes: String,
-}
-#[derive(Clone, Serialize)]
-pub struct Progress {
-    stage: &'static str,
-    downloaded: usize,
-    total: Option<u64>,
-}
 #[derive(Serialize, Deserialize)]
-struct Cleanup {
+#[serde(rename_all = "camelCase")]
+struct InstallRecord {
     version: String,
+    job_id: String,
+    connected_devices: Vec<String>,
     temp_root: PathBuf,
-    directories: Vec<PathBuf>,
-    #[serde(default)]
     before: Vec<PathBuf>,
+    directories: Vec<PathBuf>,
 }
-
-fn marker(app: &AppHandle) -> Result<PathBuf, String> {
-    let dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir.join("pending-update.json"))
-}
-fn save_marker(path: &Path, value: &Cleanup) -> Result<(), String> {
-    let temp = path.with_extension("tmp");
-    std::fs::write(&temp, serde_json::to_vec(value).map_err(|e| e.to_string())?)
-        .map_err(|e| e.to_string())?;
-    match std::fs::rename(&temp, path) {
-        Ok(()) => Ok(()),
-        // Redirected/virtualized Windows profile folders can report different
-        // volumes even for two names under the same logical directory.
-        Err(error) if error.raw_os_error() == Some(17) => {
-            std::fs::copy(&temp, path).map_err(|e| format!("无法保存更新记录：{e}"))?;
-            let _ = std::fs::remove_file(&temp);
-            Ok(())
-        }
-        Err(error) => Err(format!("无法保存更新记录：{error}")),
-    }
-}
-fn version_is_filename_safe(version: &str) -> bool {
-    !version.is_empty()
-        && version
-            .bytes()
-            .all(|c| c.is_ascii_alphanumeric() || b".-+".contains(&c))
+fn marker(app: &AppHandle) -> Result<PathBuf> {
+    let info = app
+        .state::<Desktop>()
+        .hub
+        .dispatch("hub.describe", json!({}), Value::Null)?;
+    Ok(PathBuf::from(info["dataDirectory"].as_str().unwrap()).join("updates/app-install.json"))
 }
 fn installer_dirs(root: &Path, version: &str) -> BTreeSet<PathBuf> {
-    if !version_is_filename_safe(version) {
-        return BTreeSet::new();
-    }
-    let prefix = format!("N300-{version}-updater-");
+    let prefix = format!("DeskHub-{version}-updater-");
     std::fs::read_dir(root)
         .into_iter()
         .flatten()
         .flatten()
         .filter_map(|entry| {
-            let path = entry.path();
-            let meta = std::fs::symlink_metadata(&path).ok()?;
+            let meta = std::fs::symlink_metadata(entry.path()).ok()?;
             (meta.is_dir()
                 && !meta.file_type().is_symlink()
                 && entry.file_name().to_string_lossy().starts_with(&prefix))
-            .then_some(path)
+            .then(|| entry.path())
         })
         .collect()
 }
-
-// Only remove the exact NSIS file created by our updater. Never recursively delete
-// a temp directory, follow links, or touch the downloaded user installer.
-fn cleanup_files(value: &Cleanup, allowed_root: &Path) -> bool {
-    if !version_is_filename_safe(&value.version) {
-        return false;
+fn cleanup(record: &InstallRecord) -> Result<bool> {
+    let root = std::env::temp_dir().canonicalize()?;
+    if record.temp_root.canonicalize()? != root {
+        return Err(Error::argument("Unexpected installer temporary directory"));
     }
-    let Ok(root) = value.temp_root.canonicalize() else {
-        return false;
-    };
-    if !allowed_root
-        .canonicalize()
-        .is_ok_and(|actual| actual == root)
+    if !record
+        .version
+        .bytes()
+        .all(|b| b.is_ascii_alphanumeric() || b".-+".contains(&b))
     {
-        return false;
+        return Err(Error::argument("Invalid installation version"));
     }
-    let prefix = format!("N300-{}-updater-", value.version);
-    let filename = format!("N300-{}-installer.exe", value.version);
+    let prefix = format!("DeskHub-{}-updater-", record.version);
     let mut complete = true;
-    for dir in &value.directories {
+    for dir in &record.directories {
         if !dir.exists() {
             continue;
         }
@@ -135,226 +96,269 @@ fn cleanup_files(value: &Cleanup, allowed_root: &Path) -> bool {
                 .canonicalize()
                 .is_ok_and(|p| p.parent() == Some(root.as_path()));
         if !valid {
+            return Err(Error::argument("Invalid installer cleanup record"));
+        }
+        let file = dir.join(format!("DeskHub-{}-installer.exe", record.version));
+        if file.exists() && std::fs::remove_file(&file).is_err() {
             complete = false;
             continue;
-        }
-        let installer = dir.join(&filename);
-        if installer.exists() {
-            let regular = std::fs::symlink_metadata(&installer)
-                .is_ok_and(|m| m.is_file() && !m.file_type().is_symlink());
-            if !regular || std::fs::remove_file(&installer).is_err() {
-                complete = false;
-                continue;
-            }
         }
         if std::fs::remove_dir(dir).is_err() {
             complete = false;
         }
     }
-    complete
+    Ok(complete)
 }
-
-pub fn initialize(app: &AppHandle) {
-    let Ok(path) = marker(app) else {
-        return;
-    };
-    let Ok(bytes) = std::fs::read(&path) else {
-        return;
-    };
-    let Ok(record) = serde_json::from_slice::<Cleanup>(&bytes) else {
-        return;
-    };
-    let message = if record.version == app.package_info().version.to_string() {
-        format!("已更新到 {}", record.version)
-    } else {
-        "上次更新未完成，可以重新检查更新".to_string()
-    };
-    *app.state::<Updates>().last_result.lock().unwrap() = Some(message);
-    // The NSIS process may still be exiting when it relaunches the app.
-    std::thread::spawn(move || {
-        for _ in 0..60 {
-            if cleanup_files(&record, &std::env::temp_dir()) {
-                let _ = std::fs::remove_file(&path);
-                break;
-            }
-            std::thread::sleep(Duration::from_secs(2));
-        }
-    });
-}
-
-fn loopback_http(url: &tauri::Url) -> bool {
-    url.scheme() == "http" && matches!(url.host_str(), Some("127.0.0.1" | "[::1]" | "localhost"))
-}
-fn allowed_url(url: &tauri::Url) -> bool {
-    url.scheme() == "https" || loopback_http(url)
-}
-
-pub fn configure(context: &mut tauri::Context<tauri::Wry>) -> Result<(), String> {
-    // Test/local release feeds may use loopback HTTP. Remote feeds always require
-    // HTTPS; TLS certificate and package-signature verification remain enabled.
-    if let Ok(endpoint) = std::env::var("N300_UPDATE_URL") {
-        let url = tauri::Url::parse(&endpoint).map_err(|e| e.to_string())?;
-        if !allowed_url(&url) {
-            return Err("更新地址必须使用 HTTPS".into());
-        }
-        let config = context
-            .config_mut()
-            .plugins
-            .0
-            .get_mut("updater")
-            .ok_or("缺少更新配置")?;
-        config["endpoints"] = serde_json::json!([endpoint]);
-        config["dangerousInsecureTransportProtocol"] = serde_json::json!(loopback_http(&url));
-    }
+pub fn configure(context: &mut tauri::Context<tauri::Wry>) -> Result<()> {
+    let settings = UpdateConfig::load()?;
+    let feed = checked_url(&settings.app_feed)?;
+    let config = context
+        .config_mut()
+        .plugins
+        .0
+        .get_mut("updater")
+        .ok_or_else(|| Error::argument("Missing updater configuration"))?;
+    config["endpoints"] = json!([settings.app_feed]);
+    config["pubkey"] = json!(settings.public_key);
+    config["dangerousInsecureTransportProtocol"] = json!(feed.scheme() == "http");
     Ok(())
 }
-
-#[tauri::command]
-pub fn update_info(app: AppHandle, state: State<'_, Updates>) -> Info {
-    Info {
-        version: app.package_info().version.to_string(),
-        last_result: state.last_result.lock().unwrap().clone(),
+pub fn initialize(app: &AppHandle) -> Result<()> {
+    let path = marker(app)?;
+    let result_path = path.with_file_name("app-result.json");
+    if result_path.is_file() {
+        *app.state::<Updates>().last_result.lock().unwrap() =
+            serde_json::from_slice(&std::fs::read(&result_path)?)?;
     }
-}
-
-#[tauri::command]
-pub async fn update_check(
-    app: AppHandle,
-    state: State<'_, Updates>,
-) -> Result<Option<Available>, String> {
-    let _busy = Busy::acquire(&state.busy)?;
-    let shutdown = app.clone();
-    let marker_path = marker(&app)?;
-    let updater = app
-        .updater_builder()
-        .timeout(Duration::from_secs(30))
-        .on_before_exit(move || {
-            // install() has already created the NSIS executable at this point.
-            if let Ok(bytes) = std::fs::read(&marker_path) {
-                if let Ok(mut record) = serde_json::from_slice::<Cleanup>(&bytes) {
-                    let existing: BTreeSet<_> = record.before.drain(..).collect();
-                    record.directories = installer_dirs(&record.temp_root, &record.version)
-                        .difference(&existing)
-                        .cloned()
-                        .collect();
-                    let _ = save_marker(&marker_path, &record);
+    if !path.is_file() {
+        return Ok(());
+    }
+    let record: InstallRecord = serde_json::from_slice(&std::fs::read(&path)?)?;
+    let success = record.version == app.package_info().version.to_string();
+    let result = json!({"version":record.version,"jobId":record.job_id,"state":if success {"completed"}else{"interrupted"},"cleanupPending":true});
+    *app.state::<Updates>().last_result.lock().unwrap() = result.clone();
+    atomic_json(&result_path, &result)?;
+    let hub = app.state::<Desktop>().hub.clone();
+    let downloads = hub.downloads();
+    if success {
+        downloads.finish(
+            &record.job_id,
+            Ok((
+                "completed",
+                json!({"version":record.version,"restarted":true}),
+            )),
+        );
+    }
+    let handle = app.clone();
+    std::thread::spawn(move || {
+        for id in &record.connected_devices {
+            if let Err(e) = hub.dispatch(
+                "devices.connect",
+                json!({"deviceId":id}),
+                json!("app-update-restore"),
+            ) {
+                hub.record(
+                    "app.update_reconnect_failed",
+                    json!({"deviceId":id,"error":e}),
+                );
+            }
+        }
+        for _ in 0..60 {
+            match cleanup(&record) {
+                Ok(true) => {
+                    let _ = std::fs::remove_file(&path);
+                    let mut result = result.clone();
+                    result["cleanupPending"] = json!(false);
+                    let _ = atomic_json(&result_path, &result);
+                    *handle.state::<Updates>().last_result.lock().unwrap() = result;
+                    return;
+                }
+                Ok(false) => std::thread::sleep(Duration::from_secs(2)),
+                Err(e) => {
+                    hub.record("app.update_cleanup_failed", json!(e));
+                    return;
                 }
             }
-            crate::shutdown_core(&shutdown);
-            shutdown.cleanup_before_exit();
-        })
-        .build()
-        .map_err(|e| e.to_string())?;
-    let update = updater
-        .check()
-        .await
-        .map_err(|e| format!("暂时无法检查更新，请稍后重试（{e}）"))?;
-    if update
-        .as_ref()
-        .is_some_and(|u| !allowed_url(&u.download_url))
-    {
-        return Err("更新包下载地址必须使用 HTTPS".into());
-    }
-    let result = update.as_ref().map(|u| Available {
-        version: u.version.clone(),
-        notes: u.body.clone().unwrap_or_default(),
+        }
     });
-    *state.pending.lock().map_err(|e| e.to_string())? = update;
-    Ok(result)
+    Ok(())
 }
-
-#[tauri::command]
-pub async fn update_install(
-    app: AppHandle,
-    state: State<'_, Updates>,
-    on_progress: Channel<Progress>,
-) -> Result<(), String> {
-    let _busy = Busy::acquire(&state.busy)?;
-    let update = state
-        .pending
-        .lock()
-        .map_err(|e| e.to_string())?
-        .clone()
-        .ok_or("请先检查更新")?;
-    let mut downloaded = 0;
-    let bytes = update
-        .download(
-            |count, total| {
-                downloaded += count;
-                let _ = on_progress.send(Progress {
-                    stage: "downloading",
-                    downloaded,
-                    total,
-                });
-            },
-            || {},
-        )
-        .await
-        .map_err(|e| format!("下载或校验失败，当前版本未改变，可重新尝试（{e}）"))?;
-    let root = std::env::temp_dir()
-        .canonicalize()
-        .map_err(|e| e.to_string())?;
-    let path = marker(&app)?;
-    save_marker(
-        &path,
-        &Cleanup {
-            version: update.version.clone(),
-            before: installer_dirs(&root, &update.version).into_iter().collect(),
-            directories: vec![],
-            temp_root: root,
-        },
-    )?;
-    let _ = on_progress.send(Progress {
-        stage: "installing",
-        downloaded: bytes.len(),
-        total: Some(bytes.len() as u64),
-    });
-    let result = tauri::async_runtime::spawn_blocking(move || update.install(bytes))
-        .await
-        .map_err(|e| e.to_string())?;
-    // A successful Windows installation exits above. A failed launch remains usable.
-    app.state::<crate::Core>()
-        .shutting_down
-        .store(false, Ordering::SeqCst);
-    result.map_err(|e| format!("无法启动更新安装程序：{e}"))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn cleanup_only_removes_its_recorded_installer() {
-        let temp = tempfile::tempdir().unwrap();
-        let owned = temp.path().join("N300-0.2.0-updater-test");
-        std::fs::create_dir(&owned).unwrap();
-        std::fs::write(owned.join("N300-0.2.0-installer.exe"), b"test").unwrap();
-        let record = Cleanup {
-            version: "0.2.0".into(),
-            temp_root: temp.path().into(),
-            directories: vec![owned.clone()],
-            before: vec![],
-        };
-        assert!(cleanup_files(&record, temp.path()));
-        assert!(!owned.exists());
-        let unrelated = temp.path().join("other-program");
-        std::fs::create_dir(&unrelated).unwrap();
-        let mut invalid = record;
-        invalid.directories = vec![unrelated.clone()];
-        assert!(!cleanup_files(&invalid, temp.path()));
-        assert!(unrelated.exists());
+pub async fn request(app: &AppHandle, method: &str, params: Value) -> Result<Value> {
+    if !params.is_object() {
+        return Err(Error::argument("params must be an object"));
     }
-    #[test]
-    fn remote_http_is_rejected_and_loopback_is_allowed() {
-        assert!(!allowed_url(
-            &"http://example.com/update.json".parse().unwrap()
-        ));
-        assert!(allowed_url(
-            &"https://github.com/JackDows/N300/releases/latest/download/latest.json"
-                .parse()
+    let state = app.state::<Updates>();
+    let hub = app.state::<Desktop>().hub.clone();
+    let jobs = hub.downloads();
+    match method {
+        "app.updates.info" => Ok(
+            json!({"version":app.package_info().version.to_string(),"lastResult":*state.last_result.lock().unwrap()}),
+        ),
+        "app.updates.check" => {
+            state
+                .checking
+                .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+                .map_err(|_| update_error("update_busy", "Already checking"))?;
+            let _guard = CheckGuard(&state.checking);
+            let handle = app.clone();
+            let path = marker(app)?;
+            let update = app
+                .updater_builder()
+                .timeout(Duration::from_secs(30))
+                .on_before_exit(move || {
+                    if let Ok(bytes) = std::fs::read(&path) {
+                        if let Ok(mut record) = serde_json::from_slice::<InstallRecord>(&bytes) {
+                            let previous: BTreeSet<_> = record.before.drain(..).collect();
+                            record.directories = installer_dirs(&record.temp_root, &record.version)
+                                .difference(&previous)
+                                .cloned()
+                                .collect();
+                            let _ = atomic_json(&path, &json!(record));
+                        }
+                    }
+                    handle.state::<Desktop>().hub.shutdown();
+                    handle.cleanup_before_exit();
+                })
+                .build()
+                .map_err(|e| update_error("update_failed", e))?
+                .check()
+                .await
+                .map_err(|e| update_error("download_failed", e))?;
+            let view = if let Some(update) = &update {
+                checked_url(update.download_url.as_str())?;
+                Some(
+                    json!({"version":update.version,"notes":update.body.clone().unwrap_or_default()}),
+                )
+            } else {
+                None
+            };
+            *state.candidate.lock().unwrap() = update;
+            Ok(json!({"currentVersion":app.package_info().version.to_string(),"release":view}))
+        }
+        "app.updates.download" => {
+            let update = state.candidate.lock().unwrap().clone().ok_or_else(|| {
+                Error::new(
+                    "check_required",
+                    "Check for a release first",
+                    "请先检查更新。",
+                )
+            })?;
+            let metadata = update
+                .raw_json
+                .get("platforms")
+                .and_then(|p| p.get("windows-x86_64"))
+                .unwrap_or(&update.raw_json);
+            let artifact = Artifact {
+                url: update.download_url.to_string(),
+                signature: update.signature.clone(),
+                sha256: error::string(metadata, "sha256")?.into(),
+                size: metadata["size"]
+                    .as_u64()
+                    .ok_or_else(|| Error::argument("Update feed must include size"))?,
+            };
+            let job = jobs.create("app", "deskhub", &update.version, artifact)?;
+            state
+                .downloads
+                .lock()
                 .unwrap()
-        ));
-        assert!(allowed_url(
-            &"http://127.0.0.1:9123/latest.json".parse().unwrap()
-        ));
+                .insert(job.id.clone(), update.clone());
+            let worker = jobs.clone();
+            let id = job.id.clone();
+            jobs.spawn(id.clone(), move || {
+                worker.download(&id)?;
+                update
+                    .verify(&worker.bytes(&id)?)
+                    .map_err(|e| update_error("signature_invalid", e))?;
+                Ok(("ready", json!({})))
+            });
+            Ok(json!(job))
+        }
+        "app.updates.install" => {
+            let id = error::string(&params, "jobId")?.to_owned();
+            let update = state
+                .downloads
+                .lock()
+                .unwrap()
+                .get(&id)
+                .cloned()
+                .ok_or_else(|| {
+                    Error::new(
+                        "check_required",
+                        "Downloaded update handle is unavailable",
+                        "请重新检查并下载更新。",
+                    )
+                })?;
+            let path = marker(app)?;
+            let snapshot = jobs.get(&id)?;
+            if snapshot.kind != "app" || snapshot.state != "ready" {
+                return Err(Error::argument(
+                    "A verified application download is required",
+                ));
+            }
+            let verified = jobs.bytes(&id).and_then(|bytes| {
+                update
+                    .verify(&bytes)
+                    .map_err(|e| update_error("signature_invalid", e))?;
+                Ok(bytes)
+            });
+            let bytes = match verified {
+                Ok(bytes) => bytes,
+                Err(e) => {
+                    jobs.finish(&id, Err(e.clone()));
+                    return Err(e);
+                }
+            };
+            let devices = hub.dispatch("devices.list", json!({}), Value::Null)?;
+            let connected: Vec<String> = devices
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|d| d["phase"] == "connected")
+                .filter_map(|d| d["id"].as_str().map(str::to_owned))
+                .collect();
+            let temp_root = std::env::temp_dir().canonicalize()?;
+            let job = jobs.begin_install(&id, "app")?;
+            if let Err(e) = atomic_json(
+                &path,
+                &json!(InstallRecord {
+                    version: update.version.clone(),
+                    job_id: id.clone(),
+                    connected_devices: connected.clone(),
+                    before: installer_dirs(&temp_root, &update.version)
+                        .into_iter()
+                        .collect(),
+                    directories: vec![],
+                    temp_root
+                }),
+            ) {
+                jobs.reopen();
+                jobs.finish(&id, Err(e.clone()));
+                return Err(e);
+            }
+            let worker = jobs.clone();
+            std::thread::spawn(move || {
+                // Let the accepted response reach the renderer before closing the host.
+                std::thread::sleep(Duration::from_millis(150));
+                hub.shutdown();
+                if let Err(e) = update.install(bytes) {
+                    hub.resume();
+                    worker.finish(&id, Err(update_error("install_failed", e)));
+                    let _ = std::fs::remove_file(&path);
+                    for device in connected {
+                        let _ = hub.dispatch(
+                            "devices.connect",
+                            json!({"deviceId":device}),
+                            json!("app-update-recovery"),
+                        );
+                    }
+                }
+            });
+            Ok(json!(job))
+        }
+        _ => Err(Error::new(
+            "unknown_method",
+            "Unknown desktop update method",
+            "暂不支持这项操作。",
+        )),
     }
 }

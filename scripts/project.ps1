@@ -2,6 +2,7 @@ param(
     [Parameter(Mandatory=$true)][ValidateSet('Install','Build','Run','Test')][string]$Action,
     [ValidateSet('Debug','Release')][string]$Configuration='Debug',
     [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_.-]*$')][string]$Module='All',
+    [ValidateSet('All','Backend','Desktop')][string]$Component='All',
     [switch]$Offline,
     [string[]]$CommandArguments=@('shell')
 )
@@ -10,10 +11,12 @@ $projectRoot=Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'native.ps1')
 . (Join-Path $PSScriptRoot 'rust.ps1')
 . (Join-Path $PSScriptRoot 'cache.ps1')
+. (Join-Path $PSScriptRoot 'desktop.ps1')
 $knownModules=@(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'modules') -Directory | Where-Object {Test-Path -LiteralPath (Join-Path $_.FullName 'module.json')} | ForEach-Object {$_.Name})
 if($Module -notin @('All','Backend') -and $Module -notin $knownModules){throw "Unknown module: $Module"}
 $modules=if($Module -eq 'All'){$knownModules}elseif($Module -eq 'Backend'){@()}else{@($Module)}
 $hostSelected=$Module -in @('All','Backend')
+$desktopSelected=$Module -eq 'All' -and $Component -ne 'Backend'
 $preset=$Configuration.ToLowerInvariant()
 $logs=Join-Path $projectRoot 'artifacts/validation'
 function Invoke-ContractsTool([string[]]$Arguments) {
@@ -68,6 +71,12 @@ function Build-Project {
             if(Test-Path -LiteralPath (Join-Path $projectRoot $file)){Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination $package -Force}
         }
     }
+    if($desktopSelected){Build-Desktop -Configuration $Configuration}
+    if($Configuration -eq 'Release' -and $modules.Count -gt 0 -and ((Test-Path -LiteralPath (Join-Path $projectRoot '.local/keys/deskhub-updater.key')) -or $env:TAURI_SIGNING_PRIVATE_KEY -or $env:TAURI_SIGNING_PRIVATE_KEY_PATH)){
+        $packageArguments=@((Join-Path $projectRoot 'scripts/package-release.mjs'),'modules')
+        if($Module -ne 'All'){$packageArguments+=@('--module',$Module)}
+        Invoke-ProjectTool -Tool node -Arguments $packageArguments
+    }
 }
 $operationLock=$null
 $DeskHubOperationRoot=$projectRoot
@@ -80,16 +89,18 @@ try {
 switch($Action){
     'Install'{
         Configure-Modules
+        Invoke-ContractsTool @('ci','--no-audit','--no-fund')
         if($hostSelected){
             Initialize-DeskHubRust -Install
             Invoke-ProjectTool -Tool cargo -Arguments @('fetch','--locked','--target','x86_64-pc-windows-msvc')
-            Invoke-ContractsTool @('ci','--no-audit','--no-fund')
         }
+        if($desktopSelected){Install-Desktop}
     }
     'Build'{Build-Project}
     'Test'{
         Build-Project
         if($hostSelected){
+            Initialize-DeskHubRust
             Invoke-ContractsTool @('run','check:types')
             Invoke-ContractsTool @('run','test:contracts')
             $cargoArguments=@('test','--locked')
@@ -101,10 +112,20 @@ switch($Action){
                 Invoke-ProjectTool -Tool cargo -Arguments $fixtureArguments
                 $env:DESKHUB_CONFIGURATION=$Configuration
                 Invoke-ProjectTool -Tool node -Arguments @('--test',(Join-Path $projectRoot 'tests/integration.mjs'),(Join-Path $projectRoot 'tests/features.mjs')) -LogPath (Join-Path $logs "integration-$preset.log")
+                Invoke-ProjectTool -Tool node -Arguments @('--test',(Join-Path $projectRoot 'tests/updates.mjs')) -LogPath (Join-Path $logs "updates-$preset.log")
             }
         }
+        if($desktopSelected){Test-Desktop -Configuration $Configuration}
     }
     'Run'{
+        if($desktopSelected){
+            $binary=Join-Path $projectRoot "artifacts/desktop/$Configuration/DeskHub.exe"
+            if(-not(Test-Path -LiteralPath $binary)){throw 'Build this configuration first.'}
+            $desktopArguments=@()
+            if($Offline){$desktopArguments+='--offline'}
+            & $binary @desktopArguments
+            break
+        }
         $binary=Join-Path $projectRoot "artifacts/package/$Configuration/deskhub.exe"
         if($hostSelected){
             if(-not(Test-Path -LiteralPath $binary)){throw 'Build this configuration first.'}

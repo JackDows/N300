@@ -1,11 +1,15 @@
 {
-  "name":"deskhub-engineering",
-  "version":"0.1.0",
-  "private":true,
-  "type":"module",
-  "scripts":{
-    "check:types":"tsc -p tests/tsconfig.json",
-    "test:contracts":"node --test tests/contracts.mjs"
+  "name": "deskhub-engineering",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p tests/tsconfig.json",
+    "test:contracts": "node --test tests/contracts.mjs"
   },
-  "devDependencies":{"typescript":"7.0.2"}
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "fflate": "0.8.2",
+    "@tauri-apps/cli": "2.12.3"
+  }
 }

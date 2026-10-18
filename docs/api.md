@@ -8,13 +8,17 @@
 {"jsonrpc":"2.0","id":3,"method":"devices.read","params":{"deviceId":"speaker","capability":"audio.volume"}}
 ```
 
-方法清单与参数 Schema：[api.schema.json](../contracts/api.schema.json)。类型定义：[client.d.mts](../contracts/client.d.mts)。`moduleId` 在打包目录中匹配唯一版本；有多个版本时明确传 `packagePath`，指向完整模块包的目录或 `module.json`。
+方法清单与参数 Schema：[api.schema.json](../contracts/api.schema.json)。类型定义：[client.d.mts](../contracts/client.d.mts)。`moduleId` 默认选择本地最高稳定版本；同版本存在不同包时明确传 `packagePath`，指向完整模块包的目录或 `module.json`。已有设备的绑定版本不随目录变化自动替换。
 
 | 方法 | 主要参数 | 返回 |
 | --- | --- | --- |
 | hub.describe | 无 | 后端版本、方法、运行模式与数据目录 |
-| modules.list | 无 | 打包目录中的已校验模块 |
+| modules.list | 无 | 随应用提供及用户安装的已校验模块 |
 | modules.inspect | moduleId 或 packagePath | 包清单、路径、指纹；不启动模块 |
+| modules.catalog / checkUpdates | 无 | 签名在线目录与已安装版本 |
+| modules.download / install | moduleId/version 或 jobId/deviceId | 下载与安装任务 |
+| updates.list / get / cancel | 单项操作需要 jobId | 更新任务及取消结果 |
+| app.updates.info / check / download / install | install 需要 jobId | 桌面整包升级流程，CLI 不提供 |
 | devices.add | id、模块选择；可选 label/offline/target/config | 保存后的实例，尚未连接 |
 | devices.list / get | get 需要 deviceId | 全部实例 / 单个缓存快照 |
 | devices.start / stop / restart | deviceId | 模块生命周期操作后的快照 |
@@ -64,6 +68,7 @@ OG98 的 USB ID 与其他型号共用，候选 `modelVerified:false`；选择此
 
 - `devices.changed`：`params.device` 是完整快照。前端按 ID 更新，忽略较旧 generation 或 revision。
 - `devices.removed`：`params.deviceId`。
+- `updates.changed`：`params.job` 为完整更新任务快照。调用顺序与失败恢复见 [更新接口](updates.md)。
 - `operations.changed`：包含 deviceId、generation、requestId，以及 pending/completed/failed。用于表示正在操作，completed 代表请求结束；实际确认程度看返回数据。
 
 失败在 `error.data` 提供 `code,message,userMessage,details`。界面显示 userMessage，message/details 用于日志。SDK 的 `DeskHubError.message` 已选择用户提示，技术原因另放在 technicalMessage。

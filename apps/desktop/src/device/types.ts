@@ -1,4 +1,4 @@
-// 与 n300.exe serve / n300.dll 返回结构一致的类型（见 edifier-n300/docs/api.md）。
+// Existing speaker page view model. Native requests use the shared DeskHub contract.
 
 export interface Choice {
   label: string;
@@ -78,18 +78,4 @@ export interface DeviceErrorInfo {
   message: string;
   retryable?: boolean;
   details?: unknown;
-}
-
-export type DeviceEvent =
-  | { type: "ready"; offline: boolean }
-  | { type: "state"; sequence: number; state: DeviceState }
-  | { type: "connection_error"; sequence: number; error: DeviceErrorInfo; retry_in_ms?: number }
-  | { type: "core_exit" };
-
-export class DeviceRequestError extends Error {
-  readonly info: DeviceErrorInfo;
-  constructor(info: DeviceErrorInfo) {
-    super(info.message);
-    this.info = info;
-  }
 }

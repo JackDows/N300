@@ -1,33 +1,367 @@
 {
-  "$schema":"https://json-schema.org/draft/2020-12/schema",
-  "$id":"urn:deskhub:request:v1",
-  "title":"DeskHub request v1",
-  "type":"object",
-  "required":["jsonrpc","id","method"],
-  "additionalProperties":false,
-  "properties":{
-    "jsonrpc":{"const":"2.0"},
-    "id":{"type":["string","integer"]},
-    "method":{"enum":["hub.describe","modules.list","modules.inspect","devices.list","devices.add","devices.get","devices.start","devices.stop","devices.restart","devices.replace","devices.rebind","devices.rename","devices.remove","devices.scan","devices.connect","devices.disconnect","devices.refresh","devices.read","devices.write","devices.invoke","diagnostics.export"]},
-    "params":{
-      "type":"object",
-      "properties":{
-        "deviceId":{"type":"string","minLength":1},
-        "id":{"type":"string","pattern":"^[a-zA-Z0-9_.-]{1,80}$"},
-        "moduleId":{"type":"string"},"packagePath":{"type":"string"},"label":{"type":"string"},
-        "capability":{"type":"string"},"value":{},"arguments":{"type":"object"},
-        "target":{"type":"object"},"config":{"type":"object"},"offline":{"type":"boolean"},
-        "timeoutMs":{"type":"integer","minimum":50,"maximum":60000}
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:deskhub:request:v1",
+  "title": "DeskHub request v1",
+  "type": "object",
+  "required": [
+    "jsonrpc",
+    "id",
+    "method"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [
+        "string",
+        "integer"
+      ]
+    },
+    "method": {
+      "enum": [
+        "hub.describe",
+        "modules.list",
+        "modules.inspect",
+        "devices.list",
+        "devices.add",
+        "devices.get",
+        "devices.start",
+        "devices.stop",
+        "devices.restart",
+        "devices.replace",
+        "devices.rebind",
+        "devices.rename",
+        "devices.remove",
+        "devices.scan",
+        "devices.connect",
+        "devices.disconnect",
+        "devices.refresh",
+        "devices.read",
+        "devices.write",
+        "devices.invoke",
+        "diagnostics.export",
+        "modules.catalog",
+        "modules.checkUpdates",
+        "modules.download",
+        "modules.install",
+        "updates.list",
+        "updates.get",
+        "updates.cancel",
+        "diagnostics.report",
+        "app.updates.info",
+        "app.updates.check",
+        "app.updates.download",
+        "app.updates.install",
+        "app.takeActivationNotice"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "deviceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_.-]{1,80}$"
+        },
+        "moduleId": {
+          "type": "string"
+        },
+        "packagePath": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "capability": {
+          "type": "string"
+        },
+        "value": {},
+        "arguments": {
+          "type": "object"
+        },
+        "target": {
+          "type": "object"
+        },
+        "config": {
+          "type": "object"
+        },
+        "offline": {
+          "type": "boolean"
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 60000
+        },
+        "jobId": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
       }
     }
   },
-  "allOf":[
-    {"if":{"properties":{"method":{"enum":["devices.get","devices.start","devices.stop","devices.restart","devices.replace","devices.rebind","devices.rename","devices.remove","devices.scan","devices.connect","devices.disconnect","devices.refresh","devices.read","devices.write","devices.invoke"]}}},"then":{"required":["params"],"properties":{"params":{"required":["deviceId"]}}}},
-    {"if":{"properties":{"method":{"enum":["devices.read","devices.write","devices.invoke"]}}},"then":{"properties":{"params":{"required":["capability"]}}}},
-    {"if":{"properties":{"method":{"const":"devices.write"}}},"then":{"properties":{"params":{"required":["value"]}}}},
-    {"if":{"properties":{"method":{"const":"devices.add"}}},"then":{"required":["params"],"properties":{"params":{"required":["id"],"anyOf":[{"required":["moduleId"]},{"required":["packagePath"]}]}}}},
-    {"if":{"properties":{"method":{"enum":["modules.inspect","devices.replace","devices.rebind"]}}},"then":{"required":["params"],"properties":{"params":{"anyOf":[{"required":["moduleId"]},{"required":["packagePath"]}]}}}},
-    {"if":{"properties":{"method":{"const":"devices.rebind"}}},"then":{"properties":{"params":{"required":["target"]}}}},
-    {"if":{"properties":{"method":{"const":"devices.rename"}}},"then":{"properties":{"params":{"required":["label"]}}}}
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "enum": [
+              "devices.get",
+              "devices.start",
+              "devices.stop",
+              "devices.restart",
+              "devices.replace",
+              "devices.rebind",
+              "devices.rename",
+              "devices.remove",
+              "devices.scan",
+              "devices.connect",
+              "devices.disconnect",
+              "devices.refresh",
+              "devices.read",
+              "devices.write",
+              "devices.invoke"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "params"
+        ],
+        "properties": {
+          "params": {
+            "required": [
+              "deviceId"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "enum": [
+              "devices.read",
+              "devices.write",
+              "devices.invoke"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "capability"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "devices.write"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "value"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "devices.add"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "params"
+        ],
+        "properties": {
+          "params": {
+            "required": [
+              "id"
+            ],
+            "anyOf": [
+              {
+                "required": [
+                  "moduleId"
+                ]
+              },
+              {
+                "required": [
+                  "packagePath"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "enum": [
+              "modules.inspect",
+              "devices.replace",
+              "devices.rebind"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "params"
+        ],
+        "properties": {
+          "params": {
+            "anyOf": [
+              {
+                "required": [
+                  "moduleId"
+                ]
+              },
+              {
+                "required": [
+                  "packagePath"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "devices.rebind"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "target"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "devices.rename"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "label"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "enum": [
+              "updates.get",
+              "updates.cancel",
+              "modules.install",
+              "app.updates.install"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "params"
+        ],
+        "properties": {
+          "params": {
+            "required": [
+              "jobId"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "modules.download"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "params"
+        ],
+        "properties": {
+          "params": {
+            "required": [
+              "moduleId"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "diagnostics.report"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "params"
+        ],
+        "properties": {
+          "params": {
+            "required": [
+              "context",
+              "detail"
+            ]
+          }
+        }
+      }
+    }
   ]
 }

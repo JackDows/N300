@@ -38,22 +38,20 @@ node examples/offline-demo.mjs
 
 ## 接入桌面壳
 
-公共 Rust 库位于 `backend/`，可作为 Tauri 壳的路径依赖。启动时创建一个 `Hub`，把其事件回调发送到前端；命令桥在后台执行器调用 `Hub::request`。退出或安装应用更新前调用 `Hub::shutdown`。
+桌面宿主已接入公共 Rust 库 `backend/`，统一管理设备模块与整包安装。前端直接使用以下 SDK，不需要再实现 Rust 桥或托管子进程：
 
-```rust
-// 注册命令并把 Hub 放入应用 state 后：
-#[tauri::command]
-async fn deskhub_request(
-    hub: tauri::State<'_, deskhub_backend::Hub>,
-    request: serde_json::Value,
-) -> Result<serde_json::Value, String> {
-    let hub = hub.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || hub.request(request))
-        .await.map_err(|e| e.to_string())
-}
+```js
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { createDesktopClient } from './contracts/desktop.mjs';
+const client = await createDesktopClient({ invoke, listen });
+const info = await client.request('hub.describe');
+const updates = await client.request('updates.list');
 ```
 
-也可托管 `deskhub.exe serve`，继续使用相同协议。`contracts/client.mjs` 的 transport 只需实现 send(message) 和 subscribe(callback)。不要在界面线程同步等待设备操作。
+设备与模块更新也可通过 `deskhub.exe serve` 使用；整包安装需要桌面宿主。以 `hub.describe.methods` 判断可用接口。`contracts/client.mjs` 的自定义 transport 只需实现 send(message) 和 subscribe(callback)。
+
+整包升级、模块独立下载和安装的完整调用顺序、任务状态与错误处理见 [更新接口](updates.md)。浏览器模拟器通过 `updateScenario` 提供成功、网络失败、坏签名、安装失败场景，便于设计更新页面。
 
 ## 界面应遵守的接口语义
 

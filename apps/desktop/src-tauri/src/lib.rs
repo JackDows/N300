@@ -1,181 +1,141 @@
-//! Own one native control process. Hardware state remains in n300 core.
-mod diagnostics;
-mod process;
+//! Desktop host for the same DeskHub supervisor used by the CLI and tests.
 mod updates;
+use deskhub_backend::{
+    error::{self, Error},
+    Hub,
+};
+use serde_json::{json, Value};
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
 
-#[derive(Default)]
-struct Core {
-    current: Mutex<(u64, Option<process::CoreProcess>)>,
-    shutting_down: AtomicBool,
-    activation_notice: AtomicBool,
+pub struct Desktop {
+    pub hub: Hub,
+    notice: AtomicBool,
 }
 
-fn shutdown_core(app: &AppHandle) {
-    diagnostics::record("core.stopping", serde_json::json!({}));
-    let core = app.state::<Core>();
-    core.shutting_down.store(true, Ordering::SeqCst);
-    if let Ok(mut slot) = core.current.lock() {
-        slot.1.take();
-    };
-}
 #[tauri::command]
-fn take_activation_notice(app: AppHandle) -> bool {
-    app.state::<Core>()
-        .activation_notice
-        .swap(false, Ordering::SeqCst)
-}
-#[derive(Clone, serde::Serialize)]
-struct CoreLine {
-    generation: u64,
-    line: String,
-}
-
-fn core_exe(app: &AppHandle) -> Result<PathBuf, String> {
-    if let Some(path) = std::env::var_os("N300_EXE") {
-        let path = PathBuf::from(path);
-        return if path.is_absolute() && path.is_file() {
-            Ok(path)
-        } else {
-            Err("N300_EXE 必须指向有效的绝对路径".into())
-        };
-    }
-    let path = app
-        .path()
-        .resource_dir()
-        .map_err(|error| error.to_string())?
-        .join("n300/n300.exe");
-    if path.is_file() {
-        return Ok(path);
-    }
-    #[cfg(debug_assertions)]
+async fn hub_request(app: AppHandle, request: Value) -> Value {
+    let id = request.get("id").cloned().unwrap_or(Value::Null);
+    if request.to_string().len() > 65535
+        || request["jsonrpc"] != "2.0"
+        || !(id.is_string() || id.is_i64() || id.is_u64())
     {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../../modules/edifier-n300/artifacts/package/Debug/n300.exe");
-        if path.is_file() {
-            return Ok(path);
-        }
+        return error::response(
+            id,
+            Err(Error::argument("Expected JSON-RPC 2.0 request, max 64 KiB")),
+        );
     }
-    Err("缺少 n300/n300.exe，请重新构建或完整解压安装包".into())
-}
-
-#[tauri::command]
-async fn core_start(app: AppHandle) -> Result<u64, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let state = app.state::<Core>();
-        let mut slot = state.current.lock().map_err(|error| error.to_string())?;
-        if state.shutting_down.load(Ordering::SeqCst) {
-            return Err("应用正在更新或退出".into());
-        }
-        if slot.1.as_mut().is_some_and(|child| child.alive()) {
-            return Ok(slot.0);
-        }
-        slot.1.take();
-        slot.0 += 1;
-        let generation = slot.0;
-        let exe = core_exe(&app).map_err(|error| {
-            diagnostics::record("core.start_failed", serde_json::json!({"error":error}));
-            error
-        })?;
-        let offline = std::env::args().any(|arg| arg == "--offline")
-            || std::env::var("N300_OFFLINE").is_ok_and(|value| value == "1");
-        let output = app.clone();
-        diagnostics::record(
-            "core.starting",
-            serde_json::json!({"generation":generation,"executable":exe,"offline":offline}),
+    let method = request["method"].as_str().unwrap_or("").to_owned();
+    if method == "app.takeActivationNotice" {
+        return error::response(
+            id,
+            Ok(json!(app
+                .state::<Desktop>()
+                .notice
+                .swap(false, Ordering::SeqCst))),
         );
-        slot.1 = Some(
-            process::CoreProcess::spawn(
-                &exe,
-                offline,
-                Arc::new(move |event| match event {
-                    process::Event::Line(line) => {
-                        if !diagnostics::core_message(generation, &line) {
-                            let _ = output.emit("n300://line", CoreLine { generation, line });
-                        }
-                    }
-                    process::Event::Diagnostic(line) => diagnostics::record(
-                        "core.stderr",
-                        serde_json::json!({"generation":generation,"line":line}),
-                    ),
-                    process::Event::Exit => {
-                        diagnostics::record(
-                            "core.exited",
-                            serde_json::json!({"generation":generation}),
-                        );
-                        let _ = output.emit("n300://exit", generation);
-                    }
-                }),
-            )
-            .map_err(|error| {
-                diagnostics::record(
-                    "core.start_failed",
-                    serde_json::json!({"generation":generation,"error":error}),
-                );
-                error
-            })?,
-        );
-        Ok(generation)
-    })
-    .await
-    .map_err(|error| error.to_string())?
-}
-#[tauri::command]
-async fn core_send(app: AppHandle, line: String) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let core = app.state::<Core>();
-        let mut slot = core.current.lock().map_err(|error| error.to_string())?;
-        let generation = slot.0;
-        diagnostics::record("core.request", serde_json::json!({"generation":generation,"message":serde_json::from_str::<serde_json::Value>(&line).unwrap_or(serde_json::Value::String(line.clone()))}));
-        slot.1.as_mut().ok_or("控制核心未启动")?.send(&line).map_err(|error| {
-            diagnostics::record("core.send_failed", serde_json::json!({"generation":generation,"error":error})); error
-        })
-    })
-    .await
-    .map_err(|error| error.to_string())?
+    }
+    if method.starts_with("app.updates.") {
+        let result = updates::request(
+            &app,
+            &method,
+            request.get("params").cloned().unwrap_or(json!({})),
+        )
+        .await;
+        return error::response(id, result);
+    }
+    let hub = app.state::<Desktop>().hub.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || hub.request(request)).await;
+    match result {
+        Ok(mut response) => {
+            if method == "hub.describe" && response.get("result").is_some() {
+                let methods = response["result"]["methods"].as_array_mut().unwrap();
+                methods.extend(updates::METHODS.iter().map(|s| json!(s)));
+                methods.push(json!("app.takeActivationNotice"));
+                response["result"]["desktop"] =
+                    json!({"version":app.package_info().version.to_string(),"updater":true});
+            }
+            response
+        }
+        Err(error) => error::response(
+            id,
+            Err(Error::new(
+                "host_error",
+                error.to_string(),
+                "操作未完成，请重试。",
+            )),
+        ),
+    }
 }
 pub fn run() {
     let mut context = tauri::generate_context!();
-    updates::configure(&mut context).expect("invalid update configuration");
+    if std::env::var("DESKHUB_TEST_HIDE_WINDOW").as_deref() == Ok("1") {
+        for window in &mut context.config_mut().app.windows {
+            window.visible = false;
+        }
+    }
+    updates::configure(&mut context).expect("invalid DeskHub update configuration");
     tauri::Builder::default()
-        .manage(Core::default())
-        .manage(updates::Updates::default())
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            app.state::<Core>()
-                .activation_notice
-                .store(true, Ordering::SeqCst);
-            diagnostics::record("app.already_running", serde_json::json!({}));
+        .plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            if let Some(desktop) = app.try_state::<Desktop>() {
+                desktop.notice.store(true, Ordering::SeqCst);
+                desktop.hub.record("app.already_running", json!({}));
+            }
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
                 let _ = window.unminimize();
                 let _ = window.set_focus();
             }
-            let _ = app.emit("n300://already-running", ());
+            let _ = app.emit(
+                "deskhub://event",
+                json!({"jsonrpc":"2.0","method":"app.activated","params":{}}),
+            );
         }))
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updates::Updates::default())
         .setup(|app| {
-            diagnostics::initialize(app.handle());
-            updates::initialize(app.handle());
+            let offline = std::env::args().any(|s| s == "--offline")
+                || std::env::var("DESKHUB_OFFLINE").as_deref() == Ok("1");
+            let module_root = std::env::var_os("DESKHUB_MODULE_ROOT")
+                .map(PathBuf::from)
+                .unwrap_or(app.path().resource_dir()?.join("modules"));
+            let data = std::env::var_os("DESKHUB_DATA_DIR")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| {
+                    PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
+                        .join("DeskHub/backend")
+                        .join(if offline { "offline" } else { "online" })
+                });
+            let output = app.handle().clone();
+            let hub = Hub::open(
+                module_root,
+                data,
+                offline,
+                Arc::new(move |event| {
+                    let _ = output.emit("deskhub://event", event);
+                }),
+            )?;
+            hub.record(
+                "app.started",
+                json!({"version":app.package_info().version.to_string(),"pid":std::process::id()}),
+            );
+            app.manage(Desktop {
+                hub,
+                notice: AtomicBool::new(false),
+            });
+            updates::initialize(app.handle())?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            core_start,
-            core_send,
-            take_activation_notice,
-            diagnostics::report_frontend_error,
-            updates::update_info,
-            updates::update_check,
-            updates::update_install
-        ])
+        .invoke_handler(tauri::generate_handler![hub_request])
         .build(context)
-        .expect("failed to build N300 desktop")
+        .expect("failed to build DeskHub desktop")
         .run(|app, event| {
             if let RunEvent::Exit = event {
-                diagnostics::record("app.exiting", serde_json::json!({}));
-                shutdown_core(app);
+                app.state::<Desktop>().hub.shutdown();
             }
         });
 }

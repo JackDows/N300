@@ -17,7 +17,6 @@
 *.lock text eol=lf
 *.code-workspace text eol=lf
 *.png binary
-apps/desktop/tests/fixtures/update-payload -text
 *.cpp text eol=lf
 *.hpp text eol=lf
 *.h text eol=lf

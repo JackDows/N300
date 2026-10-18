@@ -1,18 +1,11 @@
-# 迁移与发布边界
+# 工程历史
 
-DeskHub 的主仓库整合 N300 与 OG98 两条 Git 历史。N300 原生核心迁到 `modules/edifier-n300`，OG98 核心迁到 `modules/flesports-og98`，原 N300 前端迁到 `apps/desktop`。DeskHub 是唯一开发入口，两个旧工程在独立构建验收和本地提交后退役，不长期保留重复工作副本。
+DeskHub 整合 N300 与 OG98 的源码和 Git 历史。N300 原生核心位于 `modules/edifier-n300`，OG98 位于 `modules/flesports-og98`，桌面宿主与前端位于 `apps/desktop`。根目录是统一开发、构建、测试和发布入口。
 
-迁移起点为 N300 `a3324b77ce2182f270fde3f5b9b3f07cbbe7c31a`、OG98 `d68ede4f3899335c315a967c7b9e9c90cb825d2e`，均作为合并提交的祖先保留。DeskHub 源码继续使用 `https://github.com/JackDows/N300.git`，本地 `main` 跟踪 `origin/main`。交付时核对本地与远端提交一致，保留两个原项目的历史。
+迁移起点 N300 `a3324b77ce2182f270fde3f5b9b3f07cbbe7c31a` 与 OG98 `d68ede4f3899335c315a967c7b9e9c90cb825d2e` 均保留为合并提交的祖先。源码远端为 `https://github.com/JackDows/N300.git`，`main` 跟踪 `origin/main`。旧工程检出已退役，回溯与回退使用 Git。
 
-更新私钥迁至根目录 `.local/keys/`，继续由旧桌面打包脚本读取。原厂输入和逆向证据位于各模块 `research/inputs/`、`research/evidence/`；历史实机验收与 0.2.1 发布记录单独归档。上述本地材料逐文件校验后迁移，不提交私钥或原厂二进制。换电脑构建不需要这些材料；发布更新必须另行安全迁移私钥，复查协议则需要迁移证据或按清单重新下载输入。
+当前产品为 DeskHub。旧 N300 桌面专用 IPC、进程管理和发布脚本已移除；桌面直接托管公共 Hub，通过统一 JSON-RPC 接口访问全部设备和更新任务。安装身份为 `local.deskhub.desktop`，主程序为 `DeskHub.exe`。
 
-本次生成的是 **DeskHub 后端 0.1.0** 与模块包，不是替换已安装 N300 0.2.1 的桌面安装器。已有安装、更新发布地址和签名保持现状；新增后端开发数据使用独立目录。
+签名私钥位于 `.local/keys/deskhub-updater.key`，不进入 Git。原厂输入和协议证据位于各模块的 `research/inputs/` 与 `research/evidence/`。换电脑构建只需要克隆仓库并运行安装依赖；签发正式更新时另行安全迁移私钥。
 
-前端完成接入后，桌面发布需要一起验证：
-
-1. 产品名称改为 DeskHub，桌面发布版本高于旧 N300 0.2.1。
-2. 保留旧安装身份兼容或显式迁移，验证覆盖安装、快捷方式、配置和日志位置。
-3. 继续使用已配置的更新签名和旧版本能够访问的更新入口，更新前关闭全部设备模块。
-4. 迁移成功后保留升级包自动清理、单实例唤起和诊断导出行为。
-
-原 N300 更新和单实例实现仍在 `apps/desktop/src-tauri/`。现有前端暂时使用原 N300 通道；新前端按 [接手指南](frontend.md) 对接公共 Hub，发布时再做整包升级验收。
+[发布与签名](releases.md) · [更新接口](updates.md) · [前端接手](frontend.md)

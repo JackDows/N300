@@ -44,7 +44,7 @@ fn run() -> Result<()> {
             "--offline" => offline = true,
             "serve" | "shell" => mode = arg,
             "--help" | "-h" => {
-                println!("DeskHub 0.1.0\ndeskhub [--offline] [--module-root PATH] [--data-dir PATH] serve|shell\nserve: JSON-RPC lines on stdin/stdout; shell: interactive backend console.");
+                println!("DeskHub {}\ndeskhub [--offline] [--module-root PATH] [--data-dir PATH] serve|shell\nserve: JSON-RPC lines on stdin/stdout; shell: interactive backend console.",env!("CARGO_PKG_VERSION"));
                 return Ok(());
             }
             _ => return Err(Error::argument(format!("Unknown argument: {arg}"))),

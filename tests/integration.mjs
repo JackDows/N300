@@ -40,7 +40,7 @@ test('request schema and backend method inventory agree',async()=>{
   const backend=await open('schema');
   try{
     const schema=JSON.parse(await readFile(join(root,'contracts/api.schema.json'),'utf8'));
-    assert.deepEqual([...backend.info.methods].sort(),[...schema.properties.method.enum].sort());
+    assert.deepEqual([...backend.info.methods].sort(),schema.properties.method.enum.filter(m=>!m.startsWith('app.')).sort());
     await rejects(backend.client.request('not.a.method'),['unknown_method']);
   }finally{await backend.close();}
 });
@@ -174,7 +174,8 @@ test('hardware rebinding changes the module and capabilities while preserving th
 
 test('modules can run standalone through the same protocol', async () => {
   for (const [id, executable] of [['edifier-n300','deskhub-n300.exe'],['flesports-og98','deskhub-og98.exe']]) {
-    const child = spawn(join(moduleRoot, id, '0.1.0', executable), [], { stdio: ['pipe','pipe','pipe'], windowsHide: true });
+    const manifest=JSON.parse(await readFile(join(root,'modules',id,'module.json'),'utf8'));
+    const child = spawn(join(moduleRoot, id, manifest.version, executable), [], { stdio: ['pipe','pipe','pipe'], windowsHide: true });
     let output = '', errors = ''; child.stdout.on('data', (s) => output += s); child.stderr.on('data', (s) => errors += s);
     const done = new Promise((resolve) => child.once('close', resolve));
     for (const row of [{ id:1,method:'module.describe' },{ id:2,method:'session.initialize',params:{offline:true} },{ id:3,method:'device.connect' }]) child.stdin.write(JSON.stringify({ jsonrpc:'2.0',...row })+'\n');

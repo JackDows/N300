@@ -1,12 +1,13 @@
 {
   "name":"@deskhub/client",
-  "version":"0.1.0",
+  "version":"0.3.0",
   "private":true,
   "type":"module",
   "exports":{
     ".":{"types":"./client.d.mts","import":"./client.mjs"},
     "./node":{"types":"./node.d.mts","import":"./node.mjs"},
     "./mock":{"types":"./mock.d.mts","import":"./mock.mjs"},
+    "./desktop":{"types":"./desktop.d.mts","import":"./desktop.mjs"},
     "./fixtures/devices.json":"./fixtures/devices.json"
   }
 }

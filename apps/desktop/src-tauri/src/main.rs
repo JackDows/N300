@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    n300_desktop_lib::run()
+    deskhub_desktop_lib::run()
 }

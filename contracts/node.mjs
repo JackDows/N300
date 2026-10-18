@@ -2,10 +2,12 @@ import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { createClient } from './client.mjs';
 
-export async function startBackend({ executable, moduleRoot, dataDirectory, offline = false, onDiagnostic = () => {} }) {
+export async function startBackend({ executable, moduleRoot, dataDirectory, offline = false, updateConfig, onDiagnostic = () => {} }) {
   const args = ['--module-root', moduleRoot, '--data-dir', dataDirectory, 'serve'];
   if (offline) args.unshift('--offline');
-  const child = spawn(executable, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+  const env = { ...process.env };
+  if (updateConfig) env.DESKHUB_UPDATE_CONFIG = updateConfig;
+  const child = spawn(executable, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true, env });
   const listeners = new Set();
   const output = createInterface({ input: child.stdout });
   const diagnostic = createInterface({ input: child.stderr });

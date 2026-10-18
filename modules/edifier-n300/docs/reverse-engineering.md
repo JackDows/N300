@@ -115,7 +115,7 @@ REA 6.5.0 已接入 Codex。本次使用 REA/JADX 读取 APK 类、方法和引�
 research\evidence\rea-evidence-bundle.json 保存本次 REA 会话 32 条证据记录。
 补充的定向 JADX 源码导出在 research\evidence\jadx-source，脚本为 research/scripts/DecompileSelected.java。
 research/scripts/extract_catalog.py 从已导出的方法常量生成菜单表，并保留 EQ 提取审计结果。
-scripts/build.ps1 执行 CMake 编译、CTest 和分发目录整理。
+仓库根目录 `scripts/project.ps1 -Action Build -Module edifier-n300` 执行 CMake 编译、CTest 和模块打包。
 CMakeLists.txt 固定 nlohmann/json 的版本、来源与校验值，Windows 蓝牙由系统 SDK 提供。
 研究脚本使用的 Python/Node/Java 不参与产品构建和运行。
 

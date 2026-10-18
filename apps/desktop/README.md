@@ -1,46 +1,21 @@
-# 保留的 N300 桌面界面
+# DeskHub 桌面
 
-Tauri 2 + React + TypeScript。设备控制通过同仓库的 C++ 核心完成。
+Tauri 宿主直接托管 `deskhub-backend`，设备通过各自独立的模块进程运行。整包更新使用签名 NSIS 安装器，模块目录、下载、校验与替换由公共后端管理。
 
-这里保留原 N300 前端基线。DeskHub 的公共后端与前端接口见 [前端接手指南](../../docs/frontend.md)。根目录通用入口当前构建 DeskHub 后端与模块，尚未把此界面改成多设备 UI。
-需要维护旧桌面时，使用 modules/edifier-n300/scripts/project.ps1 的 -Component Desktop；其构建仍会打包原生核心。
+根目录通用工程入口负责依赖、构建、运行和测试。打开根目录的 `DeskHub.code-workspace`，或执行：
 
-浏览器预览：npm run dev（模拟数据）；桌面热更新：npm run app:dev。
-离线桌面热更新在仓库根目录执行 modules/edifier-n300/scripts/dev.ps1 -Offline。
-
-旧设备连接约定见 [原生 API](../../modules/edifier-n300/docs/api.md)，旧成品用法见 [桌面说明](../../modules/edifier-n300/docs/desktop.md)。
-
-## 设计
-
-- **三页分工**：音量（首页只有设备名、旋钮、输入源）/ 音效（预设 + 均衡器）/ 设置（设备信息与开关）。
-- **一处换肤**：所有颜色、圆角、动效时长、字体都在 [src/styles/tokens.css](src/styles/tokens.css)。
-  强调色只用在“当前值”和“正在发生的事”上，改 `--accent*` 几个变量即可换主色。
-- **窗口**：400×720 无边框，保留系统阴影和 Win11 圆角；标题栏整条可拖动。
-
-## 目录
-
-```text
-src/
-  styles/tokens.css        设计变量（换主题改这里）
-  styles/base.css          骨架、颗粒质感、页面切换、浏览器预览窗口
-  device/                  设备层：类型、Tauri 通道、模拟音箱、状态 Context
-  components/              旋钮、分段选择、EQ 曲线、预设、列表/开关、标题栏/导航、图标
-  pages/                   三个页面及页面样式
-  updates/                 更新提醒、下载进度与设置入口
-src-tauri/
-  src/lib.rs               启动并托管 n300.exe serve，逐行转发 JSON-RPC
-  src/updates.rs           官方更新插件、安装前清理核心、升级包清理
-  tauri.conf.json          窗口、CSP、打包资源
-  capabilities/            前端可用的最小权限
-app-icon.svg               图标源文件（npm run tauri -- icon app-icon.svg -o src-tauri/icons 重新生成）
+```powershell
+.\scripts\project.ps1 -Action Install
+.\scripts\project.ps1 -Action Build -Configuration Debug
+.\scripts\project.ps1 -Action Run -Configuration Debug -Offline
 ```
 
+仅浏览器开发可在本目录执行 `npm run dev`，使用共享离线模拟器。视觉设计与多设备页面由前端继续安排；现有音响页面已经接入公共接口。
 
-## 接口与生命周期
+- `src-tauri/src/lib.rs`：统一 `hub_request` 命令、事件、单实例与生命周期。
+- `src-tauri/src/updates.rs`：应用更新检查、下载、安装、重启结果与安装包清理。
+- `src/device/`：现有音响页面使用的展示状态与公共 API 调用。
+- `src/updates/`：现有更新提示的接口接线。
+- `tests/`：SDK 桥与真实 Windows WebView 验收。
 
-- RPC 响应按请求 ID 匹配，消息携带核心进程代次，旧进程的退出通知不会干扰新进程。
-- 写入返回核心回读后的确认值；失败重新读取，不能继续把乐观值当作设备实际值。
-- 断线后隐藏旧值，连接后加载设置；渲染器热更新能恢复已运行核心的状态。
-- 窗口关闭先发送 stdin EOF，超时后终止核心；Windows Job Object 在桌面异常退出时也释放核心进程。
-- 核心退出可手动重新连接，不自动重放可能已执行的写入。
-- 通过 --offline 运行的是原生模拟设备，标题栏会明确显示“离线演示”。
+[前端接手指南](../../docs/frontend.md) · [更新接口](../../docs/updates.md) · [打包发布](../../docs/releases.md)

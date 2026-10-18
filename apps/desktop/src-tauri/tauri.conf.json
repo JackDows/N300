@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "N300",
-  "version": "0.2.1",
-  "identifier": "local.n300.desktop",
+  "productName": "DeskHub",
+  "version": "0.3.0",
+  "identifier": "local.deskhub.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "N300",
+        "title": "DeskHub",
         "width": 400,
         "height": 720,
         "minWidth": 380,
@@ -50,7 +50,7 @@
       "requireSignedVersion": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk2MDIzMjIyODQ1MUQ5Q0MKUldUTTJWR0VJaklDbHRSQ3FzNGxoak40dTZQWEVUcXlpdE0rRHpVZnI5VkhkNWxjOXNSd2JiU0gK",
       "endpoints": [
-        "https://github.com/JackDows/N300/releases/latest/download/latest.json"
+        "https://github.com/JackDows/N300/releases/download/deskhub-stable/latest.json"
       ],
       "windows": {
         "installMode": "passive"

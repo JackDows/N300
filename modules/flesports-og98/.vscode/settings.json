@@ -1,6 +1,0 @@
-{
-  "cmake.useCMakePresets": "always",
-  "cmake.configureOnOpen": false,
-  "files.exclude": {".local": true},
-  "search.exclude": {".local": true, "artifacts": true, "research/inputs": true}
-}

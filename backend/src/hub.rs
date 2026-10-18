@@ -1,5 +1,7 @@
+use crate::downloads::{Downloads, UpdateConfig};
 use crate::error::{self, Error, Result};
 use crate::manifest::{inventory, Package};
+use crate::module_updates::{self, ModuleUpdates};
 use crate::process::{Event, Process};
 use crate::storage::{atomic_json, lock_directory, now_ms, Logger};
 use serde::{Deserialize, Serialize};
@@ -7,7 +9,10 @@ use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Mutex, RwLock,
+};
 use std::time::Duration;
 
 pub type Events = Arc<dyn Fn(Value) + Send + Sync>;
@@ -129,6 +134,10 @@ struct Inner {
     force_offline: bool,
     logger: Logger,
     emit: Events,
+    updates: ModuleUpdates,
+    downloads: Downloads,
+    gate: RwLock<()>,
+    closing: AtomicBool,
     _lock: File,
 }
 #[derive(Clone)]
@@ -169,6 +178,14 @@ impl Hub {
         let lock = lock_directory(&data)?;
         let data = data.canonicalize()?;
         let logger = Logger::new(&data.join("logs"))?;
+        let update_config = UpdateConfig::load()?;
+        let downloads = Downloads::open(
+            data.join("updates/downloads"),
+            update_config.public_key.clone(),
+            emit.clone(),
+            logger.clone(),
+        )?;
+        let updates = ModuleUpdates::new(update_config, data.join("updates/catalog.json"));
         let mut slots = BTreeMap::new();
         if data.join("devices.json").is_file() {
             let saved: Value = serde_json::from_slice(&std::fs::read(data.join("devices.json"))?)?;
@@ -203,7 +220,7 @@ impl Hub {
         }
         logger.record(
             "backend.start",
-            json!({"version":"0.1.0","offline":force_offline,"moduleRoot":module_root}),
+            json!({"version":env!("CARGO_PKG_VERSION"),"offline":force_offline,"moduleRoot":module_root}),
         );
         Ok(Self(Arc::new(Inner {
             slots: Mutex::new(slots),
@@ -213,6 +230,10 @@ impl Hub {
             force_offline,
             logger,
             emit,
+            updates,
+            downloads,
+            gate: RwLock::new(()),
+            closing: AtomicBool::new(false),
             _lock: lock,
         })))
     }
@@ -239,10 +260,21 @@ impl Hub {
             return Package::load(Path::new(path));
         }
         let id = error::string(params, "moduleId")?;
-        let candidates: Vec<_> = inventory(&self.0.module_root)?
+        let mut candidates: Vec<_> = self
+            .packages()?
             .into_iter()
             .filter(|p| p.manifest.id == id)
             .collect();
+        let latest = candidates
+            .iter()
+            .filter_map(|p| module_updates::version(&p.manifest.version).ok())
+            .filter(|v| v.pre.is_empty())
+            .max();
+        if let Some(latest) = latest {
+            candidates.retain(|p| {
+                module_updates::version(&p.manifest.version).is_ok_and(|v| v == latest)
+            });
+        }
         if candidates.len() != 1 {
             return Err(Error::new(
                 "module_selection_required",
@@ -505,6 +537,38 @@ impl Hub {
         trace: Value,
     ) -> Result<Value> {
         let _lifecycle = slot.lifecycle.lock().unwrap();
+        let (original, generation, connected) = {
+            let state = slot.state.lock().unwrap();
+            (
+                state.binding.clone(),
+                state.generation,
+                state.phase == "connected",
+            )
+        };
+        match self.switch_locked(slot, params, rebind, trace.clone()) {
+            Ok(value) => Ok(value),
+            Err(error) => {
+                if slot.state.lock().unwrap().generation == generation {
+                    return Err(error);
+                }
+                let restore = self.switch_locked(slot, &json!({"packagePath":original.package_path,"target":original.target,"config":original.config}), true, trace.clone())
+                    .and_then(|value| {
+                        if connected { self.invoke(slot,"device.connect",json!({}),Duration::from_secs(30),trace)?; }
+                        Ok(value)
+                    });
+                self.0.logger.record("module.rollback",json!({"deviceId":original.id,"cause":error,"restored":restore.is_ok(),"restoreError":restore.as_ref().err()}));
+                Err(error
+                    .details(json!({"rolledBack":restore.is_ok(),"restoreError":restore.err()})))
+            }
+        }
+    }
+    fn switch_locked(
+        &self,
+        slot: &Arc<Slot>,
+        params: &Value,
+        rebind: bool,
+        trace: Value,
+    ) -> Result<Value> {
         let original = slot.state.lock().unwrap().binding.clone();
         let package = self
             .choose_package(params)?
@@ -575,6 +639,16 @@ impl Hub {
         Ok(slot.state.lock().unwrap().view())
     }
     pub fn dispatch(&self, method: &str, params: Value, trace: Value) -> Result<Value> {
+        let _gate = self.0.gate.read().unwrap();
+        if self.0.closing.load(Ordering::SeqCst)
+            && !matches!(method, "updates.list" | "updates.get" | "hub.describe")
+        {
+            return Err(Error::new(
+                "app_exiting",
+                "Host is shutting down",
+                "应用正在更新或退出。",
+            ));
+        }
         if !params.is_object() {
             return Err(Error::argument("params must be an object"));
         }
@@ -598,28 +672,180 @@ impl Hub {
             ));
         }
         match method {
-            "hub.describe" => return Ok(json!({"name":"DeskHub","version":"0.1.0","protocolVersion":1,"offline":self.0.force_offline,"dataDirectory":self.0.data,"maxFrameBytes":65536,"methods":crate::METHODS})),
-            "modules.list" => return Ok(json!(inventory(&self.0.module_root)?.iter().map(|p| json!({"manifest":p.manifest,"packagePath":p.directory,"fingerprint":p.fingerprint})).collect::<Vec<_>>())),
-            "modules.inspect" => { let p = self.choose_package(params)?; return Ok(json!({"manifest":p.manifest,"packagePath":p.directory,"fingerprint":p.fingerprint})); }
-            "devices.list" => return Ok(json!(self.0.slots.lock().unwrap().values().map(|slot|slot.state.lock().unwrap().view()).collect::<Vec<_>>())),
+            "hub.describe" => {
+                return Ok(
+                    json!({"name":"DeskHub","version":env!("CARGO_PKG_VERSION"),"protocolVersion":1,"offline":self.0.force_offline,"dataDirectory":self.0.data,"maxFrameBytes":65536,"methods":crate::METHODS}),
+                )
+            }
+            "modules.list" => {
+                return Ok(json!(self
+                    .packages()?
+                    .iter()
+                    .map(module_updates::view)
+                    .collect::<Vec<_>>()))
+            }
+            "modules.inspect" => {
+                let p = self.choose_package(params)?;
+                return Ok(
+                    json!({"manifest":p.manifest,"packagePath":p.directory,"fingerprint":p.fingerprint}),
+                );
+            }
+            "modules.catalog" | "modules.checkUpdates" => {
+                let catalog = self.0.updates.check()?;
+                let packages = self.packages()?;
+                let devices = self.route("devices.list", &json!({}), Value::Null)?;
+                let releases: Vec<_> = catalog.modules.iter().map(|r| {
+                    let installed: Vec<_> = packages.iter().filter(|p|p.manifest.id==r.module_id).map(|p|p.manifest.version.clone()).collect();
+                    let affected: Vec<_> = devices.as_array().unwrap().iter().filter(|d| d["moduleId"]==r.module_id).map(|d|json!({"deviceId":d["id"],"version":d["moduleVersion"]})).collect();
+                    let compatible = r.protocol_version==1 && r.platform=="windows-x86_64" && module_updates::version(&r.minimum_hub_version).unwrap() <= module_updates::version(env!("CARGO_PKG_VERSION")).unwrap();
+                    let available = installed.iter().filter_map(|s|module_updates::version(s).ok()).max().is_none_or(|v|v<module_updates::version(&r.version).unwrap());
+                    json!({"release":r,"installedVersions":installed,"devices":affected,"compatible":compatible,"available":available})
+                }).collect();
+                return Ok(json!({"releases":releases}));
+            }
+            "updates.list" => return Ok(json!(self.0.downloads.list())),
+            "updates.get" => {
+                return Ok(json!(self
+                    .0
+                    .downloads
+                    .get(error::string(params, "jobId")?)?))
+            }
+            "updates.cancel" => {
+                return Ok(json!(self
+                    .0
+                    .downloads
+                    .cancel(error::string(params, "jobId")?)?))
+            }
+            "modules.download" => {
+                let release = self.0.updates.select(
+                    error::string(params, "moduleId")?,
+                    params
+                        .get("version")
+                        .map(|_| error::string(params, "version"))
+                        .transpose()?,
+                )?;
+                let job = self.0.downloads.create(
+                    "module",
+                    &release.module_id,
+                    &release.version,
+                    release.artifact,
+                )?;
+                let downloads = self.0.downloads.clone();
+                let id = job.id.clone();
+                self.0.downloads.spawn(job.id.clone(), move || {
+                    downloads.download(&id)?;
+                    Ok(("ready", json!({})))
+                });
+                return Ok(json!(job));
+            }
+            "modules.install" => {
+                let job_id = error::string(params, "jobId")?;
+                let job = self.0.downloads.get(job_id)?;
+                let device_id = params
+                    .get("deviceId")
+                    .map(|_| error::string(params, "deviceId").map(str::to_owned))
+                    .transpose()?;
+                if let Some(id) = &device_id {
+                    let slot = self.slot(id)?;
+                    let state = slot.state.lock().unwrap();
+                    if state.binding.module_id != job.subject {
+                        return Err(Error::argument(
+                            "The selected device uses a different module",
+                        ));
+                    }
+                    let old = Package::load(&state.binding.package_path)?;
+                    if module_updates::version(&job.version)?
+                        < module_updates::version(&old.manifest.version)?
+                    {
+                        return Err(Error::argument(
+                            "Online module installation cannot downgrade a device",
+                        ));
+                    }
+                }
+                let job = self.0.downloads.begin_install(job_id, "module")?;
+                let hub = self.clone();
+                let id = job.id.clone();
+                self.0.downloads.spawn(id.clone(), move || {
+                    let unpacked = module_updates::unpack(&hub.0.downloads, &id)?;
+                    let package = unpacked.package()?.stage(&hub.0.data.join("modules"))?;
+                    let device = if let Some(device_id) = device_id {
+                        Some(hub.dispatch(
+                            "devices.replace",
+                            json!({"deviceId":device_id,"packagePath":package.directory}),
+                            json!(id),
+                        )?)
+                    } else {
+                        None
+                    };
+                    Ok((
+                        "completed",
+                        json!({"package":module_updates::view(&package),"device":device}),
+                    ))
+                });
+                return Ok(json!(job));
+            }
+            "devices.list" => {
+                return Ok(json!(self
+                    .0
+                    .slots
+                    .lock()
+                    .unwrap()
+                    .values()
+                    .map(|slot| slot.state.lock().unwrap().view())
+                    .collect::<Vec<_>>()))
+            }
             "devices.add" => {
                 let id = error::string(params, "id")?;
-                if !error::valid_id(id) { return Err(Error::argument("Invalid device ID")); }
+                if !error::valid_id(id) {
+                    return Err(Error::argument("Invalid device ID"));
+                }
                 let label = params.get("label").and_then(Value::as_str).unwrap_or(id);
-                if label.len() > 240 { return Err(Error::argument("Label is too long")); }
-                if params.get("offline").is_some_and(|v|!v.is_boolean()) { return Err(Error::argument("offline must be boolean")); }
-                let package = self.choose_package(params)?.stage(&self.0.data.join("modules"))?;
-                let binding = Binding { id: id.into(), label: label.into(), module_id: package.manifest.id.clone(), package_path: package.directory,
+                if label.len() > 240 {
+                    return Err(Error::argument("Label is too long"));
+                }
+                if params.get("offline").is_some_and(|v| !v.is_boolean()) {
+                    return Err(Error::argument("offline must be boolean"));
+                }
+                let package = self
+                    .choose_package(params)?
+                    .stage(&self.0.data.join("modules"))?;
+                let binding = Binding {
+                    id: id.into(),
+                    label: label.into(),
+                    module_id: package.manifest.id.clone(),
+                    package_path: package.directory,
                     offline: self.0.force_offline || params["offline"].as_bool().unwrap_or(false),
-                    target: params.get("target").cloned().unwrap_or(json!({})), config: params.get("config").cloned().unwrap_or(json!({})) };
-                if !binding.target.is_object() || !binding.config.is_object() { return Err(Error::argument("target/config must be objects")); }
+                    target: params.get("target").cloned().unwrap_or(json!({})),
+                    config: params.get("config").cloned().unwrap_or(json!({})),
+                };
+                if !binding.target.is_object() || !binding.config.is_object() {
+                    return Err(Error::argument("target/config must be objects"));
+                }
                 let _configuration = self.0.configuration.lock().unwrap();
-                if self.0.slots.lock().unwrap().contains_key(id) { return Err(Error::new("duplicate_device", "Device ID already exists", "这个设备名称已经被使用。")); }
+                if self.0.slots.lock().unwrap().contains_key(id) {
+                    return Err(Error::new(
+                        "duplicate_device",
+                        "Device ID already exists",
+                        "这个设备名称已经被使用。",
+                    ));
+                }
                 self.save(Some(&binding), None)?;
-                let slot = Arc::new(Slot::new(binding, self.0.emit.clone())); self.0.slots.lock().unwrap().insert(id.into(), slot.clone());
+                let slot = Arc::new(Slot::new(binding, self.0.emit.clone()));
+                self.0.slots.lock().unwrap().insert(id.into(), slot.clone());
                 return Ok(slot.publish());
             }
             "diagnostics.export" => return self.export(),
+            "diagnostics.report" => {
+                let context = error::string(params, "context")?;
+                let detail = error::string(params, "detail")?;
+                if context.len() > 256 || detail.len() > 16 * 1024 {
+                    return Err(Error::argument("Diagnostic entry is too large"));
+                }
+                self.0
+                    .logger
+                    .record("frontend.error", json!({"context":context,"detail":detail}));
+                return Ok(json!({"recorded":true}));
+            }
             _ => {}
         }
         let id = error::string(params, "deviceId")?;
@@ -769,11 +995,14 @@ impl Hub {
         let devices = self.route("devices.list", &json!({}), Value::Null)?;
         atomic_json(
             &destination.join("summary.json"),
-            &json!({"version":"0.1.0","capturedAtUnixMs":now_ms(),"devices":devices}),
+            &json!({"version":env!("CARGO_PKG_VERSION"),"capturedAtUnixMs":now_ms(),"devices":devices,"updates":self.0.downloads.list()}),
         )?;
         Ok(json!({"directory":destination}))
     }
     pub fn shutdown(&self) {
+        self.0.closing.store(true, Ordering::SeqCst);
+        self.0.downloads.close();
+        let _gate = self.0.gate.write().unwrap();
         let slots: Vec<_> = self.0.slots.lock().unwrap().values().cloned().collect();
         let mut threads = Vec::new();
         for slot in slots {
@@ -787,5 +1016,25 @@ impl Hub {
             let _ = thread.join();
         }
         self.0.logger.record("backend.stop", json!({}));
+    }
+    pub fn resume(&self) {
+        self.0.downloads.reopen();
+        self.0.closing.store(false, Ordering::SeqCst);
+    }
+    pub fn downloads(&self) -> Downloads {
+        self.0.downloads.clone()
+    }
+    pub fn record(&self, event: &str, data: Value) {
+        self.0.logger.record(event, data);
+    }
+    pub fn update_config(&self) -> UpdateConfig {
+        self.0.updates.config.clone()
+    }
+    fn packages(&self) -> Result<Vec<Package>> {
+        let mut packages = inventory(&self.0.module_root)?;
+        packages.extend(inventory(&self.0.data.join("modules"))?);
+        packages.sort_by(|a, b| a.fingerprint.cmp(&b.fingerprint));
+        packages.dedup_by(|a, b| a.fingerprint == b.fingerprint);
+        Ok(packages)
     }
 }

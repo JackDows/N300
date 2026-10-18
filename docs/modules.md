@@ -6,7 +6,7 @@
 - `module.build.json.files`：分发文件名到模块内生成物的映射，支持 `{Configuration}`。根入口复制这些文件并生成 SHA-256 清单。
 - `module.json`：模块 ID、版本、协议版本、入口 EXE、连接方式。C++ 适配器的握手版本由此文件编译生成。
 
-分发结果位于 `artifacts/package/<配置>/modules/<moduleId>/<版本>/`。这个目录是完整替换单位；同时携带 EXE、DLL 和许可证，不能只换一个 DLL。文件哈希检查完整性，不代表发布者身份认证。
+分发结果位于 `artifacts/package/<配置>/modules/<moduleId>/<版本>/`。这个目录是完整替换单位；同时携带 EXE、DLL 和许可证，不能只换一个 DLL。本地包用清单哈希检查完整性；在线安装还要验证签名目录和 ZIP 签名，发布方法见 [发布文档](releases.md)。
 
 ## 独立运行
 
@@ -49,4 +49,4 @@ await client.request('devices.replace', {
 
 宿主将包复制到自己管理的按版本/指纹划分的目录并校验，启动候选模块进行握手，再停止旧会话。版本不兼容、内容损坏或运行时身份不符，会在旧会话继续运行时返回失败。`replace` 要求 moduleId 相同；换设备类型用 `devices.rebind`。
 
-当前采用显式本地包选择，不监听构建目录自动热换，也不自动重放设置。旧包保留，可显式选择用于回退。接口版本有破坏性变化时提高 protocolVersion；当前宿主会拒绝不支持的版本。
+在线流程通过 `modules.download` 和 `modules.install` 使用同一替换机制，支持下载进度、取消与失败恢复，见 [更新接口](updates.md)。不监听构建目录自动热换，也不自动重放设备设置。接口版本有破坏性变化时提高 protocolVersion；宿主拒绝不支持的版本。

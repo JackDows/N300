@@ -23,11 +23,13 @@ fn framing_rejects_oversize_and_invalid_utf8_without_consuming_unbounded_memory(
 
 #[test]
 fn persisted_config_and_invalid_requests_leave_hardware_unopened() {
-    let directory = std::env::temp_dir().join(format!(
-        "deskhub-tests-{}-{}",
-        std::process::id(),
-        deskhub_backend::storage::now_ms()
-    ));
+    let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../artifacts/validation")
+        .join(format!(
+            "deskhub-tests-{}-{}",
+            std::process::id(),
+            deskhub_backend::storage::now_ms()
+        ));
     std::fs::create_dir_all(&directory).unwrap();
     let hub = Hub::open(
         directory.join("modules"),
@@ -60,21 +62,16 @@ fn persisted_config_and_invalid_requests_leave_hardware_unopened() {
     );
     hub.shutdown();
     drop(hub);
-    for name in ["配置.json", "backend.lock", "logs/backend.jsonl"] {
-        std::fs::remove_file(directory.join(name)).unwrap();
-    }
-    std::fs::remove_dir(directory.join("logs")).unwrap();
-    std::fs::remove_dir(directory).unwrap();
+    // Keep the bounded acceptance directory for the manual development closeout.
 }
 
 #[test]
 fn module_manifest_rejects_external_executable_paths() {
-    let directory =
-        std::env::temp_dir().join(format!("deskhub-package-test-{}", std::process::id()));
+    let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../artifacts/validation")
+        .join(format!("deskhub-package-test-{}", std::process::id()));
     std::fs::create_dir_all(&directory).unwrap();
     let path = directory.join("module.json");
     std::fs::write(&path,json!({"id":"test","name":"test","version":"0.1.0","protocolVersion":1,"executable":"../outside.exe","files":{"../outside.exe":"0".repeat(64)}}).to_string()).unwrap();
     assert_eq!(Package::load(&path).unwrap_err().code, "invalid_argument");
-    std::fs::remove_file(path).unwrap();
-    std::fs::remove_dir(directory).unwrap();
 }

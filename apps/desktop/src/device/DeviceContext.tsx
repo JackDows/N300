@@ -1,341 +1,95 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { getTransport, isTauri, type Transport } from "./transport";
-import { recordUiError } from "../diagnostics";
-import { DeviceRequestError, type DeviceErrorInfo, type DeviceState, type Values, type WritableProperty } from "./types";
+import {createContext,useCallback,useContext,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import type {DeskHubClient,DeviceSnapshot,Reading} from '../../../../contracts/client.mjs';
+import {getTransport,isTauri} from './transport';
+import {recordUiError} from '../diagnostics';
+import type {DeviceErrorInfo,DeviceState,Values,WritableProperty} from './types';
 
-export type Phase = "starting" | "connecting" | "waiting" | "connected" | "disconnected";
-
-export interface Toast {
-  id: number;
-  text: string;
-  kind: "ok" | "error";
+export type Phase='starting'|'connecting'|'waiting'|'connected'|'disconnected';
+export interface Toast{id:number;text:string;kind:'ok'|'error'}
+interface ContextValue {
+  phase:Phase;state:DeviceState|null;values:Values;error:DeviceErrorInfo|null;toast:Toast|null;stopping:boolean;pendingInput:string|number|null;
+  set(property:WritableProperty,value:unknown):Promise<void>;setEqBand(band:number,gain:number):Promise<void>;resetEq():Promise<void>;
+  connect():Promise<void>;disconnect():Promise<void>;powerOff():Promise<void>;
 }
-
-interface DeviceContextValue {
-  phase: Phase;
-  state: DeviceState | null;
-  values: Values;
-  error: DeviceErrorInfo | null;
-  toast: Toast | null;
-  stopping: boolean;
-  pendingInput: string | number | null;
-  set(property: WritableProperty, value: unknown): Promise<void>;
-  setEqBand(band: number, gain: number): Promise<void>;
-  resetEq(): Promise<void>;
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
-  powerOff(): Promise<void>;
+const Context=createContext<ContextValue|null>(null);
+const capabilities:Record<keyof Values,string>={volume:'audio.volume',input:'audio.input',preset:'audio.preset',eq:'audio.eq',led:'lighting.enabled',idle_shutdown:'device.idleShutdown',timer:'device.timer',name:'device.name',firmware:'device.firmware'};
+export const formatHz=(hz:number)=>hz>=1000?`${hz/1000}k`:`${hz}`;
+export function errorInfo(error:unknown):DeviceErrorInfo {
+  if(error && typeof error==='object' && 'code' in error) return {code:String(error.code),message:'userMessage' in error?String(error.userMessage):'message' in error?String(error.message):'操作未完成，请重试'};
+  return {code:'internal_error',message:'操作未完成，请重试'};
 }
-
-const DeviceContext = createContext<DeviceContextValue | null>(null);
-
-const ERROR_TEXT: Record<string, string> = {
-  timeout: "设备响应超时",
-  disconnected: "连接已断开",
-  verification_failed: "设置未生效，请重试",
-  busy: "设备忙，请稍后",
-  unsupported: "设备不支持该功能",
-  not_found: "没有找到音箱",
-  ambiguous_device: "附近有多台音箱，请指定设备",
-  bluetooth_unavailable: "蓝牙不可用",
-  connection_failed: "连接失败",
-  core_exit: "连接已中断",
-  core_unavailable: "暂时无法连接音箱",
-  internal_error: "操作未完成，请重试",
-};
-
-export function errorInfo(e: unknown): DeviceErrorInfo {
-  if (e instanceof DeviceRequestError) return e.info;
-  if (e && typeof e === "object" && "code" in e && "message" in e) return e as DeviceErrorInfo;
-  return { code: "internal_error", message: String(e) };
+export function errorText(error:unknown){return errorInfo(error).message;}
+export function speakerView(snapshot:DeviceSnapshot):DeviceState {
+  const values=Object.fromEntries(Object.entries(capabilities).filter(([,id])=>snapshot.values[id]).map(([name,id])=>[name,snapshot.values[id]])) as Values;
+  return {api_version:1,offline:snapshot.offline,connected:snapshot.phase==='connected',auto_reconnect:false,
+    target:snapshot.target as DeviceState['target'],capabilities:{rename_bytes:snapshot.values['device.name']?.maxBytes},values,unavailable:snapshot.unavailable};
 }
-
-export function errorText(e: unknown) {
-  const info = errorInfo(e);
-  return ERROR_TEXT[info.code] ?? "操作未完成，请重试";
-}
-
-export const formatHz = (hz: number) => (hz >= 1000 ? `${hz / 1000}k` : `${hz}`);
-
-function patchValue(s: DeviceState, property: WritableProperty, value: unknown): DeviceState {
-  const values: Values = { ...s.values };
-  switch (property) {
-    case "volume":
-      if (values.volume) values.volume = { ...values.volume, value: value as number };
-      break;
-    case "input":
-    case "preset": {
-      const sel = values[property];
-      const c = sel?.choices.find((x) => x.value === value);
-      if (sel) values[property] = { ...sel, value: value as string, raw: c?.raw ?? sel.raw };
-      break;
-    }
-    case "timer":
-      values.timer = { ...values.timer, value: value as number };
-      break;
-    case "led":
-    case "idle_shutdown":
-      values[property] = { value: value as boolean };
-      break;
-    case "name":
-      values.name = { value: value as string };
-      break;
+export async function connectSpeaker(client:DeskHubClient):Promise<DeviceSnapshot> {
+  const info=await client.request('hub.describe');
+  const devices=await client.request('devices.list');
+  let device=devices.find(d=>d.id==='speaker');
+  device??=await client.request('devices.add',{id:'speaker',moduleId:'edifier-n300',label:'桌面音响',offline:info.offline});
+  if(device.phase==='connected')return device;
+  if(!device.offline&&!device.bindingTarget.resourceId){
+    const candidates=await client.request('devices.scan',{deviceId:device.id});
+    if(candidates.length!==1)throw {code:candidates.length?'ambiguous_device':'not_found',message:candidates.length?'附近有多台音箱，请选择设备':'没有找到音箱，请稍后重试'};
+    device=await client.request('devices.rebind',{deviceId:device.id,moduleId:device.moduleId,target:candidates[0].target});
   }
-  return { ...s, values };
+  return client.request('devices.connect',{deviceId:device.id});
 }
-
-export function DeviceProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<DeviceState | null>(null);
-  const [error, setError] = useState<DeviceErrorInfo | null>(null);
-  const [toast, setToast] = useState<Toast | null>(null);
-  const [stopping, setStopping] = useState(false);
-  const [pendingInput, setPendingInput] = useState<string | number | null>(null);
-  const inputBusy = useRef(false);
-  const transportRef = useRef<Transport | null>(null);
-  const sequenceRef = useRef(0);
-  const loadedRef = useRef(false);
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const toastId = useRef(0);
-  const stateRef = useRef(state);
-  const revisions = useRef<Record<string, number>>({});
-  const epoch = useRef(0);
-  stateRef.current = state;
-
-  const showToast = useCallback((text: string, kind: Toast["kind"] = "ok") => {
-    clearTimeout(toastTimer.current);
-    setToast({ id: ++toastId.current, text, kind });
-    toastTimer.current = setTimeout(() => setToast(null), kind === "error" ? 2800 : 1600);
-  }, []);
-
-  useEffect(() => {
-    if (!isTauri) return;
-    let disposed = false;
-    let unlisten = () => {};
-    Promise.all([import("@tauri-apps/api/core"), import("@tauri-apps/api/event")]).then(async ([{ invoke }, { listen }]) => {
-      const notify = async () => { if (await invoke<boolean>("take_activation_notice") && !disposed) showToast("程序已在运行"); };
-      const off = await listen("n300://already-running", notify);
-      if (disposed) { off(); return; }
-      unlisten = off;
-      await notify();
-    }).catch((error) => recordUiError(error, "activation_notice"));
-    return () => { disposed = true; unlisten(); };
-  }, [showToast]);
-
-  // 订阅设备事件；StrictMode 下重复挂载由 disposed 标记和通道单例保证只启动一次。
-  useEffect(() => {
-    let disposed = false;
-    let unsubscribe = () => {};
-    getTransport().then((t) => {
-      if (disposed) return;
-      transportRef.current = t;
-      unsubscribe = t.subscribe((event) => {
-        switch (event.type) {
-          case "ready":
-            sequenceRef.current = 0;
-            loadedRef.current = false;
-            break;
-          case "state":
-            if (event.sequence <= sequenceRef.current) return;
-            sequenceRef.current = event.sequence;
-            setState(event.state);
-            if (!event.state.connected) epoch.current++;
-            if (event.state.connected) setError(null);
-            break;
-          case "connection_error":
-            setError(event.error);
-            break;
-          case "core_exit":
-            epoch.current++;
-            sequenceRef.current = 0;
-            setState(null);
-            setError({ code: "core_exit", message: "控制核心已退出" });
-            break;
+export function DeviceProvider({children}:{children:ReactNode}){
+  const [snapshot,setSnapshot]=useState<DeviceSnapshot|null>(null);
+  const [error,setError]=useState<DeviceErrorInfo|null>(null);
+  const [toast,setToast]=useState<Toast|null>(null);
+  const [connecting,setConnecting]=useState(true);
+  const [stopping,setStopping]=useState(false);
+  const [pendingInput,setPendingInput]=useState<string|number|null>(null);
+  const client=useRef<DeskHubClient|null>(null),current=useRef(snapshot),toastTimer=useRef<ReturnType<typeof setTimeout>>(undefined),toastId=useRef(0),inputBusy=useRef(false);
+  current.current=snapshot;
+  const notify=useCallback((text:string,kind:Toast['kind']='ok')=>{clearTimeout(toastTimer.current);setToast({id:++toastId.current,text,kind});toastTimer.current=setTimeout(()=>setToast(null),kind==='error'?2800:1600);},[]);
+  useEffect(()=>{
+    let disposed=false;let off=()=>{};
+    getTransport().then(async c=>{
+      if(disposed)return;client.current=c;
+      off=c.subscribe(event=>{
+        if(event.type==='devices.changed'&&event.device.id==='speaker'){
+          setSnapshot(previous=>previous&&previous.revision>event.device.revision?previous:event.device);
+          if(event.device.phase==='connected')setError(null);
         }
+        if(event.type==='app.activated')void c.request('app.takeActivationNotice').then(show=>{if(show&&!disposed)notify('程序已在运行');});
       });
-      // A renderer reload can attach to a core that has already emitted its state.
-      const before = sequenceRef.current;
-      t.start().then(() => t.request<DeviceState>("tick")).then((snapshot) => {
-        if (!disposed && sequenceRef.current === before) setState(snapshot);
-      }).catch((e) => { recordUiError(e, "device.start"); if (!disposed) setError(errorInfo(e)); });
-    }).catch((e) => { recordUiError(e, "device.transport"); if (!disposed) setError(errorInfo(e)); });
-    return () => {
-      disposed = true;
-      unsubscribe();
-      clearTimeout(toastTimer.current);
-    };
-  }, []);
-
-  // 每次连上后批量读取一次全部设置。
-  const connected = !!state?.connected;
-  useEffect(() => {
-    if (!connected) {
-      loadedRef.current = false;
-      return;
-    }
-    if (loadedRef.current) return;
-    loadedRef.current = true;
-    let disposed = false;
-    transportRef.current?.request<DeviceState>("status", { full: true }).then((snapshot) => {
-      if (!disposed) setState(snapshot);
-    }).catch((e) => { recordUiError(e, "device.status"); if (!disposed) showToast(errorText(e), "error"); });
-    return () => { disposed = true; };
-  }, [connected, showToast]);
-
-  const updateValue = useCallback((property: keyof Values, value: unknown) => {
-    setState((s) => {
-      if (!s?.connected) return s;
-      const values = { ...s.values };
-      if (value === undefined) delete values[property];
-      else (values as Record<string, unknown>)[property] = value;
-      return { ...s, values };
-    });
-  }, []);
-
-  const recoverValue = useCallback(async (t: Transport, property: keyof Values, revision: number, connection: number) => {
-    if (epoch.current !== connection || !stateRef.current?.connected) return;
-    let confirmed: unknown;
-    try { confirmed = await t.request("get", { property }); } catch (e) { recordUiError(e, `get.${property}.recovery`); confirmed = undefined; }
-    if (epoch.current === connection && revisions.current[property] === revision) updateValue(property, confirmed);
-  }, [updateValue]);
-
-  const set = useCallback(
-    async (property: WritableProperty, value: unknown) => {
-      const t = transportRef.current;
-      if (!t || !stateRef.current?.connected) return;
-      if (property === "input") {
-        if (inputBusy.current) return;
-        inputBusy.current = true;
-        setPendingInput(value as string | number);
-      }
-      clearTimeout(toastTimer.current);
-      setToast(null);
-      const revision = revisions.current[property] = (revisions.current[property] ?? 0) + 1;
-      const connection = epoch.current;
-      setState((s) => (s ? patchValue(s, property, value) : s));
-      try {
-        const confirmed = await t.request("set", { property, value });
-        if (revisions.current[property] === revision && epoch.current === connection) {
-          updateValue(property, confirmed);
-        }
-      } catch (e) {
-        recordUiError(e, `set.${property}`);
-        showToast(property === "input" ? "没有切换成功，请重试" : errorText(e), "error");
-        await recoverValue(t, property, revision, connection);
-      } finally {
-        if (property === "input") { inputBusy.current = false; setPendingInput(null); }
-      }
-    },
-    [showToast, updateValue, recoverValue],
-  );
-
-  const setEqBand = useCallback(
-    async (band: number, gain: number) => {
-      const t = transportRef.current;
-      if (!t || !stateRef.current?.connected) return;
-      const revision = revisions.current.eq = (revisions.current.eq ?? 0) + 1;
-      const connection = epoch.current;
-      setState((s) => {
-        const eq = s?.values.eq;
-        if (!s || !eq) return s;
-        return {
-          ...s,
-          values: { ...s.values, eq: { ...eq, value: eq.value.map((b) => (b.index === band ? { ...b, gain_db: gain } : b)) } },
-        };
-      });
-      try {
-        const confirmed = await t.request("eq.set", { band, gain });
-        if (revisions.current.eq === revision && epoch.current === connection) {
-          updateValue("eq", confirmed);
-        }
-      } catch (e) {
-        recordUiError(e, "eq.set");
-        showToast(errorText(e), "error");
-        await recoverValue(t, "eq", revision, connection);
-      }
-    },
-    [showToast, updateValue, recoverValue],
-  );
-
-  const resetEq = useCallback(async () => {
-    const t = transportRef.current;
-    const bands = stateRef.current?.values.eq?.value.filter((b) => b.gain_db !== 0) ?? [];
-    if (!t || !bands.length) return;
-    const revision = revisions.current.eq = (revisions.current.eq ?? 0) + 1;
-    const connection = epoch.current;
-    try {
-      for (const b of bands) await t.request("eq.set", { band: b.index, gain: 0 });
-    } catch (e) {
-      recordUiError(e, "eq.reset");
-      showToast(errorText(e), "error");
-      await recoverValue(t, "eq", revision, connection);
-    }
-  }, [showToast, recoverValue]);
-
-  const call = useCallback(
-    async (method: string, okText?: string) => {
-      const t = transportRef.current;
-      if (!t) return;
-      try {
-        await t.request(method);
-        if (okText) showToast(okText);
-      } catch (e) {
-        recordUiError(e, method);
-        showToast(errorText(e), "error");
-      }
-    },
-    [showToast],
-  );
-
-  const phase: Phase = !state
-    ? error
-      ? "disconnected"
-      : "starting"
-    : state.connected
-      ? "connected"
-      : state.auto_reconnect
-        ? error ? "waiting" : "connecting"
-        : "disconnected";
-
-  const connect = useCallback(async () => {
-    setError(null);
-    try {
-      const t = transportRef.current;
-      if (!t) throw new DeviceRequestError({ code: "core_unavailable", message: "控制核心未启动" });
-      await t.request("start");
-    } catch (e) {
-      recordUiError(e, "connect");
-      setError(errorInfo(e));
-    }
-  }, []);
-  const disconnect = useCallback(async () => {
-    setStopping(true);
-    try { await call("stop"); } finally { setStopping(false); }
-  }, [call]);
-
-  const value = useMemo<DeviceContextValue>(
-    () => ({
-      phase,
-      state,
-      values: state?.connected ? state.values : {},
-      error,
-      toast,
-      stopping,
-      pendingInput,
-      set,
-      setEqBand,
-      resetEq,
-      connect,
-      disconnect,
-      powerOff: () => call("power.off", "已请求关闭音箱"),
-    }),
-    [phase, state, error, toast, stopping, pendingInput, set, setEqBand, resetEq, call, connect, disconnect],
-  );
-
-  return <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>;
+      if(isTauri&&await c.request('app.takeActivationNotice'))notify('程序已在运行');
+      try {const value=await connectSpeaker(c);if(!disposed)setSnapshot(value);}
+      catch(e){recordUiError(e,'speaker.connect');if(!disposed)setError(errorInfo(e));}
+      finally{if(!disposed)setConnecting(false);}
+    }).catch(e=>{recordUiError(e,'hub.connect');if(!disposed){setError(errorInfo(e));setConnecting(false);}});
+    return()=>{disposed=true;off();clearTimeout(toastTimer.current);};
+  },[notify]);
+  const connect=useCallback(async()=>{
+    if(!client.current)return;setConnecting(true);setError(null);
+    try{setSnapshot(await connectSpeaker(client.current));}catch(e){setError(errorInfo(e));recordUiError(e,'speaker.connect');}finally{setConnecting(false);}
+  },[]);
+  const set=useCallback(async(property:WritableProperty,value:unknown)=>{
+    const c=client.current,s=current.current;if(!c||s?.phase!=='connected')return;
+    if(property==='input'){if(inputBusy.current)return;inputBusy.current=true;setPendingInput(value as string|number);}
+    setToast(null);const capability=capabilities[property];
+    try{
+      const confirmed=await c.request('devices.write',{deviceId:s.id,capability,value});
+      setSnapshot(previous=>previous?{...previous,values:{...previous.values,[capability]:confirmed}}:previous);
+    }catch(e){recordUiError(e,`speaker.${property}`);notify(property==='input'?'没有切换成功，请重试':errorText(e),'error');
+      try{const value=await c.request('devices.read',{deviceId:s.id,capability});setSnapshot(previous=>previous?{...previous,values:{...previous.values,[capability]:value}}:previous);}catch{/* The backend snapshot retains stale/error state. */}
+    }finally{if(property==='input'){inputBusy.current=false;setPendingInput(null);}}
+  },[notify]);
+  const setEqBand=useCallback(async(band:number,gain:number)=>{
+    const c=client.current,s=current.current;if(!c||s?.phase!=='connected')return;
+    try{const eq=await c.request('devices.invoke',{deviceId:s.id,capability:'audio.eq.setBand',arguments:{band,gain}}) as Reading;setSnapshot(p=>p?{...p,values:{...p.values,'audio.eq':eq}}:p);}
+    catch(e){recordUiError(e,'speaker.eq');notify(errorText(e),'error');}
+  },[notify]);
+  const resetEq=useCallback(async()=>{const bands=(current.current?.values['audio.eq']?.value??[]) as Array<{index:number;gain_db:number}>;for(const band of bands)if(band.gain_db)await setEqBand(band.index,0);},[setEqBand]);
+  const disconnect=useCallback(async()=>{if(!client.current||!current.current)return;setStopping(true);try{setSnapshot(await client.current.request('devices.disconnect',{deviceId:current.current.id}));}catch(e){notify(errorText(e),'error');}finally{setStopping(false);}},[notify]);
+  const powerOff=useCallback(async()=>{if(!client.current||!current.current)return;try{await client.current.request('devices.invoke',{deviceId:current.current.id,capability:'device.powerOff'});notify('已请求关闭音箱');}catch(e){notify(errorText(e),'error');}},[notify]);
+  const state=useMemo(()=>snapshot?speakerView(snapshot):null,[snapshot]);
+  const phase:Phase=connecting?'connecting':snapshot?.phase==='connected'?'connected':'disconnected';
+  return <Context.Provider value={{phase,state,values:state?.connected?state.values:{},error,toast,stopping,pendingInput,set,setEqBand,resetEq,connect,disconnect,powerOff}}>{children}</Context.Provider>;
 }
-
-export function useDevice() {
-  const ctx = useContext(DeviceContext);
-  if (!ctx) throw new Error("useDevice 必须在 DeviceProvider 内使用");
-  return ctx;
-}
+export function useDevice(){const value=useContext(Context);if(!value)throw new Error('DeviceProvider missing');return value;}

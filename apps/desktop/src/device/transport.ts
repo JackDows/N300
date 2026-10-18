@@ -1,23 +1,12 @@
-import type { DeviceEvent } from "./types";
-
-/** 前端与设备核心之间的通道：桌面版走 Tauri → n300.exe serve，浏览器预览走内存模拟。 */
-export interface Transport {
-  readonly kind: "tauri" | "mock";
-  start(): Promise<void>;
-  request<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T>;
-  subscribe(listener: (event: DeviceEvent) => void): () => void;
-  dispose?(): void;
-}
-
-export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-
-let instance: Promise<Transport> | null = null;
-
-export function getTransport(): Promise<Transport> {
+import type { DeskHubClient } from '../../../../contracts/client.mjs';
+export const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+let instance: Promise<DeskHubClient> | null = null;
+export function getTransport(): Promise<DeskHubClient> {
   instance ??= isTauri
-    ? import("./tauriTransport").then((m) => m.createTauriTransport())
-    : import("./mockTransport").then((m) => m.createMockTransport());
+    ? Promise.all([import('@tauri-apps/api/core'),import('@tauri-apps/api/event'),import('../../../../contracts/desktop.mjs')])
+      .then(([{invoke},{listen},{createDesktopClient}])=>createDesktopClient({invoke,listen}))
+    : Promise.all([import('../../../../contracts/mock.mjs'),import('../../../../contracts/fixtures/devices.json')])
+      .then(([{createMockClient},seed])=>createMockClient(seed.default as any));
   return instance;
 }
-
-if (import.meta.hot) import.meta.hot.dispose(() => { void instance?.then((transport) => transport.dispose?.()); });
+if(import.meta.hot)import.meta.hot.dispose(()=>{void instance?.then(c=>c.close());});

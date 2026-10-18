@@ -10,6 +10,14 @@ fn main() {
     for line in std::io::stdin().lock().lines().map_while(Result::ok) {
         let request: Value = serde_json::from_str(&line).unwrap();
         let params = &request["params"];
+        if request["method"] == "device.connect" && identity["failConnect"] == true {
+            println!(
+                "{}",
+                json!({"jsonrpc":"2.0","id":request["id"],"error":{"code":-32000,"message":"Injected connection failure","data":{"code":"connection_failed","message":"Injected update activation failure","userMessage":"设备暂时无法连接。"}}})
+            );
+            std::io::stdout().flush().unwrap();
+            continue;
+        }
         let snapshot = |connected: bool, counter: i64, offline: bool| json!({"phase":if connected{"connected"}else{"disconnected"},"offline":offline,"target":{"serial":"fixture"},"values":{"test.counter":{"value":counter}}});
         let result = match request["method"].as_str().unwrap() {
             "module.describe" => {

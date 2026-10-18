@@ -6,15 +6,15 @@
 
 ## 获取依赖与构建
 
-开发基础环境：Windows x64、Visual Studio 2022 C++ 桌面开发工具、CMake 3.24+、PowerShell 5.1/7。打开 `OG98.code-workspace`，安装推荐的 VS Code 扩展。
+开发基础环境：Windows x64、Visual Studio 2022 C++ 桌面开发工具、CMake 3.24+、PowerShell 5.1/7。打开仓库根目录的 `DeskHub.code-workspace`。
 
 运行和调试面板使用固定入口：**安装依赖、构建 Debug、构建 Release、运行 Debug、运行 Release、运行离线测试版**。同样可从项目根目录执行：
 
 ```powershell
-.\scripts\project.ps1 -Action Install
-.\scripts\project.ps1 -Action Build -Configuration Debug
-.\scripts\project.ps1 -Action Build -Configuration Release
-.\scripts\project.ps1 -Action Run -Configuration Debug -Offline
+.\scripts\project.ps1 -Action Install -Module flesports-og98
+.\scripts\project.ps1 -Action Build -Module flesports-og98 -Configuration Debug
+.\scripts\project.ps1 -Action Build -Module flesports-og98 -Configuration Release
+.\scripts\project.ps1 -Action Run -Module flesports-og98 -Configuration Debug -Offline
 ```
 
 `Install` 检查工具链并通过 CMake 下载 nlohmann/json **3.12.0**，校验固定 SHA-256，缓存在 `.local/dependencies/`。`Build` 编译、运行离线测试并生成 `artifacts/package/Debug` 或 `Release`。首次安装依赖需要网络，之后已有缓存即可离线构建。没有依赖相邻的 N300、REA 或本机原厂安装目录。

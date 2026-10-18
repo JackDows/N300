@@ -1,20 +1,72 @@
 import { DeskHubError } from './client.mjs';
 
 /** Browser-only device simulator. Package integrity and filesystem export use the native host. */
-export function createMockClient(seed, { latencyMs = 20 } = {}) {
+export function createMockClient(seed, { latencyMs = 20, updateScenario = 'success' } = {}) {
   const original = structuredClone(seed);
   const devices = new Map(original.map((device) => [device.id, structuredClone(device)]));
   const sessions = new Map(original.map((device) => [device.id, structuredClone(device.values)]));
   const listeners = new Set(), queues = new Map();
   let closed = false, nextId = 0;
+  const jobs = new Map(), installed = new Map();
+  let appVersion = '0.3.0', lastResult = null, appChecked = false;
   const fail = (code, userMessage) => { throw new DeskHubError({ code, userMessage, message: code }); };
   const emit = (event) => { for (const listener of listeners) listener(structuredClone(event)); };
   const publish = (device) => { device.revision++; emit({ type: 'devices.changed', device }); return structuredClone(device); };
   const get = (id) => devices.get(id) ?? fail('device_not_found', '这个设备尚未添加。');
   const templateFor = (id) => original.find((d) => d.moduleId === id) ?? fail('module_selection_required', '模拟器中没有这个设备模块。');
-  const select = (params) => templateFor(params.moduleId ?? params.packagePath?.replace(/^mock:\/\//, ''));
+  const select = (params) => {
+    const [id, version] = params.packagePath?.replace(/^mock:\/\//, '').split('/') ?? [params.moduleId];
+    const template = templateFor(id);
+    return version ? { ...template, moduleVersion: version } : template;
+  };
   const packageFor = (device) => ({ manifest: { id: device.moduleId, name: device.label, version: device.moduleVersion, protocolVersion: 1, executable: 'browser-mock', files: {} }, packagePath: `mock://${device.moduleId}`, fingerprint: 'mock' });
   const validLabel = (label) => typeof label === 'string' && label.length > 0 && new TextEncoder().encode(label).length <= 240;
+  const jobView = (job) => structuredClone(job);
+  const jobGet = (id) => jobs.get(id) ?? fail('job_not_found', '找不到这次更新。');
+  const jobEmit = (job) => { if (!closed) emit({type:'updates.changed',job}); return jobView(job); };
+  const nextVersion = (value) => { const parts = value.split('.').map(Number); return `${parts[0]}.${parts[1]}.${parts[2]+1}`; };
+  const releases = [...new Map(original.map(d=>[d.moduleId,d])).values()].map(d=>({moduleId:d.moduleId,name:d.label,version:nextVersion(d.moduleVersion),minimumHubVersion:'0.3.0',protocolVersion:1,platform:'windows-x86_64',notes:'离线模拟更新',artifact:{url:`https://example.invalid/${d.moduleId}.zip`,size:1000,sha256:'0'.repeat(64),signature:'offline-simulation'}}));
+  const jobFail = (job, code) => {job.state='failed';job.error={code,message:code,userMessage:'更新未完成，请重试。',details:{}};jobEmit(job);};
+  function download(kind,subject,version){
+    if([...jobs.values()].some(j=>j.kind===kind&&j.subject===subject&&!['completed','failed','cancelled','interrupted'].includes(j.state)))fail('update_busy','更新操作正在进行。');
+    const job={id:`mock-${++nextId}`,kind,subject,version,state:'queued',downloaded:0,total:1000,createdAtUnixMs:Date.now(),error:null,result:null};
+    jobs.set(job.id,job);
+    void(async()=>{
+      for(const amount of [250,500,750,1000]){
+        await new Promise(r=>setTimeout(r,Math.max(10,latencyMs)));
+        if(closed||job.state==='cancelled')return;
+        if(updateScenario==='network-error'){jobFail(job,'download_failed');return;}
+        job.state='downloading';job.downloaded=amount;jobEmit(job);
+      }
+      job.state='verifying';jobEmit(job);
+      await new Promise(r=>setTimeout(r,Math.max(10,latencyMs)));
+      if(closed||job.state==='cancelled')return;
+      if(updateScenario==='bad-signature'){jobFail(job,'signature_invalid');return;}
+      job.state='ready';jobEmit(job);
+    })();
+    return jobEmit(job);
+  }
+  function install(job,deviceId){
+    if(job.state!=='ready')fail('invalid_argument','请先完成下载。');
+    const device=deviceId?get(deviceId):null;
+    if(device&&device.moduleId!==job.subject)fail('invalid_argument','请选择使用该模块的设备。');
+    job.state='installing';
+    void(async()=>{
+      await new Promise(r=>setTimeout(r,Math.max(10,latencyMs)));
+      if(closed)return;
+      if(updateScenario==='install-failure'){jobFail(job,'install_failed');return;}
+      if(job.kind==='app'){
+        appVersion=job.version;job.result={version:appVersion,restarted:true};lastResult={version:appVersion,jobId:job.id,state:'completed',cleanupPending:false};
+      }else{
+        const template=templateFor(job.subject),p=packageFor({...template,moduleVersion:job.version});
+        p.packagePath+=`/${job.version}`;p.fingerprint=`mock-${job.subject}-${job.version}`;installed.set(p.packagePath,p);
+        if(device){device.generation++;device.moduleVersion=job.version;publish(device);}
+        job.result={package:p,device:device?structuredClone(device):null};
+      }
+      job.state='completed';jobEmit(job);
+    })();
+    return jobEmit(job);
+  }
   function connect(device) {
     if (device.phase === 'connected') return publish(device);
     if (device.phase === 'stopped' || device.phase === 'faulted') device.generation++;
@@ -30,11 +82,28 @@ export function createMockClient(seed, { latencyMs = 20 } = {}) {
   }
   async function execute(method, params, requestId) {
     if (closed) fail('transport_closed', '模拟器已经关闭。');
-    if (method === 'hub.describe') return { name: 'DeskHub', version: '0.1.0', protocolVersion: 1, offline: true, dataDirectory: 'browser-memory', maxFrameBytes: 65536, methods: methods.slice() };
+    if (method === 'hub.describe') return { name: 'DeskHub', version: '0.3.0', protocolVersion: 1, offline: true, dataDirectory: 'browser-memory', maxFrameBytes: 65536, methods: methods.slice(), desktop: {version:appVersion,updater:true} };
     if (method === 'devices.list') return structuredClone([...devices.values()]);
-    if (method === 'modules.list') return [...new Map(original.map((d) => [d.moduleId, packageFor(d)])).values()];
+    if (method === 'modules.list') return [...new Map(original.map((d) => [d.moduleId, packageFor(d)])).values(),...installed.values()].map(p=>structuredClone(p));
     if (method === 'modules.inspect') return packageFor(select(params));
     if (method === 'diagnostics.export') fail('unsupported_mock_operation', '诊断文件导出请连接原生离线后端测试。');
+    if (method === 'diagnostics.report') return {recorded:true};
+    if (method === 'app.takeActivationNotice') return false;
+    if (method === 'updates.list') return [...jobs.values()].map(jobView);
+    if (method === 'updates.get') return jobView(jobGet(params.jobId));
+    if (method === 'updates.cancel') {
+      const job=jobGet(params.jobId);
+      if(job.state==='installing')fail('update_busy','正在安装，请稍后。');
+      if(!['completed','failed','cancelled','interrupted'].includes(job.state)){job.state='cancelled';job.error={code:'download_cancelled',message:'Cancelled',userMessage:'下载已取消。',details:{}};}
+      return jobEmit(job);
+    }
+    if (method === 'app.updates.info') return {version:appVersion,lastResult:structuredClone(lastResult)};
+    if (method === 'app.updates.check') {appChecked=true;return {currentVersion:appVersion,release:appVersion==='0.3.1'?null:{version:'0.3.1',notes:'离线模拟整包更新'}};}
+    if (method === 'app.updates.download') {if(!appChecked)fail('check_required','请先检查更新。');return download('app','deskhub','0.3.1');}
+    if (method === 'app.updates.install') {const job=jobGet(params.jobId);if(job.kind!=='app')fail('invalid_argument','更新类型不匹配。');return install(job);}
+    if (method === 'modules.catalog'||method === 'modules.checkUpdates') return {releases:releases.map(release=>({release:structuredClone(release),compatible:true,available:![...installed.values()].some(p=>p.manifest.id===release.moduleId&&p.manifest.version===release.version),installedVersions:[templateFor(release.moduleId).moduleVersion,...[...installed.values()].filter(p=>p.manifest.id===release.moduleId).map(p=>p.manifest.version)],devices:[...devices.values()].filter(d=>d.moduleId===release.moduleId).map(d=>({deviceId:d.id,version:d.moduleVersion}))}))};
+    if (method === 'modules.download') {const release=releases.find(r=>r.moduleId===params.moduleId&&(!params.version||params.version===r.version));if(!release)fail('release_not_found','没有找到模块版本。');return download('module',release.moduleId,release.version);}
+    if (method === 'modules.install') {const job=jobGet(params.jobId);if(job.kind!=='module')fail('invalid_argument','更新类型不匹配。');return install(job,params.deviceId);}
     if (!methods.includes(method)) fail('unknown_method', '暂不支持这项操作。');
     if (method === 'devices.add') {
       if (typeof params.id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(params.id) || !validLabel(params.label ?? params.id)) fail('invalid_argument', '设备名称格式不正确。');
@@ -126,7 +195,7 @@ export function createMockClient(seed, { latencyMs = 20 } = {}) {
       throw error;
     }
   }
-  const methods = ['hub.describe', 'modules.list', 'modules.inspect', 'devices.list', 'devices.add', 'devices.get', 'devices.start', 'devices.stop', 'devices.restart', 'devices.replace', 'devices.rebind', 'devices.rename', 'devices.remove', 'devices.scan', 'devices.connect', 'devices.disconnect', 'devices.refresh', 'devices.read', 'devices.write', 'devices.invoke', 'diagnostics.export'];
+  const methods = ['hub.describe', 'modules.list', 'modules.inspect','modules.catalog','modules.checkUpdates','modules.download','modules.install','updates.list','updates.get','updates.cancel','app.updates.info','app.updates.check','app.updates.download','app.updates.install','app.takeActivationNotice', 'devices.list', 'devices.add', 'devices.get', 'devices.start', 'devices.stop', 'devices.restart', 'devices.replace', 'devices.rebind', 'devices.rename', 'devices.remove', 'devices.scan', 'devices.connect', 'devices.disconnect', 'devices.refresh', 'devices.read', 'devices.write', 'devices.invoke', 'diagnostics.export','diagnostics.report'];
   return {
     request(method, params = {}) {
       const id = ++nextId;
