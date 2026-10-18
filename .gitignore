@@ -1,38 +1,17 @@
-# Local environments and Python-generated files
-/.venv/
-/.local/
-__pycache__/
-*.py[cod]
-*.egg-info/
+**/.local/
+**/artifacts/
+**/target/
+**/node_modules/
+**/dist/
+**/test-results/
+**/playwright-report/
+**/src-tauri/gen/
+**/research/inputs/
+**/research/evidence/
 *.bundle
-.pytest_cache/
-.ruff_cache/
-
-# Build products and validation logs
-/artifacts/
-/build/
-/dist/
-
-# Original vendor downloads and machine-local reverse engineering output
-/research/inputs/
-/research/evidence/
-
-# Editor and OS local state
-.idea/
-/.vscode/*
-!/.vscode/launch.json
-!/.vscode/tasks.json
-!/.vscode/settings.json
-!/.vscode/extensions.json
-Thumbs.db
-Desktop.ini
-.DS_Store
+*.tsbuildinfo
+__pycache__/
 .env
 .env.*
-node_modules/
-*.tsbuildinfo
-/desktop/dist/
-/desktop/src-tauri/target/
-/desktop/src-tauri/gen/
-/desktop/test-results/
-/desktop/playwright-report/
+Thumbs.db
+Desktop.ini

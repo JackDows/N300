@@ -1,0 +1,33 @@
+{
+  "name": "n300-desktop",
+  "private": true,
+  "version": "0.2.1",
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "tauri": "tauri",
+    "app:dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ../../modules/edifier-n300/scripts/dev.ps1",
+    "app:build": "powershell -NoProfile -ExecutionPolicy Bypass -File ../../modules/edifier-n300/scripts/project.ps1 -Action Build -Configuration Release -Component Desktop",
+    "test:unit": "vitest run",
+    "test:desktop": "playwright test"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.12.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "5.0.5",
+    "@playwright/test": "1.64.1"
+  }
+}

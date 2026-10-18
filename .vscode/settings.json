@@ -8,15 +8,15 @@
   },
   "search.exclude": {
     ".venv": true,
-    ".local": true,
-    "artifacts": true,
-    "research/inputs": true,
-    "research/evidence": true,
-    "desktop/node_modules": true,
-    "desktop/dist": true,
-    "desktop/src-tauri/gen": true
+    "**/.local": true,
+    "**/artifacts": true,
+    "**/research/inputs": true,
+    "**/research/evidence": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/src-tauri/gen": true
   },
   "rust-analyzer.linkedProjects": [
-    "desktop/src-tauri/Cargo.toml"
+    "Cargo.toml"
   ]
 }

@@ -1,57 +1,12 @@
-# 逆向资料与复现
+# 逆向资料索引
 
-本目录用于解释和扩展控制协议，不参与应用的正常安装、测试和编译。
-[sources.json](sources.json) 随 Git 提交，记录官方输入文件的来源、文件大小和 SHA-256。
-inputs 与 evidence 保留本机资料，不纳入源码仓库。
-PDF/二维码分析、历史扫描脚本的 Python 依赖只在需要时安装，与 C++ 应用构建无关：
+协议资料按设备保留，应用构建不需要 REA、原厂 APK/EXE 或反编译输出。
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r research/requirements.lock.txt
-```
+- N300：[研究入口](../modules/edifier-n300/research/README.md)、[协议依据](../modules/edifier-n300/docs/reverse-engineering.md)。
+- OG98：[研究入口](../modules/flesports-og98/research/README.md)、[协议与证据 ID](../modules/flesports-og98/docs/protocol.md)、[本地功能清单](../modules/flesports-og98/docs/features.md)。
 
-## 下载原始资料
+Git 保存源码、依赖锁、产物哈希、证据索引、测试和验证结论。原厂输入、完整 REA 记录和抓包迁入各模块的 `research/inputs/`、`research/evidence/`，不进入 Git，也不参加生成物清理。换电脑构建只需要本仓库；复查逆向过程时复制这些证据目录，或按研究清单取得对应输入。
 
-在项目根目录执行（需要基础环境 Node.js）：
+OG98 原始分析记录：`modules/flesports-og98/research/evidence/2026-10-18/`。N300 历史验收记录：`modules/edifier-n300/research/evidence/migration-0.2.1/`；最后已发布安装包与签名：`research/evidence/releases/0.2.1/`（相对 N300 模块）。
 
-```powershell
-node research/scripts/fetch-inputs.mjs
-```
-
-该脚本只下载 sources.json 中列出的官方资料，并检查 SHA-256。
-已经存在且校验相符的文件不会重复下载。
-
-## 继续静态分析
-
-需要自行安装 Java 17+ 和 JADX。当前工作区的公共工具位于
-../../tools/toolchain/jadx/jadx-headless-mcp-0.7.1-all.jar。
-DecompileSelected.java 接受 APK 路径、输出目录和类名；
-ExportResources.java 接受 APK 路径和输出目录。
-工具本身不执行 APK 内的代码。
-
-REA 会话脚本需要 REA 源码及其已安装的 npm 依赖。
-默认查找 ../../tools/rea；如果项目单独放在其他位置，可以设置环境变量
-REA_ROOT 指向 REA 仓库，并将 Codex config.toml 路径作为首个参数传入
-research/scripts/rea-session.mjs。环境配置属于分析工具，不影响应用编译。
-
-## 资料路径
-
-```text
-inputs/edifier-connect-8.5.3.apk       官方 Android App
-inputs/n300-manual.pdf               官方说明书
-evidence/jadx-source/                定向反编译源码
-evidence/rea-evidence-bundle.json     原始 REA 会话证据
-evidence/n300-product-config.json    从 App 配置提取的设备信息
-scripts/extract_catalog.py           从反编译源码生成应用菜单资源
-```
-
-## 证据保留
-
-原始 REA 证据中的绝对路径对应分析时的位置，目录整理后仍按原样保存，
-避免改动证据内容与摘要。判断目标文件身份请使用 sources.json 的 SHA-256。
-当前测试和构建结果在 ../artifacts/validation。产品已改为原生 DLL/CLI，不再保留 GUI 预览。
-
-## 人工实测
-
-probe_bluetooth.py 和 probe_classic.py 会进行真实蓝牙扫描。
-它们不会由 setup、test 或 build 自动调用。
+当前 DeskHub 只新增模块适配层和公共宿主，没有改写设备私有报文算法。

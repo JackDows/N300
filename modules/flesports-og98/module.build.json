@@ -1,0 +1,7 @@
+{
+  "files":{
+    "deskhub-og98.exe":"artifacts/dist/{Configuration}/deskhub-og98.exe",
+    "og98.dll":"artifacts/dist/{Configuration}/og98.dll",
+    "nlohmann-json-LICENSE.MIT":".local/dependencies/build/nlohmann_json-src/LICENSE.MIT"
+  }
+}

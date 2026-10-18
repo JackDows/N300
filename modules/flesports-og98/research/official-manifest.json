@@ -1,0 +1,32 @@
+[
+  {
+    "path": "package.json",
+    "sha256": "b9a275716c0ee4139809e5721d0a9877e83dbe04591a4588964bd8e13ef04690",
+    "bytes": 950
+  },
+  {
+    "path": "CurrentCompany.json",
+    "sha256": "c21395f15d1fbf616f048ddb20feb30975df4ba97b271fb843c41b0863b0dd76",
+    "bytes": 36
+  },
+  {
+    "path": "iot_driver.exe",
+    "sha256": "7e56bc75152450a454c874f6e0eb1d1cc09bf65e00db002021c4b14b70430583",
+    "bytes": 6709824
+  },
+  {
+    "path": "main_dist/main.js",
+    "sha256": "4dfa67338b234b8370f6c2ff18bd56b95e71030af1d31e6ed27799f0e770f58a",
+    "bytes": 870966
+  },
+  {
+    "path": "dist/static/js/main_36623ada.js",
+    "sha256": "8c604678512d5fa9c0a1a62e7d687e60c16200d0f16f41d6551500251299762e",
+    "bytes": 18200371
+  },
+  {
+    "path": "company/company_腹灵/CONFIG.json",
+    "sha256": "6b0444cf8df27f802cb5aad5e338a6c2a7af37c008233c59b048c8335935b02d",
+    "bytes": 187
+  }
+]

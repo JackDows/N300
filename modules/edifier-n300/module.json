@@ -1,0 +1,9 @@
+{
+  "id":"edifier-n300",
+  "name":"EDIFIER N300",
+  "version":"0.1.0",
+  "protocolVersion":1,
+  "executable":"deskhub-n300.exe",
+  "transport":["ble"],
+  "files":{}
+}

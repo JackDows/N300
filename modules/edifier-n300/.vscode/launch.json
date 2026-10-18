@@ -1,0 +1,93 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "安装依赖",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/scripts/project.ps1",
+      "args": [
+        "-Action",
+        "Install"
+      ],
+      "cwd": "${workspaceFolder}",
+      "createTemporaryIntegratedConsole": true
+    },
+    {
+      "name": "构建 Debug",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/scripts/project.ps1",
+      "args": [
+        "-Action",
+        "Build",
+        "-Configuration",
+        "Debug"
+      ],
+      "cwd": "${workspaceFolder}",
+      "createTemporaryIntegratedConsole": true,
+      "preLaunchTask": "install"
+    },
+    {
+      "name": "构建 Release",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/scripts/project.ps1",
+      "args": [
+        "-Action",
+        "Build",
+        "-Configuration",
+        "Release"
+      ],
+      "cwd": "${workspaceFolder}",
+      "createTemporaryIntegratedConsole": true,
+      "preLaunchTask": "install"
+    },
+    {
+      "name": "运行 Debug",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/scripts/project.ps1",
+      "args": [
+        "-Action",
+        "Run",
+        "-Configuration",
+        "Debug"
+      ],
+      "cwd": "${workspaceFolder}",
+      "createTemporaryIntegratedConsole": true,
+      "preLaunchTask": "build-debug"
+    },
+    {
+      "name": "运行 Release",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/scripts/project.ps1",
+      "args": [
+        "-Action",
+        "Run",
+        "-Configuration",
+        "Release"
+      ],
+      "cwd": "${workspaceFolder}",
+      "createTemporaryIntegratedConsole": true,
+      "preLaunchTask": "build-release"
+    },
+    {
+      "name": "运行离线测试版",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/scripts/project.ps1",
+      "args": [
+        "-Action",
+        "Run",
+        "-Configuration",
+        "Debug",
+        "-Offline"
+      ],
+      "cwd": "${workspaceFolder}",
+      "createTemporaryIntegratedConsole": true,
+      "preLaunchTask": "build-debug"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+[workspace]
+members = ["backend"]
+exclude = ["apps/desktop/src-tauri"]
+resolver = "2"
+
+[profile.dev.package."*"]
+debug = 0
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

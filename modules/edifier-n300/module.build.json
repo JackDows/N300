@@ -1,0 +1,7 @@
+{
+  "files":{
+    "deskhub-n300.exe":"artifacts/dist/{Configuration}/deskhub-n300.exe",
+    "n300.dll":"artifacts/dist/{Configuration}/n300.dll",
+    "nlohmann-json-LICENSE.MIT":".local/dependencies/build/nlohmann_json-src/LICENSE.MIT"
+  }
+}

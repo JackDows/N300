@@ -1,0 +1,342 @@
+[
+  {
+    "bindingTarget": {},
+    "capabilities": [
+      {
+        "id": "audio.eq",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "audio.input",
+        "read": true,
+        "valueType": "device-defined",
+        "write": true
+      },
+      {
+        "id": "audio.preset",
+        "read": true,
+        "valueType": "device-defined",
+        "write": true
+      },
+      {
+        "id": "audio.volume",
+        "read": true,
+        "valueType": "integer",
+        "write": true
+      },
+      {
+        "id": "device.firmware",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "device.idleShutdown",
+        "read": true,
+        "valueType": "boolean",
+        "write": true
+      },
+      {
+        "id": "device.name",
+        "read": true,
+        "valueType": "device-defined",
+        "write": true
+      },
+      {
+        "id": "device.timer",
+        "read": true,
+        "valueType": "integer",
+        "write": true
+      },
+      {
+        "id": "lighting.enabled",
+        "read": true,
+        "valueType": "boolean",
+        "write": true
+      },
+      {
+        "id": "audio.eq.setBand",
+        "invoke": true
+      },
+      {
+        "id": "device.powerOff",
+        "invoke": true
+      }
+    ],
+    "error": null,
+    "generation": 1,
+    "id": "speaker",
+    "label": "桌面音响",
+    "moduleId": "edifier-n300",
+    "moduleVersion": "0.1.0",
+    "offline": true,
+    "phase": "connected",
+    "processId": null,
+    "revision": 1,
+    "target": {
+      "address": "00:11:22:33:44:55",
+      "encryption": 0,
+      "name": "N300 (offline)",
+      "protocol": 1,
+      "rssi": -40,
+      "service": "48097e01-1a48-11e9-ab14-d663bd873d93"
+    },
+    "unavailable": {},
+    "valueState": "confirmed",
+    "values": {
+      "audio.eq": {
+        "gain_max": 6,
+        "gain_min": -6,
+        "gain_step": 1,
+        "value": [
+          {
+            "frequency_hz": 100,
+            "gain_db": 0,
+            "index": 0,
+            "q": 7
+          },
+          {
+            "frequency_hz": 500,
+            "gain_db": 0,
+            "index": 1,
+            "q": 7
+          },
+          {
+            "frequency_hz": 2000,
+            "gain_db": 0,
+            "index": 2,
+            "q": 7
+          },
+          {
+            "frequency_hz": 8000,
+            "gain_db": 0,
+            "index": 3,
+            "q": 7
+          }
+        ]
+      },
+      "audio.input": {
+        "choices": [
+          {
+            "label": "蓝牙",
+            "raw": 1,
+            "value": "bluetooth"
+          },
+          {
+            "label": "AUX",
+            "raw": 2,
+            "value": "aux"
+          },
+          {
+            "label": "USB",
+            "raw": 3,
+            "value": "usb"
+          }
+        ],
+        "group": 5,
+        "raw": 2,
+        "value": "aux"
+      },
+      "audio.preset": {
+        "choices": [
+          {
+            "label": "音乐",
+            "raw": 0,
+            "value": "music"
+          },
+          {
+            "label": "监听",
+            "raw": 1,
+            "value": "monitor"
+          },
+          {
+            "label": "游戏",
+            "raw": 2,
+            "value": "game"
+          },
+          {
+            "label": "电影",
+            "raw": 3,
+            "value": "movie"
+          },
+          {
+            "label": "自定义",
+            "raw": 4,
+            "value": "customized"
+          }
+        ],
+        "raw": 4,
+        "value": "customized"
+      },
+      "audio.volume": {
+        "max": 16,
+        "min": 0,
+        "step": 1,
+        "value": 8
+      },
+      "device.firmware": {
+        "value": "1.5.1"
+      },
+      "device.idleShutdown": {
+        "value": false
+      },
+      "device.name": {
+        "value": "N300"
+      },
+      "device.timer": {
+        "unit": "minutes",
+        "value": 0
+      },
+      "lighting.enabled": {
+        "value": true
+      }
+    }
+  },
+  {
+    "bindingTarget": {},
+    "capabilities": [
+      {
+        "id": "device.firmware",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "keyboard.autoOS",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "keyboard.debounce",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "keyboard.options",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "keyboard.profile",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "keyboard.reportRate",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "keyboard.sleep",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "lighting.brightness",
+        "max": 4,
+        "min": 0,
+        "read": true,
+        "step": 1,
+        "valueType": "integer",
+        "write": true
+      },
+      {
+        "id": "lighting.state",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      }
+    ],
+    "error": null,
+    "generation": 1,
+    "id": "keyboard",
+    "label": "桌面键盘",
+    "moduleId": "flesports-og98",
+    "moduleVersion": "0.1.0",
+    "offline": true,
+    "phase": "connected",
+    "processId": null,
+    "revision": 1,
+    "target": {
+      "path": "sim://og98"
+    },
+    "unavailable": {},
+    "valueState": "confirmed",
+    "values": {
+      "device.firmware": {
+        "value": {
+          "bytes": [
+            2,
+            1
+          ],
+          "raw": 258
+        }
+      },
+      "keyboard.autoOS": {
+        "value": true
+      },
+      "keyboard.debounce": {
+        "value": 1
+      },
+      "keyboard.options": {
+        "value": {
+          "keyboardLocked": false,
+          "ledOff": false,
+          "powerSave": false,
+          "raw": [
+            0,
+            0,
+            0
+          ],
+          "wasdSwapped": false,
+          "winLocked": false
+        }
+      },
+      "keyboard.profile": {
+        "value": 0
+      },
+      "keyboard.reportRate": {
+        "value": {
+          "hz": 1000,
+          "raw": 1
+        }
+      },
+      "keyboard.sleep": {
+        "value": {
+          "bluetoothDeepSeconds": 600,
+          "bluetoothSeconds": 120,
+          "wirelessDeepSeconds": 0,
+          "wirelessSeconds": 120
+        }
+      },
+      "lighting.brightness": {
+        "max": 4,
+        "min": 0,
+        "step": 1,
+        "value": 4
+      },
+      "lighting.state": {
+        "value": {
+          "brightness": 4,
+          "mode": 13,
+          "optionRaw": 16,
+          "rgbRaw": [
+            0,
+            200,
+            200
+          ],
+          "speedRaw": 4,
+          "userPictureSlot": 2
+        }
+      }
+    }
+  }
+]

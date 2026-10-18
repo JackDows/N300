@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { resolve, dirname } from 'node:path';
 
-const output = fileURLToPath(new URL('../.local/downloads/rustup-init-1.29.1.exe', import.meta.url));
+const cacheRoot = process.argv[2] ?? process.env.DESKHUB_CACHE_ROOT ?? resolve(process.env.USERPROFILE, '.cache/DeskHub');
+const output = resolve(cacheRoot,'downloads/rustup-init-1.29.1.exe');
 const expected = '6f4bef66261261fcb43131be8720bab817d403a09edec7455c371974b90bdb7e';
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const cached = await readFile(output).catch(() => null);
@@ -11,7 +12,7 @@ if (!cached || sha256(cached) !== expected) {
   if (!response.ok) throw new Error(`rustup download: HTTP ${response.status}`);
   const bytes = Buffer.from(await response.arrayBuffer());
   if (sha256(bytes) !== expected) throw new Error('rustup SHA-256 mismatch');
-  await mkdir(new URL('../.local/downloads/', import.meta.url), { recursive: true });
+  await mkdir(dirname(output), { recursive: true });
   await writeFile(output + '.partial', bytes);
   await rename(output + '.partial', output);
 }

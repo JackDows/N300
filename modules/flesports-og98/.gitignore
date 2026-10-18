@@ -1,0 +1,10 @@
+/.local/
+/artifacts/
+/research/inputs/
+node_modules/
+*.tsbuildinfo
+/.vscode/*
+!/.vscode/launch.json
+!/.vscode/tasks.json
+!/.vscode/settings.json
+!/.vscode/extensions.json

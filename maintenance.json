@@ -1,0 +1,27 @@
+{
+  "schemaVersion":1,
+  "buildCacheMaxIdleDays":7,
+  "buildCacheMaxMiB":2048,
+  "buildCaches":["artifacts/build","modules/*/artifacts/build","modules/*/artifacts/dist","modules/*/artifacts/package"],
+  "retention":[
+    {"pattern":"artifacts/validation/integration-Debug-*","days":7,"keep":2},
+    {"pattern":"artifacts/validation/integration-Release-*","days":7,"keep":2},
+    {"pattern":"artifacts/validation/maintenance-*","days":7,"keep":2},
+    {"pattern":"artifacts/data/fixtures-*","days":1,"keep":1},
+    {"pattern":"artifacts/screenshots/*","days":7,"keep":10},
+    {"pattern":"apps/desktop/test-results/*","days":7,"keep":2},
+    {"pattern":"apps/desktop/playwright-report/*","days":7,"keep":0},
+    {"pattern":"modules/*/artifacts/validation/webview*","days":1,"keep":0},
+    {"pattern":"modules/*/artifacts/validation/*webview*","days":1,"keep":0},
+    {"pattern":"modules/*/artifacts/desktop/*","days":14,"keep":2},
+    {"pattern":"modules/*/artifacts/installers/*","days":14,"keep":1},
+    {"pattern":"modules/*/artifacts/updates/*","days":14,"keep":2},
+    {"pattern":".local/repro-*","days":1,"keep":0},
+    {"pattern":".local/tmp/*","days":7,"keep":0}
+  ],
+  "runtimePackageKeep":2,
+  "runtimePackageMinAgeDays":7,
+  "runtimeLogKeep":20,
+  "runtimeLogDays":7,
+  "protected":[".git",".local/keys","research","modules/*/research","artifacts/package","artifacts/data/online","artifacts/data/offline"]
+}
