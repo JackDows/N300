@@ -35,6 +35,15 @@ Debug、Release 已通过上述 64 项/组及 TypeScript 检查，包含新增 G
 
 最终安装包已通过本地签名更新源的 `0.3.0 → 0.4.0` 实际覆盖升级：退出旧模块、自动重启、原有绑定/用户文件/页面存储保留、三个模块可读、下载包与临时安装器删除。精简记录为 `research/evidence/ghub-2026-10-19/local-upgrade.json`。升级脚本显式等待三个实例创建并连接，避免把旧的两设备列表误认为新版本已全部就绪。
 
+源码 `903ee9b` 已推送并发布 [DeskHub 0.4.0](https://github.com/JackDows/N300/releases/tag/v0.4.0) 与 [G HUB 模块 0.1.0](https://github.com/JackDows/N300/releases/tag/module-logitech-ghub-v0.1.0)。正式频道验收：
+
+- 从默认 GitHub 整包更新地址完成 `0.3.0 → 0.4.0`，再次确认覆盖、重启、数据保留与下载包清理。
+- 从默认签名模块目录独立下载、安装 G HUB 0.1.0，完成原生离线 DPI 写入/回读；音响和键盘进程不变，模块下载缓存删除。发布瞬间的旧目录缓存消退后，已使用未修改的默认更新配置复测通过。
+- 本机安装为 `D:\DeskHub\DeskHub.exe`，已检查实际可见窗口。旧 N300 0.2.1 程序已卸载，原用户数据目录保留。N300 重新扫描后只读连接成功；OG98 本次未应答，未执行真实写入；鼠标仍按用户确认的缺席状态等待连接。
+- 测试安装通过卸载器移除；随后手动核对并删除构建中间文件、测试副本、浏览器缓存、重复截图与旧安装包，回收约 7.8 GiB，保留当前交付包、工具依赖、密钥、设备配置与协议证据。
+
+记录为同目录的 `github-upgrade.json`、`github-module.json`、`local-installation.json` 和 `manual-closeout.json`。安装版 EXE 与便携版只有 Tauri 的 `UNK → NSS` 三字节安装类型标记差异。
+
 ## 2026-10-19 虚拟桌面与统一控制窗
 
 在虚拟桌面初版上统一了设备控制窗的字体、材质、间距、按钮和状态反馈，保留音响与键盘的设备色。修正焦点恢复、方向键操作、音量修改后立即关闭的提交、最小化窗口行为和浏览器更新预览；恢复应用设置中的日志导出入口。
@@ -49,7 +58,7 @@ Debug、Release 已通过上述 64 项/组及 TypeScript 检查，包含新增 G
 
 真实 Windows 覆盖升级通过：使用本次 DeskHub 宿主构建的测试基线 `0.2.99`，经更新接口下载已签名安装器，升级到 `0.3.0`。确认两个旧模块进程退出、应用自动重启、设备绑定/用户配置/页面存储保留、设备重新连接与读取、下载缓存与临时安装器删除。测试安装位于工作区专用目录；没有旧 N300 兼容或迁移流程。
 
-实际记录：`research/evidence/updates-0.3.0/upgrade.json`；日志与各配置测试报告保留在 `artifacts/validation/`。签名安装器位于 `artifacts/releases/0.3.0/`，独立模块包位于 `artifacts/module-releases/`。
+实际记录：`research/evidence/updates-0.3.0/upgrade.json`；日志与各配置测试报告保留在 `artifacts/validation/`。该版本安装器可从 [v0.3.0 发行页](https://github.com/JackDows/N300/releases/tag/v0.3.0) 取得，本地交付目录只保留当前版本；独立模块包位于 `artifacts/module-releases/`。
 
 干净源码重建也通过：从暂存树 `fdd2de9211aff87dda995edf823b5d5e857a4d1e` 导出新目录，不复制依赖工作目录、构建产物或私钥；使用声明的工具缓存执行 `Install`、完整 Release `Test`，50 项/组及类型检查通过，并生成无需私钥的可用安装器。桌面 Cargo 包显式声明独立工作区，可放入其他 Rust 工作区内构建。精简记录保存在 `research/evidence/updates-0.3.0/clean-source/`。
 
