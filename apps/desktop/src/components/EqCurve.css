@@ -17,7 +17,7 @@
 
 .eq__axis,
 .eq__freq {
-  fill: var(--text-3);
+  fill: var(--text-2);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
@@ -67,9 +67,13 @@
 }
 
 .eq__band:hover .eq__handle,
+.eq__band:focus-visible .eq__handle,
 .eq__band.is-active .eq__handle {
   fill: var(--accent);
 }
+
+.eq__band:focus-visible { outline: none; }
+.eq__band:focus-visible .eq__handle { stroke: var(--text); stroke-width: 3; }
 
 .eq__gain {
   fill: var(--text-2);

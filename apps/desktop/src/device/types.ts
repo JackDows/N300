@@ -1,4 +1,4 @@
-// Existing speaker page view model. Native requests use the shared DeskHub contract.
+// Device view models for N300 Speaker & FL-ESPORTS OG98 Keyboard.
 
 export interface Choice {
   label: string;
@@ -78,4 +78,50 @@ export interface DeviceErrorInfo {
   message: string;
   retryable?: boolean;
   details?: unknown;
+}
+
+export interface KeyboardLightingState {
+  brightness: number;
+  mode: number;
+  optionRaw: number;
+  rgbRaw: [number, number, number];
+  speedRaw: number;
+  userPictureSlot?: number;
+}
+
+export interface KeyboardSleepValue {
+  bluetoothDeepSeconds: number;
+  bluetoothSeconds: number;
+  wirelessDeepSeconds: number;
+  wirelessSeconds: number;
+}
+
+export interface KeyboardOptionsValue {
+  keyboardLocked: boolean;
+  ledOff: boolean;
+  powerSave: boolean;
+  raw: number[];
+  wasdSwapped: boolean;
+  winLocked: boolean;
+}
+
+export interface KeyboardView {
+  id: string;
+  label: string;
+  phase: "stopped" | "starting" | "connecting" | "waiting" | "connected" | "disconnected" | "faulted";
+  offline: boolean;
+  connected: boolean;
+  moduleVersion: string | null;
+  valueState: "unknown" | "confirmed" | "stale";
+  error: DeviceErrorInfo | null;
+  brightness: VolumeValue | null;
+  lighting: KeyboardLightingState | null;
+  reportRateHz: number | null;
+  profile: number | null;
+  debounce: number | null;
+  autoOS: boolean | null;
+  sleep: KeyboardSleepValue | null;
+  options: KeyboardOptionsValue | null;
+  firmwareText: string | null;
+  path: string | null;
 }

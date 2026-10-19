@@ -67,6 +67,7 @@ function Test-Desktop {
     Initialize-DesktopTools
     Invoke-DesktopTool @('run','typecheck')
     Invoke-DesktopTool @('run','test:unit')
+    Invoke-DesktopTool @('run','test:ui') -LogPath (Join-Path $projectRoot "artifacts/validation/ui-regression-$Configuration.log")
     $cargoArgs=@('test','--locked','--manifest-path','apps/desktop/src-tauri/Cargo.toml','--lib')
     if($Configuration -eq 'Release'){$cargoArgs+='--release'}
     Invoke-ProjectTool -Tool cargo -Arguments $cargoArgs -LogPath (Join-Path $projectRoot "artifacts/validation/desktop-rust-$Configuration.log")

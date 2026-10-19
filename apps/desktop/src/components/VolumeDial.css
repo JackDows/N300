@@ -31,7 +31,7 @@
 /* 背后的氛围光，亮度随音量变化 */
 .dial__glow {
   position: absolute;
-  inset: 34px;
+  inset: 12%;
   border-radius: 50%;
   background: radial-gradient(circle, var(--accent-glow) 0%, transparent 68%);
   opacity: calc(0.12 + var(--ratio) * 0.6);
@@ -51,6 +51,8 @@
   position: absolute;
   inset: 0;
   overflow: visible;
+  width: 100%;
+  height: 100%;
 }
 
 .dial__tick {
@@ -115,7 +117,7 @@
 .dial__face {
   --face-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.75), 0 6px 14px -6px rgba(0, 0, 0, 0.6);
   position: absolute;
-  inset: 52px;
+  inset: 18.0556%;
   border-radius: 50%;
   background:
     radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.07), transparent 55%),
@@ -183,7 +185,7 @@
 
 .dial__value-text {
   font-family: var(--font-display);
-  font-size: 68px;
+  font-size: 52px;
   font-weight: 300;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -193,19 +195,18 @@
 }
 
 .dial.is-disabled .dial__value-text {
-  color: var(--text-3);
+  color: var(--text-2);
 }
 
 .dial__caption {
   color: var(--text-3);
   font-size: 12px;
-  letter-spacing: 0.24em;
-  padding-left: 0.24em;
+  letter-spacing: 0.12em;
+  padding-left: 0.12em;
 }
 
 .dial.is-loading .dial__caption {
   color: var(--accent);
-  animation: dial-breathe 1.6s ease-in-out infinite;
 }
 
 @keyframes dial-breathe {

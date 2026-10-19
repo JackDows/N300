@@ -11,12 +11,12 @@ const initial:State={version:'',stage:'idle',release:null,message:'',downloaded:
 export function UpdateProvider({children}:{children:ReactNode}){
   const [state,setState]=useState(initial);const busy=useRef(false),alive=useRef(true);
   const check=useCallback(async()=>{
-    if(busy.current||!isTauri)return;busy.current=true;setState(s=>({...s,stage:'checking',message:''}));
+    if(busy.current)return;busy.current=true;setState(s=>({...s,stage:'checking',message:''}));
     try{const c=await getTransport();const {release}=await c.request('app.updates.check');if(alive.current)setState(s=>({...s,release,stage:release?'available':'current',dismissed:release?.version===s.release?.version&&s.dismissed}));}
     catch(e){recordUiError(e,'update.check');if(alive.current)setState(s=>({...s,stage:'error',message:'暂时无法检查更新，请稍后重试'}));}finally{busy.current=false;}
   },[]);
   const install=useCallback(async()=>{
-    if(busy.current||!isTauri)return;busy.current=true;
+    if(busy.current)return;busy.current=true;
     setState(s=>({...s,stage:'downloading',downloaded:0,message:''}));
     let off=()=>{};
     try{
@@ -28,12 +28,13 @@ export function UpdateProvider({children}:{children:ReactNode}){
       setState(s=>({...s,stage:'installing'}));job=await c.request('app.updates.install',{jobId:job.id});
       while(alive.current&&job.state==='installing'){await new Promise(r=>setTimeout(r,200));job=await c.request('updates.get',{jobId:job.id});}
       if(alive.current&&job.state==='failed')throw job.error??new Error('安装未完成');
+      if(alive.current&&job.state==='completed'){const info=await c.request('app.updates.info');setState(s=>({...s,version:info.version,stage:'current',release:null,message:''}));}
     }catch(e){recordUiError(e,'update.install');if(alive.current)setState(s=>({...s,stage:'error',message:'更新未完成，请重试'}));}finally{off();busy.current=false;}
   },[]);
   useEffect(()=>{
     alive.current=true;let disposed=false;let timer:ReturnType<typeof setTimeout>;
-    if(isTauri)getTransport().then(c=>c.request('app.updates.info')).then(info=>{
-      if(disposed)return;setState(s=>({...s,version:info.version,message:info.lastResult?.state==='completed'?`已更新到 ${info.lastResult.version}`:info.lastResult?'上次更新未完成，请重试':''}));timer=setTimeout(check,8000);
+    getTransport().then(c=>c.request('app.updates.info')).then(info=>{
+      if(disposed)return;setState(s=>({...s,version:info.version,message:info.lastResult?.state==='completed'?`已更新到 ${info.lastResult.version}`:info.lastResult?'上次更新未完成，请重试':''}));if(isTauri)timer=setTimeout(check,8000);
     }).catch(e=>recordUiError(e,'update.info'));
     return()=>{disposed=true;alive.current=false;clearTimeout(timer);};
   },[check]);

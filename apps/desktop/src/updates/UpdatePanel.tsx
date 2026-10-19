@@ -28,7 +28,7 @@ export function UpdatePanel() {
     {update.release && <div className="update-panel__release">
       <strong>新版本 {update.release.version}</strong>
       {update.release.notes && <p className="update-panel__notes">{update.release.notes}</p>}
-      <p>更新会重启应用，保留设置和设备记录。安装包将在更新后自动清理。</p>
+      <p>更新后应用会自动重启，你的设置和设备记录会保留。</p>
       {busy ? <progress aria-label="更新下载进度" max={100} value={percent ?? undefined} />
         : <button className="btn-primary" onClick={update.install}>{update.stage === "error" ? "重试更新" : "下载并更新"}</button>}
     </div>}

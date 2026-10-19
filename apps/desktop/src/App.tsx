@@ -1,66 +1,29 @@
-import { useState, type CSSProperties } from "react";
-import { Nav, ToastPill, type NavItem } from "./components/Nav";
+import { useState } from "react";
+import { DeskStage, type ModalKind } from "./components/DeskStage";
+import { ToastPill } from "./components/Toast";
 import { TitleBar } from "./components/TitleBar";
-import { IconDial, IconSliders, IconWave } from "./components/icons";
-import { errorText, useDevice } from "./device/DeviceContext";
-import { HomePage } from "./pages/HomePage";
-import { SettingsPage } from "./pages/SettingsPage";
-import { SoundPage } from "./pages/SoundPage";
+import { useDevice } from "./device/DeviceContext";
 import { UpdateNotice } from "./updates/UpdatePanel";
-import "./pages/pages.css";
 
-type Tab = "home" | "sound" | "settings";
-
-const TABS: NavItem<Tab>[] = [
-  { id: "home", label: "音量", icon: <IconDial size={19} /> },
-  { id: "sound", label: "音效", icon: <IconWave size={19} /> },
-  { id: "settings", label: "设置", icon: <IconSliders size={19} /> },
-];
-
-const order = (t: Tab) => TABS.findIndex((x) => x.id === t);
-
-// 预览时可用 ?tab=sound / ?tab=settings 直接打开指定页面。
-const initialTab = (): Tab => {
-  const t = new URLSearchParams(location.search).get("tab");
-  return TABS.some((x) => x.id === t) ? (t as Tab) : "home";
+const initialModal = (): ModalKind => {
+  const params = new URLSearchParams(location.search);
+  const m = params.get("modal");
+  if (m === "speaker" || m === "keyboard" || m === "system") return m;
+  return null;
 };
 
 export default function App() {
-  const { phase, state, error, toast } = useDevice();
-  const [tab, setTab] = useState<Tab>(initialTab);
-  const [dir, setDir] = useState(1);
-
-  const go = (next: Tab) => {
-    if (next === tab) return;
-    setDir(order(next) > order(tab) ? 1 : -1);
-    setTab(next);
-  };
-
-  const status =
-    phase === "connected"
-      ? ({ tone: "ok", text: state?.offline ? "离线演示" : "已连接" } as const)
-      : phase === "waiting"
-        ? ({ tone: "warn", text: "等待重试" } as const)
-        : phase === "disconnected"
-          ? ({ tone: "off", text: error ? errorText(error) : "未连接" } as const)
-          : ({ tone: "busy", text: "连接中" } as const);
+  const { toast } = useDevice();
+  const [modal, setModal] = useState<ModalKind>(initialModal);
 
   return (
     <div className="app">
-      <TitleBar status={status} />
-      <UpdateNotice onOpen={() => {
-        go("settings");
-        requestAnimationFrame(() => document.getElementById("software-update")?.scrollIntoView({ block: "center" }));
-      }} />
+      <TitleBar />
+      <UpdateNotice onOpen={() => setModal("system")} />
       <main className="stage">
-        <div key={tab} className="page-anim" style={{ "--dir": dir } as CSSProperties}>
-          {tab === "home" && <HomePage />}
-          {tab === "sound" && <SoundPage />}
-          {tab === "settings" && <SettingsPage />}
-        </div>
+        <DeskStage activeModal={modal} onOpenModal={setModal} />
       </main>
       <ToastPill toast={toast} />
-      <Nav items={TABS} active={tab} onChange={go} />
     </div>
   );
 }

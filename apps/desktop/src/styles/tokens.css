@@ -4,41 +4,44 @@
  */
 :root {
   /* 背景 */
-  --bg: #0b0b0c;
-  --bg-elev: #141416;
-  --bg-sunken: #070708;
+  --bg: #0c0f13;
+  --bg-elev: #191d23;
+  --bg-sunken: #111419;
 
   /* 表面（叠加在背景上的半透明层） */
-  --surface: rgba(255, 255, 255, 0.035);
-  --surface-hover: rgba(255, 255, 255, 0.06);
-  --surface-active: rgba(255, 255, 255, 0.09);
-  --hairline: rgba(255, 255, 255, 0.07);
-  --hairline-strong: rgba(255, 255, 255, 0.12);
+  --surface: rgba(255, 255, 255, 0.025);
+  --surface-hover: rgba(255, 255, 255, 0.055);
+  --surface-active: rgba(255, 255, 255, 0.085);
+  --hairline: rgba(214, 224, 236, 0.08);
+  --hairline-strong: rgba(214, 224, 236, 0.16);
 
   /* 文字 */
-  --text: #f3f0ea;
-  --text-2: #9b978f;
-  --text-3: #5d5a55;
+  --text: #edf0f2;
+  --text-2: #aab0b8;
+  --text-3: #818a96;
 
   /* 强调色：香槟琥珀 */
-  --accent: #e8ad55;
-  --accent-hi: #f8d9a0;
-  --accent-lo: #c7772b;
-  --accent-soft: rgba(232, 173, 85, 0.14);
-  --accent-glow: rgba(232, 173, 85, 0.38);
+  --accent: #dfb77b;
+  --accent-hi: #f0d7ae;
+  --accent-lo: #ac7f47;
+  --accent-soft: rgba(223, 183, 123, 0.1);
+  --accent-glow: rgba(223, 183, 123, 0.22);
   --on-accent: #1d1409;
+  --keyboard-accent: #8bcac3;
+  --control-accent: var(--accent);
+  --control-soft: var(--accent-soft);
 
   /* 状态 */
-  --ok: #7fd4a4;
+  --ok: #8ac8a6;
   --warn: #e8ad55;
   --danger: #f08a7e;
   --danger-soft: rgba(240, 138, 126, 0.14);
 
   /* 形状 */
   --radius-xs: 8px;
-  --radius-s: 12px;
-  --radius-m: 16px;
-  --radius-l: 22px;
+  --radius-s: 10px;
+  --radius-m: 14px;
+  --radius-l: 20px;
   --radius-pill: 999px;
 
   /* 阴影 */
@@ -47,7 +50,7 @@
 
   /* 动效 */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-fast: 140ms;
   --dur: 240ms;
   --dur-slow: 420ms;
@@ -57,6 +60,7 @@
     "Microsoft YaHei UI", system-ui, sans-serif;
   --font-display: "Segoe UI Variable Display", "Segoe UI", "HarmonyOS Sans SC", "MiSans",
     "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Code", Consolas, monospace;
 
   /* 窗口 */
   --titlebar-h: 44px;

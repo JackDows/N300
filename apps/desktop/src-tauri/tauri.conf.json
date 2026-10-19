@@ -14,16 +14,16 @@
       {
         "label": "main",
         "title": "DeskHub",
-        "width": 400,
-        "height": 720,
-        "minWidth": 380,
-        "minHeight": 660,
+        "width": 920,
+        "height": 620,
+        "minWidth": 780,
+        "minHeight": 540,
         "resizable": true,
         "maximizable": false,
         "decorations": false,
         "shadow": true,
         "center": true,
-        "backgroundColor": "#0b0b0c"
+        "backgroundColor": "#0c0f13"
       }
     ],
     "security": {

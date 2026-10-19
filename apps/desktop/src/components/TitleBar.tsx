@@ -1,30 +1,36 @@
-import { isTauri } from "../device/transport";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { IconClose, IconMinimize } from "./icons";
 import "./Shell.css";
 
-async function windowAction(action: "minimize" | "close") {
-  if (!isTauri) return;
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
-  const w = getCurrentWindow();
-  await (action === "minimize" ? w.minimize() : w.close());
-}
+const runWindowCommand = (fn: (w: ReturnType<typeof getCurrentWindow>) => Promise<void>) => {
+  if (!("__TAURI_INTERNALS__" in window)) return;
+  void fn(getCurrentWindow()).catch(() => {});
+};
 
-/** 无边框窗口的标题栏：整条可拖动，只保留最小化和关闭。 */
-export function TitleBar({ status }: { status: { tone: "ok" | "busy" | "warn" | "off"; text: string } }) {
+export function TitleBar() {
   return (
     <header className="titlebar" data-tauri-drag-region>
-      <div className="titlebar__brand">
-        <span className="brand-mark" />
+      <div className="titlebar__brand" data-tauri-drag-region>
+        <span className="titlebar__glyph" aria-hidden="true" />
         <span className="titlebar__name">DeskHub</span>
-        <span className={`status-dot is-${status.tone}`} />
-        <span className="titlebar__status">{status.text}</span>
       </div>
-      <div className="titlebar__actions">
-        <button className="win-btn" aria-label="最小化" onClick={() => windowAction("minimize")}>
-          <IconMinimize size={16} />
+
+      <div className="titlebar__win">
+        <button
+          className="winbtn"
+          aria-label="最小化窗口"
+          title="最小化"
+          onClick={() => runWindowCommand((w) => w.minimize())}
+        >
+          <IconMinimize size={13} />
         </button>
-        <button className="win-btn win-btn--close" aria-label="关闭" onClick={() => windowAction("close")}>
-          <IconClose size={16} />
+        <button
+          className="winbtn winbtn--close"
+          aria-label="关闭窗口"
+          title="退出 DeskHub"
+          onClick={() => runWindowCommand((w) => w.close())}
+        >
+          <IconClose size={13} />
         </button>
       </div>
     </header>

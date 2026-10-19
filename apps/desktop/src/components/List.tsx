@@ -56,7 +56,7 @@ export function ExpandRow({
         <span className="row__value">{value}</span>
         <IconChevron size={16} className="expand__chevron" />
       </Row>
-      <div className="expand__body">
+      <div className="expand__body" inert={!open}>
         <div className="expand__inner">{children}</div>
       </div>
     </div>
@@ -88,6 +88,7 @@ export function HoldRow({ icon, title, hint, onConfirm, disabled }: { icon: Reac
 
   const start = () => {
     if (disabled) return;
+    clearTimeout(timer.current);
     setHolding(true);
     timer.current = setTimeout(() => {
       setHolding(false);
@@ -108,6 +109,13 @@ export function HoldRow({ icon, title, hint, onConfirm, disabled }: { icon: Reac
       onPointerUp={cancel}
       onPointerLeave={cancel}
       onPointerCancel={cancel}
+      onBlur={cancel}
+      onKeyDown={(event) => {
+        if (event.key !== " " && event.key !== "Enter") return;
+        event.preventDefault();
+        if (!event.repeat) start();
+      }}
+      onKeyUp={(event) => { if (event.key === " " || event.key === "Enter") cancel(); }}
     >
       <span className="hold__fill" />
       <span className="row__icon">{icon}</span>

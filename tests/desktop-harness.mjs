@@ -30,7 +30,7 @@ export async function launch({executable,directory,updateConfig,port,extraEnv={}
   const processHandle=spawn(executable,['--offline'],{env,cwd:dirname(executable),stdio:'ignore',windowsHide:true});
   const connection=await attach(port);
   return {...connection,process:processHandle,port,env,async close(){
-    try{await connection.page.getByRole('button',{name:'关闭',exact:true}).click({timeout:3000});}catch{}
+    try{await connection.page.getByRole('button',{name:'关闭窗口',exact:true}).click({timeout:3000});}catch{}
     await until(()=>!alive(processHandle.pid),{timeout:5000}).catch(()=>processHandle.kill());
     await connection.browser.close();
   }};

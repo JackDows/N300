@@ -13,8 +13,11 @@
 }
 
 .seg.is-disabled {
-  opacity: 0.35;
+  opacity: 0.5;
 }
+
+.seg[aria-busy="true"] { opacity: 1; }
+.seg[aria-busy="true"] .seg__item { opacity: 1; cursor: progress; }
 
 .seg__thumb {
   position: absolute;
@@ -24,7 +27,7 @@
   width: calc((100% - var(--pad) * 2) / var(--n));
   transform: translateX(calc(var(--i) * 100%));
   border-radius: calc(var(--radius-m) - var(--pad));
-  background: linear-gradient(180deg, #26262a, #1c1c1f);
+  background: var(--surface-active);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
     0 0 0 1px var(--hairline-strong),

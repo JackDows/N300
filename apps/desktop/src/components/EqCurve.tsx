@@ -9,8 +9,8 @@ interface Props {
   onCommit(band: number, gain: number): void;
 }
 
-const W = 340;
-const H = 176;
+const W = 400;
+const H = 164;
 const PAD = { l: 30, r: 14, t: 26, b: 30 };
 const PW = W - PAD.l - PAD.r;
 const PH = H - PAD.t - PAD.b;
@@ -114,6 +114,22 @@ export function EqCurve({ eq, editable, onCommit }: Props) {
             key={b.index}
             className={`eq__band${dragging === i ? " is-active" : ""}`}
             onPointerDown={(e) => onDown(e, i)}
+            role={editable ? "slider" : undefined}
+            tabIndex={editable ? 0 : undefined}
+            aria-label={editable ? `${formatHz(b.frequency_hz)} Hz 增益` : undefined}
+            aria-valuemin={editable ? min : undefined}
+            aria-valuemax={editable ? max : undefined}
+            aria-valuenow={editable ? b.gain_db : undefined}
+            aria-valuetext={editable ? `${b.gain_db} dB` : undefined}
+            aria-orientation={editable ? "vertical" : undefined}
+            onKeyDown={(e) => {
+              if (!editable) return;
+              const delta = ["ArrowUp", "ArrowRight"].includes(e.key) ? step : ["ArrowDown", "ArrowLeft"].includes(e.key) ? -step : 0;
+              if (!delta && e.key !== "Home" && e.key !== "End") return;
+              e.preventDefault();
+              const next = e.key === "Home" ? min : e.key === "End" ? max : Math.max(min, Math.min(max, b.gain_db + delta));
+              if (next !== b.gain_db) { setGains(prev => prev.map((g, j) => j === i ? next : g)); onCommit(b.index, next); }
+            }}
           >
             <text className="eq__freq" x={x} y={H - 8} textAnchor="middle">
               {formatHz(b.frequency_hz)}

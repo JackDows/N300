@@ -1,6 +1,16 @@
 # 前端接手指南
 
-前端只对接 DeskHub 公共接口。设备进程、线程、重连和协议都由后端管理。现有 N300 界面在 `apps/desktop/`，视觉设计与多设备页面由前端工程继续完成。
+前端只对接 DeskHub 公共接口。设备进程、线程、重连和协议都由后端管理。`apps/desktop/` 采用虚拟桌面入口：点击音响、键盘或显示器，分别打开设备控制与应用设置。
+
+## 界面结构与验证
+
+- `styles/tokens.css` 统一颜色、文字层级、圆角和动效。音响用暖金、键盘用低饱和青色，其余材质和控件样式共用。
+- `DeskScene25D` 绘制桌面，`DeskStage` 管理单个控制窗及焦点，`ConsoleHeader` 统一标题区。设备页面按相同间距和控件规范扩展。
+- 弹窗支持 Tab、Esc 和关闭后恢复焦点；名称编辑中的 Esc 只取消编辑。分段选择、灯光档位和 EQ 支持方向键。布局按应用容器尺寸适配，浏览器预览与桌面窗口一致。
+- `npm --prefix apps/desktop run dev` 打开浏览器离线预览；`?modal=speaker|keyboard|system` 直接进入指定控制窗。软件更新操作使用同一个模拟接口。日志文件导出在原生宿主中验证。
+- `npm --prefix apps/desktop run test:ui` 使用 Windows 上的 Microsoft Edge 执行控制、焦点、离线更新与窗口尺寸回归，自动启动预览服务。`test:desktop` 使用已构建的 Windows 程序和原生离线模块验证设备控制、更新校验、单实例与日志导出。
+
+窗口尺寸默认 920 × 620，最小 780 × 540。浏览器也可缩小预览容器检查滚动与控件可达性。验证输出放在 `artifacts/validation/`；交付前按 `AGENTS.md` 人工检查和清理。
 
 ## 先在浏览器开发
 

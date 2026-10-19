@@ -58,7 +58,13 @@ export function VolumeDial({ value, min, max, step, loading, statusLabel, onComm
     setDraft(value);
   }, [value]);
 
-  useEffect(() => () => clearTimeout(commitTimer.current ?? undefined), []);
+  useEffect(() => () => {
+    if (commitTimer.current) {
+      clearTimeout(commitTimer.current);
+      commitTimer.current = null;
+      onCommitRef.current(draftRef.current);
+    }
+  }, []);
 
   const steps = Math.max(1, Math.round((max - min) / step));
   const clamp = (v: number) => Math.min(max, Math.max(min, min + Math.round((v - min) / step) * step));

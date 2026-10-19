@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import "./Segmented.css";
+import { radioKeys } from "./radioKeys";
 
 export interface SegmentOption {
   value: string | number;
@@ -26,14 +27,16 @@ export function Segmented({ options, value, onChange, disabled, busy, size = "m"
       role="radiogroup"
       aria-label={ariaLabel}
       aria-busy={busy || undefined}
+      onKeyDown={radioKeys}
       style={{ "--n": options.length, "--i": Math.max(index, 0) } as CSSProperties}
     >
       <span className={`seg__thumb${index < 0 ? " is-hidden" : ""}`} />
-      {options.map((o) => (
+      {options.map((o, i) => (
         <button
           key={o.value}
           role="radio"
           aria-checked={o.value === value}
+          tabIndex={i === Math.max(0, index) ? 0 : -1}
           className={`seg__item${o.value === value ? " is-on" : ""}`}
           disabled={disabled}
           onClick={() => o.value !== value && onChange(o.value)}

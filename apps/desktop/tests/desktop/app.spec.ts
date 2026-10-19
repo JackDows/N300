@@ -26,6 +26,7 @@ test('desktop hosts the shared backend and the existing controls use the new API
   const info=await app.request('hub.describe');expect(info.name).toBe('DeskHub');expect(info.desktop.updater).toBe(true);
   expect(info.methods).toContain('modules.download');expect(info.methods).toContain('app.updates.install');
   await expect(app.page.locator('.titlebar__name')).toHaveText('DeskHub');
+  await app.page.getByRole('button',{name:'音响设置',exact:true}).click();
   await app.request('devices.write',{deviceId:'speaker',capability:'audio.volume',value:10});
   await expect(app.page.getByRole('slider',{name:'音量'})).toHaveAttribute('aria-valuenow','10');
   await app.page.getByRole('radio',{name:'蓝牙',exact:true}).click({timeout:10000});
@@ -35,6 +36,11 @@ test('keyboard and speaker remain independent inside the actual desktop process'
   const speaker=await app.request('devices.get',{deviceId:'speaker'});
   await app.request('devices.add',{id:'keyboard',moduleId:'flesports-og98',offline:true});await app.request('devices.connect',{deviceId:'keyboard'});
   await app.request('devices.write',{deviceId:'keyboard',capability:'lighting.brightness',value:2});
+  await app.page.getByRole('button',{name:'关闭浮窗'}).click();
+  await app.page.getByRole('button',{name:'键盘设置',exact:true}).click();
+  await expect(app.page.getByRole('radio',{name:'柔和',exact:true})).toBeChecked();
+  await app.page.getByRole('radio',{name:'明亮',exact:true}).click();
+  await until(async()=>(await app.request('devices.read',{deviceId:'keyboard',capability:'lighting.brightness'})).value===3);
   await app.request('devices.restart',{deviceId:'keyboard'});
   expect((await app.request('devices.get',{deviceId:'speaker'})).processId).toBe(speaker.processId);
   expect((await app.request('devices.read',{deviceId:'speaker',capability:'audio.volume'})).value).toBe(10);
@@ -55,7 +61,12 @@ test('second launch activates the existing host and diagnostics export includes 
   const second=spawn(executable,['--offline'],{env:app.env,stdio:'ignore',windowsHide:true});
   await until(()=>second.exitCode!==null);expect(second.exitCode).toBe(0);
   await expect(app.page.getByText('程序已在运行',{exact:true})).toBeVisible();
-  const exported=await app.request('diagnostics.export');expect(existsSync(join(exported.directory,'summary.json'))).toBe(true);
+  await app.page.getByRole('button',{name:'关闭浮窗'}).click();
+  await app.page.getByRole('button',{name:'显示器与系统中枢'}).click();
+  await app.page.getByRole('button',{name:'导出日志'}).click();
+  const location=app.page.getByRole('textbox',{name:'日志保存位置'});
+  await expect(location).toBeVisible();
+  expect(existsSync(join(await location.inputValue(),'summary.json'))).toBe(true);
   expect(errors).toEqual([]);
 });
 test('signed version binding and install-time cache validation reject stale or altered application packages',async()=>{
