@@ -1,0 +1,6 @@
+{
+  "files": {
+    "deskhub-ghub.exe": "artifacts/dist/{Configuration}/deskhub-ghub.exe",
+    "nlohmann-json-LICENSE.MIT": ".local/dependencies/build/nlohmann_json-src/LICENSE.MIT"
+  }
+}

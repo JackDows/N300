@@ -7,7 +7,7 @@ const fixture=JSON.parse(await readFile(new URL('../contracts/fixtures/devices.j
 test('browser mock follows native capability ranges, serializes a device and isolates peers',async()=>{
   const client=createMockClient(fixture,{latencyMs:30});
   try{
-    assert.equal((await client.request('devices.list')).length,2);
+    assert.equal((await client.request('devices.list')).length,fixture.length);
     const writing=client.request('devices.write',{deviceId:'keyboard',capability:'lighting.brightness',value:2});
     const reading=client.request('devices.read',{deviceId:'keyboard',capability:'lighting.brightness'});
     await writing;assert.equal((await reading).value,2);

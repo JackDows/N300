@@ -6,7 +6,7 @@ import {execFileSync} from 'node:child_process';
 import {readFileSync,writeFileSync,mkdirSync,existsSync,readdirSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {tmpdir} from 'node:os';
-import {root,config,digest} from '../scripts/signing.mjs';
+import {root,config} from '../scripts/signing.mjs';
 import {launch,attach,alive,until} from './desktop-harness.mjs';
 import {waitJob} from './update-fixtures.mjs';
 const executable=process.env.DESKHUB_UPGRADE_TEST_EXE;
@@ -39,7 +39,7 @@ try{
   const before=await app.request('app.updates.info');assert.notEqual(before.version,version);
   await app.request('devices.add',{id:'keyboard',moduleId:'flesports-og98',offline:true,label:'升级验收键盘'});await app.request('devices.connect',{deviceId:'keyboard'});
   const devicesBefore=await app.request('devices.list'),pids=devicesBefore.map(d=>d.processId).filter(Boolean);
-  const bindings=readFileSync(join(directory,'data/devices.json'));
+  const bindings=JSON.parse(readFileSync(join(directory,'data/devices.json'),'utf8'));
   const userFile=join(directory,'data/user-settings.json');writeFileSync(userFile,'{"acceptance":"preserve"}');
   await app.page.evaluate(()=>localStorage.setItem('deskhub-upgrade-check','preserve'));
   const check=await app.request('app.updates.check');assert.equal(check.release.version,version);
@@ -50,8 +50,10 @@ try{
   const processes=await until(()=>{const p=installedProcesses();return p.length===1&&p[0].ProcessId!==app.process.pid?p:null;},{timeout:90000,message:'Updated application did not restart'});
   after=await attach(app.port);
   const info=await after.request('app.updates.info');assert.equal(info.version,version);assert.equal(info.lastResult.state,'completed');
-  await until(async()=>(await after.request('devices.list')).every(d=>d.phase==='connected'),{timeout:30000});
-  assert.equal(digest(readFileSync(join(directory,'data/devices.json'))),digest(bindings));
+  await until(async()=>{const devices=await after.request('devices.list');return ['speaker','keyboard','mouse'].every(id=>devices.some(d=>d.id===id&&d.phase==='connected'));},{timeout:30000});
+  const saved=JSON.parse(readFileSync(join(directory,'data/devices.json'),'utf8'));
+  assert.equal(saved.schemaVersion,bindings.schemaVersion);
+  for(const binding of bindings.devices)assert.deepEqual(saved.devices.find(d=>d.id===binding.id),binding,'Existing device binding changed during upgrade');
   assert.equal(readFileSync(userFile,'utf8'),'{"acceptance":"preserve"}');
   assert.equal(await after.page.evaluate(()=>localStorage.getItem('deskhub-upgrade-check')),'preserve');
   assert.ok(pids.every(pid=>!alive(pid)),'An old module process survived the installer');
@@ -61,10 +63,11 @@ try{
   assert.equal((await after.request('updates.get',{jobId:download.id})).state,'completed');
   assert.equal((await after.request('devices.read',{deviceId:'keyboard',capability:'lighting.brightness'})).value,4);
   assert.equal((await after.request('devices.read',{deviceId:'speaker',capability:'audio.volume'})).value,8);
+  assert.equal((await after.request('devices.read',{deviceId:'mouse',capability:'mouse.dpiStage'})).value,'3');
   const result={source:published?'github':'loopback',before:before.version,after:info.version,installation:executable,restarted:true,oldModuleProcessesExited:true,bindingsPreserved:true,userSettingsPreserved:true,rendererSettingsPreserved:true,downloadAndInstallerRemoved:true,independentModulesWorking:true,appProcessId:processes[0].ProcessId};
   writeFileSync(join(directory,'result.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));
 }finally{
-  if(after){try{await after.page.getByRole('button',{name:'关闭',exact:true}).click();}catch{}await after.browser.close();}
+  if(after){try{await after.page.getByRole('button',{name:'关闭窗口',exact:true}).click();}catch{}await until(()=>installedProcesses().length===0,{timeout:10000});await after.browser.close();}
   else await app?.close();
   feed.closeAllConnections();await new Promise(r=>feed.close(r));
 }

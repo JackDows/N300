@@ -45,6 +45,33 @@ test('keyboard and speaker remain independent inside the actual desktop process'
   expect((await app.request('devices.get',{deviceId:'speaker'})).processId).toBe(speaker.processId);
   expect((await app.request('devices.read',{deviceId:'speaker',capability:'audio.volume'})).value).toBe(10);
 });
+test('mouse controls use the native module and replacement leaves both other devices running',async()=>{
+  await until(async()=>(await app.request('devices.get',{deviceId:'mouse'})).phase==='connected');
+  const peers=await Promise.all(['speaker','keyboard'].map(deviceId=>app.request('devices.get',{deviceId})));
+  await app.page.getByRole('button',{name:'关闭浮窗'}).click();
+  await app.page.getByRole('button',{name:'鼠标设置',exact:true}).click();
+  await app.page.getByRole('radio',{name:'800',exact:true}).click();
+  await until(async()=>(await app.request('devices.read',{deviceId:'mouse',capability:'mouse.dpiStage'})).value==='1');
+  await app.page.getByRole('combobox',{name:'回报率',exact:true}).selectOption('500');
+  await until(async()=>(await app.request('devices.read',{deviceId:'mouse',capability:'mouse.reportRate'})).value===500);
+  await app.page.getByRole('radio',{name:'板载配置',exact:true}).click();
+  await expect(app.page.getByRole('radio',{name:'800',exact:true})).toBeDisabled();
+  await app.page.getByRole('combobox',{name:'板载配置',exact:true}).selectOption('PROFILE_2');
+  await until(async()=>(await app.request('devices.read',{deviceId:'mouse',capability:'mouse.profile'})).value==='PROFILE_2');
+  await app.page.getByRole('radio',{name:'软件控制',exact:true}).click();
+  await expect(app.page.getByRole('radio',{name:'800',exact:true})).toBeChecked();
+  const before=await app.request('devices.get',{deviceId:'mouse'});
+  const replacement=(await app.request('modules.list')).find((p:any)=>p.manifest.id==='logitech-ghub');
+  await app.request('devices.replace',{deviceId:'mouse',packagePath:replacement.packagePath});
+  const after=await app.request('devices.get',{deviceId:'mouse'});
+  expect(after.processId).not.toBe(before.processId);expect(after.phase).toBe('connected');
+  await until(()=>!alive(before.processId));
+  await expect(app.page.getByRole('radio',{name:'1600',exact:true})).toBeChecked();
+  for(const peer of peers){
+    const current=await app.request('devices.get',{deviceId:peer.id});
+    expect(current.processId).toBe(peer.processId);expect(current.values).toEqual(peer.values);
+  }
+});
 test('update check, signed download rejection and retry preserve the running app',async()=>{
   expect((await app.request('app.updates.check')).release).toBeNull();
   const artifact=fixture.artifact('bad-update.exe',Buffer.from('signed-test-payload'));

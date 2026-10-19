@@ -22,7 +22,7 @@
 | devices.add | id、模块选择；可选 label/offline/target/config | 保存后的实例，尚未连接 |
 | devices.list / get | get 需要 deviceId | 全部实例 / 单个缓存快照 |
 | devices.start / stop / restart | deviceId | 模块生命周期操作后的快照 |
-| devices.scan | deviceId；可选 arguments | `{label, modelVerified, target}` 候选列表 |
+| devices.scan | deviceId；可选 arguments | `{label, modelVerified, target, available?}` 候选列表 |
 | devices.connect / disconnect | deviceId | 连接状态快照 |
 | devices.refresh | deviceId | 主动从设备读取后的快照 |
 | devices.read | deviceId、capability | `{value,...元数据}` |
@@ -52,6 +52,9 @@
 | --- | --- |
 | N300 | audio.volume、audio.input、audio.preset、audio.eq、lighting.enabled、device.idleShutdown、device.timer、device.name、device.firmware；invoke：audio.eq.setBand、device.powerOff |
 | OG98 | device.firmware、keyboard.profile、keyboard.reportRate、lighting.state、lighting.brightness、keyboard.debounce、keyboard.sleep、keyboard.autoOS、keyboard.options；目前只有亮度可写 |
+| Logitech G HUB | device.info、device.battery；可写：device.onboardMode、mouse.dpiStage、mouse.reportRate、mouse.profile，实际可写性由读取结果的 writable 决定 |
+
+G HUB 的 DPI、回报率和板载配置通过读取结果的 `choices` 生成选项；DPI 的 `value` 是档位 ID 字符串，显示值取 `label`，不能把 DPI 数字直接当作档位。板载模式只读取默认 DPI 和回报率，允许切换已启用的板载配置；软件模式允许选择已有 DPI 档位和回报率。详见 [鼠标接口与使用方式](../modules/logitech-ghub/README.md)。
 
 N300 EQ 调用示例：`devices.invoke`，`capability:"audio.eq.setBand"`，`arguments:{band:0,gain:2}`。关机的返回值可能标明状态未验证，不能仅凭请求完成推断硬件已经关机。
 
@@ -60,7 +63,7 @@ N300 EQ 调用示例：`devices.invoke`，`capability:"audio.eq.setBand"`，`arg
 1. 添加一个模块实例，暂不填写 target。
 2. `devices.scan` 获取候选。
 3. 用户选择后，通过 `devices.rebind` 将候选的完整 target 原样保存。
-4. `devices.connect` 连接。真实实例没有 resourceId 时返回 target_required。
+4. `devices.connect` 连接。N300 和 OG98 真实实例没有 resourceId 时返回 target_required；G HUB 只有一个鼠标候选时可自动选择，多个候选时等待选择。桌面会保存唯一候选的稳定绑定。
 
 OG98 的 USB ID 与其他型号共用，候选 `modelVerified:false`；选择此模块前须确认键盘是 OG98。当前只支持 2.4G。N300 连接目标和能力依据已有 BLE 实现。
 

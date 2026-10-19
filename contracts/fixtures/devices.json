@@ -342,5 +342,152 @@
         }
       }
     }
+  },
+  {
+    "bindingTarget": {},
+    "capabilities": [
+      {
+        "id": "device.info",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "device.battery",
+        "read": true,
+        "valueType": "device-defined",
+        "write": false
+      },
+      {
+        "id": "device.onboardMode",
+        "read": true,
+        "valueType": "boolean",
+        "write": true
+      },
+      {
+        "id": "mouse.dpiStage",
+        "read": true,
+        "valueType": "device-defined",
+        "write": true
+      },
+      {
+        "id": "mouse.reportRate",
+        "read": true,
+        "valueType": "integer",
+        "write": true
+      },
+      {
+        "id": "mouse.profile",
+        "read": true,
+        "valueType": "device-defined",
+        "write": true
+      }
+    ],
+    "error": null,
+    "generation": 1,
+    "id": "mouse",
+    "label": "罗技鼠标",
+    "moduleId": "logitech-ghub",
+    "moduleVersion": "0.1.0",
+    "offline": true,
+    "phase": "connected",
+    "processId": null,
+    "revision": 1,
+    "target": {
+      "name": "PRO X SUPERLIGHT 2 SE",
+      "resourceId": "ghub:mouse.deskhub_demo.1"
+    },
+    "unavailable": {},
+    "valueState": "confirmed",
+    "values": {
+      "device.battery": {
+        "value": {
+          "charging": false,
+          "percentage": 82
+        }
+      },
+      "device.info": {
+        "value": {
+          "backend": "G HUB",
+          "connection": "LIGHTSPEED",
+          "firmware": "32.5.29",
+          "model": "pro_x_2_wireless_mouse_ext5",
+          "name": "PRO X SUPERLIGHT 2 SE"
+        }
+      },
+      "device.onboardMode": {
+        "value": false,
+        "writable": true
+      },
+      "mouse.dpiStage": {
+        "choices": [
+          {
+            "dpiX": 800,
+            "dpiY": 800,
+            "label": "800",
+            "value": "1"
+          },
+          {
+            "dpiX": 1200,
+            "dpiY": 1200,
+            "label": "1200",
+            "value": "2"
+          },
+          {
+            "dpiX": 1600,
+            "dpiY": 1600,
+            "label": "1600",
+            "value": "3"
+          },
+          {
+            "dpiX": 2400,
+            "dpiY": 2400,
+            "label": "2400",
+            "value": "4"
+          },
+          {
+            "dpiX": 3200,
+            "dpiY": 3200,
+            "label": "3200",
+            "value": "5"
+          }
+        ],
+        "label": "灵敏度",
+        "value": "3",
+        "writable": true
+      },
+      "mouse.profile": {
+        "label": "默认配置",
+        "value": "default",
+        "writable": false
+      },
+      "mouse.reportRate": {
+        "choices": [
+          {
+            "label": "125 Hz",
+            "value": 125
+          },
+          {
+            "label": "250 Hz",
+            "value": 250
+          },
+          {
+            "label": "500 Hz",
+            "value": 500
+          },
+          {
+            "label": "1000 Hz",
+            "value": 1000
+          },
+          {
+            "label": "2000 Hz",
+            "value": 2000
+          }
+        ],
+        "value": 1000,
+        "wireless": true,
+        "writable": true
+      }
+    }
   }
 ]

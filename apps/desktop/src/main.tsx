@@ -5,6 +5,7 @@ import { DeviceProvider } from "./device/DeviceContext";
 import { UpdateProvider } from "./updates/UpdateContext";
 import { isTauri } from "./device/transport";
 import { recordUiError } from "./diagnostics";
+import { MouseProvider } from "./device/MouseContext";
 import "./styles/tokens.css";
 import "./styles/base.css";
 
@@ -19,7 +20,7 @@ window.addEventListener("unhandledrejection", (event) => recordUiError(event.rea
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <DeviceProvider>
-      <UpdateProvider><App /></UpdateProvider>
+      <MouseProvider><UpdateProvider><App /></UpdateProvider></MouseProvider>
     </DeviceProvider>
   </StrictMode>,
 );

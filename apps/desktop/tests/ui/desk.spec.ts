@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { APP_VERSION, MOCK_UPDATE_VERSION } from "../../../../contracts/version.mjs";
 
 const openSpeaker = async (page: Page) => page.getByRole("button", { name: "音响设置", exact: true }).click();
 const closePanel = async (page: Page) => page.getByRole("button", { name: "关闭浮窗" }).click();
@@ -74,18 +75,42 @@ test("keyboard brightness, backlight off and disconnected controls reflect actua
 
 test("offline update preview completes instead of leaving dead controls", async ({ page }) => {
   await page.goto("/?modal=system");
-  await expect(page.getByText("当前版本 0.3.0")).toBeVisible();
+  await expect(page.getByText(`当前版本 ${APP_VERSION}`)).toBeVisible();
   await page.getByRole("button", { name: "检查更新" }).click();
   await expect(page.getByRole("button", { name: "下载并更新" })).toBeVisible();
   await page.getByRole("button", { name: "下载并更新" }).click();
-  await expect(page.getByText("当前版本 0.3.1")).toBeVisible();
+  await expect(page.getByText(`当前版本 ${MOCK_UPDATE_VERSION}`)).toBeVisible();
   await expect(page.getByText("已是最新版本", { exact: true })).toBeVisible();
+});
+
+test("mouse controls share the desktop and respect software and onboard modes", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "鼠标设置", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "PRO X SUPERLIGHT 2 SE" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "1600", exact: true })).toBeChecked();
+  await page.getByRole("radio", { name: "800", exact: true }).click();
+  await expect(page.locator(".mouse-dpi strong")).toHaveText("800");
+  await page.getByRole("combobox", { name: "回报率", exact: true }).selectOption("500");
+  await expect(page.getByRole("combobox", { name: "回报率", exact: true })).toHaveValue("500");
+  await page.getByRole("radio", { name: "板载配置", exact: true }).click();
+  await expect(page.getByRole("radio", { name: "800", exact: true })).toBeDisabled();
+  await page.getByRole("combobox", { name: "板载配置", exact: true }).selectOption("PROFILE_2");
+  await expect(page.getByRole("combobox", { name: "板载配置", exact: true })).toHaveValue("PROFILE_2");
+  await page.getByRole("radio", { name: "软件控制", exact: true }).click();
+  await expect(page.locator(".mouse-dpi strong")).toHaveText("800");
+  await closePanel(page); await openSpeaker(page);
+  await expect(page.getByRole("slider", { name: "音量", exact: true })).toHaveAttribute("aria-valuenow", "8");
+  await closePanel(page); await page.getByRole("button", { name: "显示器与系统中枢" }).click();
+  await page.getByRole("button", { name: "断开 PRO X SUPERLIGHT 2 SE" }).click();
+  await page.getByRole("button", { name: "打开 Logitech 鼠标 设置" }).click();
+  await expect(page.locator(".mouse-dpi strong")).toHaveText("—");
+  await expect(page.getByRole("combobox", { name: "回报率", exact: true })).toBeDisabled();
 });
 
 for (const [width, height] of [[806, 566], [1100, 760], [1480, 980], [540, 720]]) {
   test(`console layout remains reachable at ${width} × ${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
-    for (const modal of ["speaker", "keyboard", "system"]) {
+    for (const modal of ["speaker", "keyboard", "mouse", "system"]) {
       await page.goto(`/?modal=${modal}`);
       const panel = page.getByRole("dialog");
       await expect(panel).toBeVisible();

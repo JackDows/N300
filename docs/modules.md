@@ -20,7 +20,7 @@
 {"jsonrpc":"2.0","id":5,"method":"module.shutdown"}
 ```
 
-上面的能力读取适用于 OG98；N300 可换成 audio.volume。原有原生 CLI/DLL/C ABI 也保留在各模块的 `artifacts/package/<配置>/`，可独立开发和诊断。
+上面的能力读取适用于 OG98；N300 可换成 audio.volume，G HUB 可换成 mouse.dpiStage。N300、OG98 原有原生 CLI/DLL/C ABI 也保留在各模块的 `artifacts/package/<配置>/`，可独立开发和诊断。
 
 ## 模块协议 v1
 
@@ -35,7 +35,7 @@
 
 成功用 JSON-RPC result，失败用 error.data 的 code/message/userMessage/details。事件用 `module.event`，params 包含 type/data；`type:"snapshot"` 表示新状态。stdout 只能包含协议帧，诊断输出到 stderr。EOF 会处理完已接受的模块请求再退出。
 
-同一设备的 I/O 在专用工作线程串行执行。N300 在该线程初始化 Windows MTA，停止时调用原有取消接口。OG98 的同步 HID 调用不能保证硬取消，宿主通过独立进程与超时负责最终隔离。
+同一设备的 I/O 在专用工作线程串行执行。N300 在该线程初始化 Windows MTA，停止时调用原有取消接口。OG98 的同步 HID 调用不能保证硬取消，宿主通过独立进程与超时负责最终隔离。G HUB 模块另有自身的 WebSocket 接收线程，关闭连接可取消等待；模块退出不会终止官方 G HUB 后台。各模块互不共享设备队列，G HUB 的依赖与接口见 [模块说明](../modules/logitech-ghub/README.md)。
 
 ## 替换流程
 

@@ -8,6 +8,8 @@ interface DeskScene25DProps {
   kbConnected: boolean;
   kbBrightnessRatio: number;
   kbRgb: [number, number, number];
+  mouseConnected: boolean;
+  mouseName: string;
   onSelectDevice(modal: Exclude<ModalKind, null>): void;
 }
 
@@ -149,9 +151,11 @@ export function DeskScene25D({
   kbConnected,
   kbBrightnessRatio,
   kbRgb,
+  mouseConnected,
+  mouseName,
   onSelectDevice,
 }: DeskScene25DProps) {
-  const [hoverTarget, setHoverTarget] = useState<"speaker" | "keyboard" | "system" | null>(
+  const [hoverTarget, setHoverTarget] = useState<"speaker" | "keyboard" | "mouse" | "system" | null>(
     null,
   );
 
@@ -1022,7 +1026,12 @@ export function DeskScene25D({
         </g>
 
         {/* ==================== 7. 2.5D 透视无线鼠标 (Perspective Wireless Mouse) ==================== */}
-        <g aria-hidden="true" pointerEvents="none">
+        <g role="button" tabIndex={0} aria-label="鼠标设置"
+          className={`desk25d-node desk25d-node--mouse${hoverTarget === "mouse" ? " is-hovered" : ""}`}
+          onFocus={() => setHoverTarget("mouse")} onBlur={() => setHoverTarget(null)}
+          onMouseEnter={() => setHoverTarget("mouse")} onMouseLeave={() => setHoverTarget(null)}
+          onClick={() => onSelectDevice("mouse")}
+          onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelectDevice("mouse"); } }}>
           {/* 鼠标接触投影与尾部微光 */}
           <ellipse cx="812" cy="548" rx="38" ry="48" fill="rgba(0, 0, 0, 0.72)" filter="url(#blur-tight)" />
           <ellipse
@@ -1063,21 +1072,21 @@ export function DeskScene25D({
             height="16"
             rx="3.5"
             fill="#0e1017"
-            stroke="rgba(92, 225, 230, 0.55)"
+            stroke={mouseConnected ? "rgba(170, 189, 219, 0.7)" : "rgba(170, 189, 219, 0.2)"}
             strokeWidth="0.9"
           />
           {/* 尾部流光灯带 */}
           <path
             d="M 792 568 Q 812 576 832 568"
             fill="none"
-            stroke="rgba(92, 225, 230, 0.45)"
+            stroke={mouseConnected ? "rgba(170, 189, 219, 0.65)" : "rgba(170, 189, 219, 0.15)"}
             strokeWidth="1.4"
             strokeLinecap="round"
           />
         </g>
       </svg>
       <div className={`desk-caption${hoverTarget ? " is-active" : ""}`} aria-hidden="true">
-        {hoverTarget ? <><span>{hoverTarget === "speaker" ? "N300" : hoverTarget === "keyboard" ? "OG98" : "DeskHub"}</span><span className="desk-caption__detail">{hoverTarget === "speaker" ? "音响控制" : hoverTarget === "keyboard" ? "键盘灯光" : "设备与应用"}</span><span className="desk-caption__key">↵</span></> : "选择桌面上的设备"}
+        {hoverTarget ? <><span>{hoverTarget === "speaker" ? "N300" : hoverTarget === "keyboard" ? "OG98" : hoverTarget === "mouse" ? mouseName : "DeskHub"}</span><span className="desk-caption__detail">{hoverTarget === "speaker" ? "音响控制" : hoverTarget === "keyboard" ? "键盘灯光" : hoverTarget === "mouse" ? "鼠标控制" : "设备与应用"}</span><span className="desk-caption__key">↵</span></> : "选择桌面上的设备"}
       </div>
     </div>
   );

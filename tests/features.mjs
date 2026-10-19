@@ -57,6 +57,34 @@ for (const mode of ['native', 'browser']) {
       assert.equal((await read(client, 'keyboard', 'lighting.state')).value.brightness, (await read(client, 'keyboard', 'lighting.brightness')).value);
     } finally { await backend.close(); }
   });
+  test(`${mode}: mouse choices, board restrictions, repeated mode changes and restart`, async () => {
+    const backend = await open(mode, 'mouse'); const client = backend.client;
+    try {
+      const peers = await Promise.all(['speaker', 'keyboard'].map(id => request(client, 'devices.get', id)));
+      for (const capability of ['mouse.dpiStage', 'mouse.reportRate']) {
+        for (const choice of (await read(client, 'mouse', capability)).choices) await write(client, 'mouse', capability, choice.value);
+        await assert.rejects(request(client, 'devices.write', 'mouse', { capability, value: 'unknown-choice' }));
+      }
+      await write(client, 'mouse', 'mouse.dpiStage', '1');
+      await write(client, 'mouse', 'device.onboardMode', true);
+      await write(client, 'mouse', 'device.onboardMode', true);
+      for (const [capability, value] of [['mouse.dpiStage', '2'], ['mouse.reportRate', 500]]) {
+        assert.equal((await read(client, 'mouse', capability)).writable, false);
+        await assert.rejects(request(client, 'devices.write', 'mouse', { capability, value }));
+      }
+      for (const choice of (await read(client, 'mouse', 'mouse.profile')).choices) await write(client, 'mouse', 'mouse.profile', choice.value);
+      await write(client, 'mouse', 'device.onboardMode', false);
+      assert.equal((await read(client, 'mouse', 'mouse.dpiStage')).value, '1');
+      await write(client, 'mouse', 'device.onboardMode', true);
+      await request(client, 'devices.restart', 'mouse');
+      assert.equal((await read(client, 'mouse', 'device.onboardMode')).value, false);
+      assert.equal((await read(client, 'mouse', 'mouse.dpiStage')).value, '3');
+      for (const peer of peers) {
+        const current = await request(client, 'devices.get', peer.id);
+        assert.equal(current.processId, peer.processId); assert.deepEqual(current.values, peer.values);
+      }
+    } finally { await backend.close(); }
+  });
   test(`${mode}: every EQ band, restrictions and offline power-off`, async () => {
     const backend = await open(mode, 'eq'); const client = backend.client;
     try {

@@ -3,10 +3,12 @@ import { useDevice } from "../device/DeviceContext";
 import { KeyboardConsole } from "../pages/KeyboardConsole";
 import { SpeakerConsole } from "../pages/SpeakerConsole";
 import { SystemConsole } from "../pages/SystemConsole";
+import { MouseConsole } from "../pages/MouseConsole";
+import { useMouse } from "../device/MouseContext";
 import { DeskScene25D } from "./DeskScene25D";
 import "./DeskStage.css";
 
-export type ModalKind = "speaker" | "keyboard" | "system" | null;
+export type ModalKind = "speaker" | "keyboard" | "mouse" | "system" | null;
 
 function ConsoleDialog({ kind, onClose, children, returnFocus }: { kind: Exclude<ModalKind, null>; onClose(): void; children: ReactNode; returnFocus: HTMLElement | SVGElement | null }) {
   const panel = useRef<HTMLDivElement>(null);
@@ -52,6 +54,7 @@ export function DeskStage({
   onOpenModal(modal: ModalKind): void;
 }) {
   const { phase, values, keyboard } = useDevice();
+  const mouse = useMouse();
   const returnFocus = useRef<HTMLElement | SVGElement | null>(null);
 
   const spkConnected = phase === "connected";
@@ -88,6 +91,8 @@ export function DeskStage({
           kbConnected={kbConnected}
           kbBrightnessRatio={kbRatio}
           kbRgb={kbRgb}
+          mouseConnected={mouse.connected}
+          mouseName={mouse.info?.name ?? "Logitech 鼠标"}
           onSelectDevice={(modal) => {
             returnFocus.current = document.activeElement as HTMLElement | SVGElement | null;
             onOpenModal(modal);
@@ -103,6 +108,7 @@ export function DeskStage({
             {activeModal === "keyboard" && (
               <KeyboardConsole onClose={() => onOpenModal(null)} />
             )}
+            {activeModal === "mouse" && <MouseConsole onClose={() => onOpenModal(null)} />}
             {activeModal === "system" && (
               <SystemConsole
                 onClose={() => onOpenModal(null)}

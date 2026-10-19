@@ -1,6 +1,6 @@
 # 构建与发布
 
-应用版本位于根 `package.json`、`backend/Cargo.toml`、`apps/desktop/package.json`、`apps/desktop/src-tauri/Cargo.toml`、`tauri.conf.json` 与对应锁文件。设备模块独立使用各自 `module.json` 的版本。发布过的版本不可覆盖；修改模块后二进制需发布新版本。
+应用版本位于根 `package.json`、`backend/Cargo.toml`、`apps/desktop/package.json`、`apps/desktop/src-tauri/Cargo.toml`、`tauri.conf.json`、`contracts/package.json` 与对应锁文件；`contracts/version.mjs` 同步浏览器模拟版本及模拟升级版本。设备模块独立使用各自 `module.json` 的版本。发布过的版本不可覆盖；修改模块后二进制需发布新版本。
 
 ## 依赖与构建
 
@@ -55,4 +55,4 @@ node tests/verify-upgrade.mjs
 node tests/verify-upgrade.mjs --published
 ```
 
-该脚本使用已签名的 Release 安装器与本地更新源，验证退出全部模块、覆盖、重启、绑定/用户配置/页面存储保持、下载与临时安装器删除、两个设备模块可继续工作。测试记录在 `artifacts/validation/upgrade-*/result.json`。验收结束后按 `AGENTS.md` 手动检查并移除测试安装和临时文件，保留正式安装包与精简记录。
+该脚本使用已签名的 Release 安装器与本地更新源，验证退出全部模块、覆盖、重启、原有绑定/用户配置/页面存储保持、下载与临时安装器删除，以及三个设备模块可继续工作。测试记录在 `artifacts/validation/upgrade-*/result.json`。验收结束后按 `AGENTS.md` 手动检查并移除测试安装和临时文件，保留正式安装包与精简记录。

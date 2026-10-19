@@ -1,13 +1,13 @@
 # 前端接手指南
 
-前端只对接 DeskHub 公共接口。设备进程、线程、重连和协议都由后端管理。`apps/desktop/` 采用虚拟桌面入口：点击音响、键盘或显示器，分别打开设备控制与应用设置。
+前端只对接 DeskHub 公共接口。设备进程、线程、重连和协议都由后端管理。`apps/desktop/` 采用虚拟桌面入口：点击音响、键盘、鼠标或显示器，分别打开设备控制与应用设置。
 
 ## 界面结构与验证
 
-- `styles/tokens.css` 统一颜色、文字层级、圆角和动效。音响用暖金、键盘用低饱和青色，其余材质和控件样式共用。
+- `styles/tokens.css` 统一颜色、文字层级、圆角和动效。音响用暖金、键盘用低饱和青色、鼠标用灰蓝，其余材质和控件样式共用。
 - `DeskScene25D` 绘制桌面，`DeskStage` 管理单个控制窗及焦点，`ConsoleHeader` 统一标题区。设备页面按相同间距和控件规范扩展。
 - 弹窗支持 Tab、Esc 和关闭后恢复焦点；名称编辑中的 Esc 只取消编辑。分段选择、灯光档位和 EQ 支持方向键。布局按应用容器尺寸适配，浏览器预览与桌面窗口一致。
-- `npm --prefix apps/desktop run dev` 打开浏览器离线预览；`?modal=speaker|keyboard|system` 直接进入指定控制窗。软件更新操作使用同一个模拟接口。日志文件导出在原生宿主中验证。
+- `npm --prefix apps/desktop run dev` 打开浏览器离线预览；`?modal=speaker|keyboard|mouse|system` 直接进入指定控制窗。软件更新操作使用同一个模拟接口。日志文件导出在原生宿主中验证。
 - `npm --prefix apps/desktop run test:ui` 使用 Windows 上的 Microsoft Edge 执行控制、焦点、离线更新与窗口尺寸回归，自动启动预览服务。`test:desktop` 使用已构建的 Windows 程序和原生离线模块验证设备控制、更新校验、单实例与日志导出。
 
 窗口尺寸默认 920 × 620，最小 780 × 540。浏览器也可缩小预览容器检查滚动与控件可达性。验证输出放在 `artifacts/validation/`；交付前按 `AGENTS.md` 人工检查和清理。
@@ -64,6 +64,8 @@ const updates = await client.request('updates.list');
 整包升级、模块独立下载和安装的完整调用顺序、任务状态与错误处理见 [更新接口](updates.md)。浏览器模拟器通过 `updateScenario` 提供成功、网络失败、坏签名、安装失败场景，便于设计更新页面。
 
 ## 界面应遵守的接口语义
+
+鼠标由独立 `MouseProvider` 通过公共 SDK 管理，未依赖音响状态。界面读取 `writable` 和 `choices`，不把 G HUB 的内部配置 ID、WebSocket 路径或原始错误展示给用户。未连接时不显示上次 DPI、电量和回报率；等待设备不会阻塞音响和键盘。模块目前提供基础控制，未实现按键映射、宏或灯光编辑。
 
 - 初始读取 devices.list，随后订阅事件；刷新页面不需要重启设备模块。
 - 按稳定的 deviceId 保存页面归属，label 可变，moduleId 在换硬件时也可变。

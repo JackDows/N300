@@ -11,7 +11,7 @@ export interface DeviceSnapshot {
   capabilities: Capability[]; values: Record<string, Reading>; unavailable: Record<string, unknown>;
   valueState: 'unknown' | 'confirmed' | 'stale'; error: ErrorInfo | null; processId: number | null;
 }
-export interface Candidate { label: string; modelVerified: boolean; target: { resourceId: string; [key: string]: unknown } }
+export interface Candidate { label: string; modelVerified: boolean; available?: boolean; target: { resourceId: string; [key: string]: unknown } }
 export interface ModuleManifest { id: string; name: string; version: string; protocolVersion: 1; executable: string; transport?: string[]; files: Record<string, string> }
 export interface ModulePackage { manifest: ModuleManifest; packagePath: string; fingerprint: string }
 export interface HubInfo { name: 'DeskHub'; version: string; protocolVersion: 1; offline: boolean; dataDirectory: string; maxFrameBytes: number; methods: string[]; desktop?: { version: string; updater: boolean } }

@@ -1,8 +1,8 @@
 # DeskHub
 
-个人多设备控制软件的后端工程。当前接入 EDIFIER N300 音响与腹灵 OG98 键盘：统一管理设备实例，每台设备使用独立控制进程、工作队列和线程，模块可单独运行、重启、替换。
+个人多设备控制软件。当前接入 EDIFIER N300 音响、腹灵 OG98 键盘与 Logitech G HUB 鼠标：统一管理设备实例，每台设备使用独立控制进程、工作队列和线程，模块可单独运行、重启、替换。
 
-桌面宿主、整包升级与模块独立下载安装均使用统一后端。`apps/desktop/` 中的现有音响页面已接入公共接口；多设备页面与视觉设计由前端继续开发。接口、TypeScript SDK 和更新流程的离线模拟已提供。
+桌面宿主、整包升级与模块独立下载安装均使用统一后端。`apps/desktop/` 提供统一的桌面入口和音响、键盘、鼠标控制窗。接口、TypeScript SDK 和更新流程均提供离线模拟，前端开发无需连接硬件。
 
 直接使用：[DeskHub 最新安装包](https://github.com/JackDows/N300/releases/latest)。应用内可检查并覆盖升级；设备模块使用独立的签名发布目录。
 
@@ -30,6 +30,7 @@ node examples/offline-demo.mjs
 ```powershell
 .\scripts\project.ps1 -Action Build -Module edifier-n300 -Configuration Release
 .\scripts\project.ps1 -Action Build -Module flesports-og98 -Configuration Release
+.\scripts\project.ps1 -Action Build -Module logitech-ghub -Configuration Release
 .\scripts\project.ps1 -Action Build -Module Backend -Configuration Release
 ```
 
@@ -37,7 +38,7 @@ node examples/offline-demo.mjs
 
 ## 交付目录
 
-`artifacts/desktop/Debug` / `Release` 中包含 `DeskHub.exe` 与模块；`artifacts/package/Debug` / `Release` 包含独立后端 CLI、模块、接口 SDK 与文档。复制整个目录到另一台 Windows x64 电脑即可运行，无需 Node、Rust、原厂软件或 REA；桌面需要 WebView2 Runtime。Release 构建同时生成 NSIS 安装器，有签名私钥时生成整包与模块发布文件。
+`artifacts/desktop/Debug` / `Release` 中包含 `DeskHub.exe` 与模块；`artifacts/package/Debug` / `Release` 包含独立后端 CLI、模块、接口 SDK 与文档。复制整个目录到另一台 Windows x64 电脑即可运行，无需 Node、Rust 或 REA；桌面需要 WebView2 Runtime。N300、OG98 直接连接设备；Logitech 鼠标复用本机已安装并运行的 G HUB 后台，使用时可关闭原厂界面。Release 构建同时生成 NSIS 安装器，有签名私钥时生成整包与模块发布文件。
 
 桌面和公共后端默认使用 `%LOCALAPPDATA%\DeskHub\backend\online` / `offline` 保存绑定、模块、更新任务和日志；控制台开发脚本使用 `artifacts/data/online` / `offline`。运行时模块复制到数据目录中按版本和哈希划分的目录。整包升级保留用户数据；模块更新只替换指定实例，失败时恢复原模块。
 
@@ -46,7 +47,7 @@ node examples/offline-demo.mjs
 ```text
 apps/desktop/       DeskHub 桌面宿主与现有设备页面
 backend/            Rust 公共后端库、进程管理与命令行
-modules/            两个设备核心、适配器及公共模块 SDK
+modules/            三个独立设备模块及公共模块 SDK
 contracts/          请求 Schema、前端 SDK、TypeScript 类型与浏览器模拟器
 examples/           原生离线联调示例
 scripts/            通用工程入口、签名打包和发布

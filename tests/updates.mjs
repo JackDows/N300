@@ -1,4 +1,5 @@
 import test,{after} from 'node:test';
+import {MOCK_UPDATE_VERSION} from '../contracts/version.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync,existsSync} from 'node:fs';
 import {join} from 'node:path';
@@ -109,7 +110,7 @@ test('browser simulator supports update progress, independent module activation,
       if(['network-error','bad-signature'].includes(scenario)){assert.equal(state.state,'failed');continue;}
       await c.request('modules.install',{jobId:job.id,deviceId:'keyboard'});state=await waitJob(c,job.id);assert.equal(state.state,scenario==='success'?'completed':'failed');
       assert.equal((await c.request('devices.read',{deviceId:'speaker',capability:'audio.volume'})).value,8);
-      if(scenario==='success'){await c.request('app.updates.check');const app=await c.request('app.updates.download');await waitJob(c,app.id);await c.request('app.updates.install',{jobId:app.id});await waitJob(c,app.id);assert.equal((await c.request('app.updates.info')).version,'0.3.1');}
+      if(scenario==='success'){await c.request('app.updates.check');const app=await c.request('app.updates.download');await waitJob(c,app.id);await c.request('app.updates.install',{jobId:app.id});await waitJob(c,app.id);assert.equal((await c.request('app.updates.info')).version,MOCK_UPDATE_VERSION);}
     }finally{c.close();}
   }
 });

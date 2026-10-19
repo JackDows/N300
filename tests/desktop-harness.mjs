@@ -22,12 +22,12 @@ export async function attach(port){
   };
   return {browser,page,request};
 }
-export async function launch({executable,directory,updateConfig,port,extraEnv={}}){
+export async function launch({executable,directory,updateConfig,port,extraEnv={},offline=true}){
   port??=await freePort();mkdirSync(directory,{recursive:true});
-  const env={...process.env,DESKHUB_OFFLINE:'1',DESKHUB_DATA_DIR:join(directory,'data'),DESKHUB_UPDATE_CONFIG:updateConfig,
+  const env={...process.env,DESKHUB_OFFLINE:offline?'1':'0',DESKHUB_DATA_DIR:join(directory,'data'),DESKHUB_UPDATE_CONFIG:updateConfig,
     DESKHUB_TEST_HIDE_WINDOW:'1',WEBVIEW2_USER_DATA_FOLDER:join(directory,'webview'),
     WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS:`--remote-debugging-port=${port} --remote-debugging-address=127.0.0.1`,...extraEnv};
-  const processHandle=spawn(executable,['--offline'],{env,cwd:dirname(executable),stdio:'ignore',windowsHide:true});
+  const processHandle=spawn(executable,offline?['--offline']:[],{env,cwd:dirname(executable),stdio:'ignore',windowsHide:true});
   const connection=await attach(port);
   return {...connection,process:processHandle,port,env,async close(){
     try{await connection.page.getByRole('button',{name:'关闭窗口',exact:true}).click({timeout:3000});}catch{}

@@ -4,17 +4,20 @@ import { useDevice } from "../device/DeviceContext";
 import { getTransport, isTauri } from "../device/transport";
 import { recordUiError } from "../diagnostics";
 import { UpdatePanel } from "../updates/UpdatePanel";
+import { useMouse } from "../device/MouseContext";
 
 export function SystemConsole({ onClose, onSelectDevice }: {
   onClose(): void;
-  onSelectDevice(device: "speaker" | "keyboard"): void;
+  onSelectDevice(device: "speaker" | "keyboard" | "mouse"): void;
 }) {
   const { phase, stopping, connect, disconnect, keyboard, kbBusy, connectKeyboard, disconnectKeyboard, notify } = useDevice();
+  const mouse = useMouse();
   const [exporting, setExporting] = useState(false);
   const [exportPath, setExportPath] = useState("");
   const nodes = [
     { id: "speaker" as const, name: "N300", kind: "音响", connected: phase === "connected", connecting: phase === "connecting", busy: stopping, connect, disconnect },
     { id: "keyboard" as const, name: "OG98", kind: "键盘", connected: keyboard.connected, connecting: keyboard.phase === "connecting", busy: kbBusy, connect: connectKeyboard, disconnect: disconnectKeyboard },
+    { id: "mouse" as const, name: mouse.info?.name ?? "Logitech 鼠标", kind: "鼠标", connected: mouse.connected, connecting: mouse.busy, busy: mouse.busy, connect: mouse.connect, disconnect: mouse.disconnect },
   ];
   const exportLogs = async () => {
     setExporting(true);

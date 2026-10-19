@@ -8,7 +8,7 @@ import { UpdateNotice } from "./updates/UpdatePanel";
 const initialModal = (): ModalKind => {
   const params = new URLSearchParams(location.search);
   const m = params.get("modal");
-  if (m === "speaker" || m === "keyboard" || m === "system") return m;
+  if (m === "speaker" || m === "keyboard" || m === "mouse" || m === "system") return m;
   return null;
 };
 

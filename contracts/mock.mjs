@@ -1,14 +1,16 @@
 import { DeskHubError } from './client.mjs';
+import { APP_VERSION, MOCK_UPDATE_VERSION } from './version.mjs';
 
 /** Browser-only device simulator. Package integrity and filesystem export use the native host. */
 export function createMockClient(seed, { latencyMs = 20, updateScenario = 'success' } = {}) {
   const original = structuredClone(seed);
   const devices = new Map(original.map((device) => [device.id, structuredClone(device)]));
   const sessions = new Map(original.map((device) => [device.id, structuredClone(device.values)]));
+  const mouseSoftware = new Map();
   const listeners = new Set(), queues = new Map();
   let closed = false, nextId = 0;
   const jobs = new Map(), installed = new Map();
-  let appVersion = '0.3.0', lastResult = null, appChecked = false;
+  let appVersion = APP_VERSION, lastResult = null, appChecked = false;
   const fail = (code, userMessage) => { throw new DeskHubError({ code, userMessage, message: code }); };
   const emit = (event) => { for (const listener of listeners) listener(structuredClone(event)); };
   const publish = (device) => { device.revision++; emit({ type: 'devices.changed', device }); return structuredClone(device); };
@@ -76,13 +78,13 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
     return publish(device);
   }
   function stop(device) {
-    device.generation++; sessions.delete(device.id);
+    device.generation++; sessions.delete(device.id); mouseSoftware.delete(device.id);
     Object.assign(device, { phase: 'stopped', values: {}, error: null, valueState: 'unknown', unavailable: {} });
     return publish(device);
   }
   async function execute(method, params, requestId) {
     if (closed) fail('transport_closed', '模拟器已经关闭。');
-    if (method === 'hub.describe') return { name: 'DeskHub', version: '0.3.0', protocolVersion: 1, offline: true, dataDirectory: 'browser-memory', maxFrameBytes: 65536, methods: methods.slice(), desktop: {version:appVersion,updater:true} };
+    if (method === 'hub.describe') return { name: 'DeskHub', version: APP_VERSION, protocolVersion: 1, offline: true, dataDirectory: 'browser-memory', maxFrameBytes: 65536, methods: methods.slice(), desktop: {version:appVersion,updater:true} };
     if (method === 'devices.list') return structuredClone([...devices.values()]);
     if (method === 'modules.list') return [...new Map(original.map((d) => [d.moduleId, packageFor(d)])).values(),...installed.values()].map(p=>structuredClone(p));
     if (method === 'modules.inspect') return packageFor(select(params));
@@ -98,8 +100,8 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
       return jobEmit(job);
     }
     if (method === 'app.updates.info') return {version:appVersion,lastResult:structuredClone(lastResult)};
-    if (method === 'app.updates.check') {appChecked=true;return {currentVersion:appVersion,release:appVersion==='0.3.1'?null:{version:'0.3.1',notes:'离线模拟整包更新'}};}
-    if (method === 'app.updates.download') {if(!appChecked)fail('check_required','请先检查更新。');return download('app','deskhub','0.3.1');}
+    if (method === 'app.updates.check') {appChecked=true;return {currentVersion:appVersion,release:appVersion===MOCK_UPDATE_VERSION?null:{version:MOCK_UPDATE_VERSION,notes:'离线模拟整包更新'}};}
+    if (method === 'app.updates.download') {if(!appChecked)fail('check_required','请先检查更新。');return download('app','deskhub',MOCK_UPDATE_VERSION);}
     if (method === 'app.updates.install') {const job=jobGet(params.jobId);if(job.kind!=='app')fail('invalid_argument','更新类型不匹配。');return install(job);}
     if (method === 'modules.catalog'||method === 'modules.checkUpdates') return {releases:releases.map(release=>({release:structuredClone(release),compatible:true,available:![...installed.values()].some(p=>p.manifest.id===release.moduleId&&p.manifest.version===release.version),installedVersions:[templateFor(release.moduleId).moduleVersion,...[...installed.values()].filter(p=>p.manifest.id===release.moduleId).map(p=>p.manifest.version)],devices:[...devices.values()].filter(d=>d.moduleId===release.moduleId).map(d=>({deviceId:d.id,version:d.moduleVersion}))}))};
     if (method === 'modules.download') {const release=releases.find(r=>r.moduleId===params.moduleId&&(!params.version||params.version===r.version));if(!release)fail('release_not_found','没有找到模块版本。');return download('module',release.moduleId,release.version);}
@@ -137,7 +139,7 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
       const template = select(params);
       if (method === 'devices.replace' && template.moduleId !== device.moduleId) fail('invalid_argument', '更换设备类型请使用重新绑定。');
       if (method === 'devices.rebind' && (!params.target || typeof params.target !== 'object' || Array.isArray(params.target))) fail('invalid_argument', '请选择设备。');
-      const connected = device.phase === 'connected'; sessions.delete(device.id);
+        const connected = device.phase === 'connected'; sessions.delete(device.id); mouseSoftware.delete(device.id);
       Object.assign(device, { moduleId: template.moduleId, moduleVersion: template.moduleVersion, capabilities: structuredClone(template.capabilities), values: {}, error: null, unavailable: {}, valueState: 'unknown', phase: 'disconnected', generation: device.generation + 1 });
       if (method === 'devices.rebind') Object.assign(device, { bindingTarget: structuredClone(params.target), target: structuredClone(params.target) });
       return connected ? connect(device) : publish(device);
@@ -168,6 +170,7 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
       } else {
         if (!reading) fail('unavailable', '暂时没有这项设置的数据。');
         if (operation === 'write') {
+          if (reading.writable === false) fail('setting_read_only', '当前模式下不能调整此项。');
           let value = params.value;
           if (capability.valueType === 'integer' && (!Number.isInteger(value) || (reading.min !== undefined && value < reading.min) || (reading.max !== undefined && value > reading.max))) fail('invalid_argument', '设置值不在允许的范围内。');
           if (capability.valueType === 'boolean' && typeof value !== 'boolean') fail('invalid_argument', '参数格式不正确。');
@@ -180,7 +183,22 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
             if (typeof value !== 'string' || !value.trim() || value.includes('\0') || new TextEncoder().encode(value.trim()).length > (reading.maxBytes ?? 24)) fail('invalid_argument', '设备名称格式不正确。');
             value = value.trim();
           }
+          const previousValue = reading.value;
           reading.value = structuredClone(value);
+          if (params.capability === 'device.onboardMode' && device.moduleId === 'logitech-ghub' && previousValue !== value) {
+            if (value) {
+              mouseSoftware.set(device.id, {stage:structuredClone(device.values['mouse.dpiStage']),profile:structuredClone(device.values['mouse.profile'])});
+              device.values['mouse.profile']={value:'PROFILE_1',label:'板载配置',writable:true,choices:[{value:'PROFILE_1',label:'配置 1'},{value:'PROFILE_2',label:'配置 2'}]};
+              device.values['mouse.dpiStage'].value=templateFor(device.moduleId).values['mouse.dpiStage'].value;
+              device.values['mouse.dpiStage'].label='默认 DPI';
+            } else {
+              const previous=mouseSoftware.get(device.id);
+              device.values['mouse.profile']=structuredClone(previous?.profile??templateFor(device.moduleId).values['mouse.profile']);
+              device.values['mouse.dpiStage']=structuredClone(previous?.stage??templateFor(device.moduleId).values['mouse.dpiStage']);
+            }
+            device.values['mouse.dpiStage'].writable=!value;
+            device.values['mouse.reportRate'].writable=!value;
+          }
           if (params.capability === 'lighting.brightness') { device.values['lighting.state'].value.brightness = value; reading = { ...reading, verified: true }; }
         }
       }
