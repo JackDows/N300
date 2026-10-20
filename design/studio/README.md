@@ -18,13 +18,19 @@
 
 ```powershell
 npm --prefix apps/desktop ci
-& 'D:\Blender\blender.exe' --background --factory-startup --python design/studio/build_scene.py -- --render
+& 'D:\Blender\blender.exe' --background --factory-startup --python-exit-code 1 --python design/studio/build_scene.py -- --render
 npm --prefix apps/desktop run dev -- --host 127.0.0.1
 ```
 
 浏览器打开 `/visual.html`。`D:\Blender` 是本机完整安装位置；其他电脑可用自己的 Blender 路径运行相同命令。渲染与模型输出到 `artifacts/visual/studio-v1`，源码和配列保留在 Git。Blender 源场景、GLB 和审核图由构建生成，不依赖此前的拼贴素材。
 
 审核遵循 `refactoring-ui` 的层级、留白和可读性要求。三维造型与光照属于场景美术工作，需额外检查真实渲染。每次交付前人工检查和清理中间产物。
+
+模型制作分为三个源文件：
+
+- `build_scene.py`：桌面构图、其他设备、光照和导出。
+- `keyboard_asset.py`：OG98 槽位、各排键帽高度与倾角、凹面、刻字、开放边框和分件。导出前检查刻字是否被键帽遮住。
+- `studio_materials.py`：生成塑料、金属与织物的法线和粗糙度贴图；物理 UV 尺寸为每单元 20 mm。使用 Blender 自带的 NumPy，图像打包在 `.blend` 和 GLB 内，无外部纹理依赖。
 
 ## 独立预览包
 
@@ -47,6 +53,8 @@ npm --prefix apps/desktop run open:visual
 
 移动鼠标到设备上可轻微浮起并高亮，移开后平滑落回；点击设备从当前姿态进入聚焦。左右音箱分别从实际点击的位置浮起。键盘的每个模型按键可独立选中，设置卡片里的功能保存在本次预览会话。点击机箱会打开侧板；点击内部部件显示已核对的型号。点击空白或按 Esc 收回，Esc 在有选择时先取消选择。
 
+键盘近景在宽窗口中为模型与设置并排，在小窗口中把设置放到键盘上方。面板分别显示当前功能与待应用的功能；“恢复原键”先恢复待应用值，应用后才更新本次预览的映射。
+
 ## 渲染与模块边界
 
 - Blender 负责建模、真实尺度、配列、材质与初始镜头。导出的 GLB 保留 `device_id`、`slot_id`、`part_id` 和侧板铰链层级。
@@ -64,7 +72,7 @@ npm --prefix apps/desktop run review:visual
 
 检查已构建的预览包时，先运行 `preview:visual`，然后在当前终端设置 `$env:DESKHUB_VISUAL_URL='http://127.0.0.1:1421'` 再执行上述检查命令。测试记录写入 `artifacts/visual/validation.json`；截图脚本生成默认窗口、最小窗口、窄屏和显示缩放的画面，供人工审查。清理仍需人工逐项执行。
 
-实际窗口的性能验证：`npm --prefix apps/desktop run open:visual -- --benchmark`。记录位于 `artifacts/visual/performance.json`，包括 WebGL 显卡、实际尺寸和像素比、首次及重复交互的帧间隔。加载阶段预编译桌面与聚焦视图的光照变体，避免把首次编译停顿留到用户点击时。
+实际窗口的性能验证：`npm --prefix apps/desktop run open:visual -- --benchmark`。记录位于 `artifacts/visual/performance.json`，包括 WebGL 显卡、实际尺寸和像素比、首次及重复交互的帧间隔。完成后保存实际窗口的 `visible-desktop.png`、`visible-keyboard.png`，并留在键盘近景便于检查。加载阶段预编译桌面与聚焦视图的光照变体，执行聚焦场景的离屏绘制以准备阴影、法线和驱动管线，减少首次点击的停顿。
 
 本轮的具体发现和验证范围见 [REVIEW.md](REVIEW.md)。
 

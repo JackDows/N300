@@ -51,13 +51,13 @@ export class StudioRenderer {
   private environment:THREE.WebGLRenderTarget;
   private ao:GTAOPass|null=null;
   private aoTarget=new THREE.WebGLRenderTarget(1,1);
-  private aoMaterial=new THREE.ShaderMaterial({uniforms:{map:{value:null},strength:{value:.65}},vertexShader:'varying vec2 uv0;void main(){uv0=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:'uniform sampler2D map;uniform float strength;varying vec2 uv0;void main(){float ao=texture2D(map,uv0).r;gl_FragColor=vec4(vec3(mix(1.,ao,strength)),1.);}',depthTest:false,depthWrite:false,transparent:true,premultipliedAlpha:true,blending:THREE.MultiplyBlending});
+  private aoMaterial=new THREE.ShaderMaterial({uniforms:{map:{value:null},strength:{value:.42}},vertexShader:'varying vec2 uv0;void main(){uv0=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:'uniform sampler2D map;uniform float strength;varying vec2 uv0;void main(){float ao=texture2D(map,uv0).r;gl_FragColor=vec4(vec3(mix(1.,ao,strength)),1.);}',depthTest:false,depthWrite:false,transparent:true,premultipliedAlpha:true,blending:THREE.MultiplyBlending});
   private aoQuad=new FullScreenQuad(this.aoMaterial);
   private glass:THREE.Mesh[]=[];
   private modelBytes=0;
   private caseLight:THREE.PointLight|null=null;
   private colorTarget=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:4});
-  private bloom=new UnrealBloomPass(new THREE.Vector2(1,1),.18,.35,1.15);
+  private bloom=new UnrealBloomPass(new THREE.Vector2(1,1),.06,.25,3.0);
   private output=new OutputPass();
 
   constructor(private host:HTMLElement,private onState:(state:StudioState)=>void){
@@ -66,7 +66,7 @@ export class StudioRenderer {
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
     this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure=.85;
+    this.renderer.toneMappingExposure=.96;
     this.renderer.shadowMap.enabled=true;
     this.renderer.shadowMap.type=THREE.VSMShadowMap;
     this.renderer.autoClear=false;
@@ -77,8 +77,9 @@ export class StudioRenderer {
     const room=new RoomEnvironment();const pmrem=new THREE.PMREMGenerator(this.renderer);
     this.environment=pmrem.fromScene(room,.04);room.dispose();pmrem.dispose();
     this.scene.environment=this.foreground.environment=this.environment.texture;
-    this.scene.environmentIntensity=this.foreground.environmentIntensity=.16;
-    this.lighting(this.scene);this.lighting(this.foreground);
+    this.scene.environmentIntensity=.26;
+    this.foreground.environmentIntensity=.34;
+    this.lighting(this.scene);this.lighting(this.foreground,true);
     this.dimScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),this.dimMaterial));
     this.observer=new ResizeObserver(()=>this.resize());this.observer.observe(host);
     this.renderer.domElement.addEventListener('pointermove',this.move);
@@ -88,15 +89,15 @@ export class StudioRenderer {
     this.load().catch(error=>{if(!this.disposed){console.error(error);this.publish({error:'桌面未能载入，请刷新后重试。'});}});
   }
 
-  private lighting(scene:THREE.Scene){
-    scene.add(new THREE.HemisphereLight(0xe3edf2,0x172025,.15));
-    const key=new THREE.DirectionalLight(0xe9eff2,.6);key.position.set(-.8,1.8,.8);key.target.position.set(0,.15,0);
+  private lighting(scene:THREE.Scene,focused=false){
+    scene.add(new THREE.HemisphereLight(0xe3edf2,0x30383b,.22));
+    const key=new THREE.DirectionalLight(0xe9eff2,.7);key.position.set(-.8,1.8,.8);key.target.position.set(0,.15,0);
     key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-1.4;key.shadow.camera.right=1.4;key.shadow.camera.top=1.2;key.shadow.camera.bottom=-1.2;key.shadow.camera.near=.1;key.shadow.camera.far=5;key.shadow.bias=-.0002;key.shadow.normalBias=.0015;
     key.shadow.radius=5;key.shadow.blurSamples=8;scene.add(key,key.target);
-    const wash=new THREE.SpotLight(0xd4e7eb,4.0,4,.8,1,2);wash.position.set(-.5,1.4,.65);wash.target.position.set(-.1,.02,-.1);scene.add(wash,wash.target);
-    const softbox=new THREE.RectAreaLight(0xe9eff2,3,1.3,.8);softbox.position.set(-.6,1.7,.7);softbox.lookAt(0,.15,0);scene.add(softbox);
-    const fill=new THREE.RectAreaLight(0xfff1dd,2.5,1.2,.7);fill.position.set(.8,.9,1.1);fill.lookAt(0,.2,0);scene.add(fill);
-    const rim=new THREE.RectAreaLight(0xa9d5de,4,.9,.35);rim.position.set(.2,1.1,-.6);rim.lookAt(0,.25,0);scene.add(rim);
+    const wash=new THREE.SpotLight(0xd4e7eb,2.4,4,.8,1,2);wash.position.set(-.5,1.4,.65);wash.target.position.set(-.1,.02,-.1);scene.add(wash,wash.target);
+    const softbox=new THREE.RectAreaLight(0xe9eff2,focused?3.6:3,1.6,.95);softbox.position.set(-.6,1.7,.7);softbox.lookAt(0,.15,0);scene.add(softbox);
+    const fill=new THREE.RectAreaLight(0xfff7ec,1.8,1.2,.7);fill.position.set(.8,.9,1.1);fill.lookAt(0,.2,0);scene.add(fill);
+    const rim=new THREE.RectAreaLight(0xa9d5de,2.4,.9,.35);rim.position.set(.2,1.1,-.6);rim.lookAt(0,.25,0);scene.add(rim);
     const wall=new THREE.SpotLight(0x629baf,2,2,.95,1,2);wall.position.set(-.2,.1,-.4);wall.target.position.set(-.15,.35,-.66);scene.add(wall,wall.target);
   }
 
@@ -108,6 +109,7 @@ export class StudioRenderer {
     this.scene.add(gltf.scene);
     if(gltf.cameras[0] instanceof THREE.PerspectiveCamera){this.camera=gltf.cameras[0];this.camera.near=.02;this.camera.far=30;}
     this.camera.updateWorldMatrix(true,false);this.cameraOrigin.copy(this.camera.position);
+    gltf.scene.getObjectByName(THREE.PropertyBinding.sanitizeNodeName('camera.target'))?.getWorldPosition(this.cameraTarget);
     gltf.scene.traverse(object=>{
       const id=object.userData.device_id as DeviceId|undefined;
       if(id){const list=this.roots.get(id)??[];list.push(object);this.roots.set(id,list);this.originals.set(object,{parent:object.parent!,pose:capture(object)});}
@@ -116,13 +118,14 @@ export class StudioRenderer {
       if(object.userData.animation_role==='side_panel')this.door=object;
       if(object instanceof THREE.Mesh){
         const materials=Array.isArray(object.material)?object.material:[object.material];
+        for(const material of materials)for(const value of Object.values(material))if(value instanceof THREE.Texture)value.anisotropy=Math.min(8,this.renderer.capabilities.getMaxAnisotropy());
         const glass=materials.some(m=>m instanceof THREE.MeshPhysicalMaterial&&m.transmission>.5);
         object.castShadow=!glass&&!object.name.startsWith('legend');object.receiveShadow=!glass;
         if(glass){object.userData.ignorePick=true;object.renderOrder=2;this.glass.push(object);for(const material of materials){if(material instanceof THREE.MeshPhysicalMaterial){material.transmission=0;material.transparent=true;material.opacity=.04;material.depthWrite=false;material.side=THREE.DoubleSide;material.forceSinglePass=true;material.roughness=.12;material.envMapIntensity=.15;material.specularIntensity=.25;}}}
       }
     });
     this.caseLight=new THREE.PointLight(0xb9d4db,.045,.65,2);this.caseLight.position.set(-.05,.38,.02);this.roots.get('computer')?.[0].add(this.caseLight);
-    this.ao=new GTAOPass(this.scene,this.camera,512,512);this.ao.output=GTAOPass.OUTPUT.Off;this.ao.updateGtaoMaterial({radius:.12,distanceExponent:1,thickness:1,scale:1,samples:12});this.ao.updatePdMaterial({lumaPhi:10,depthPhi:2,normalPhi:3,radius:6,rings:2,samples:16});
+    this.ao=new GTAOPass(this.scene,this.camera,512,512);this.ao.output=GTAOPass.OUTPUT.Off;this.ao.updateGtaoMaterial({radius:.045,distanceExponent:1,thickness:1,scale:1,samples:16});this.ao.updatePdMaterial({lumaPhi:10,depthPhi:2,normalPhi:3,radius:4,rings:2,samples:16});
     this.aoMaterial.uniforms.map.value=this.ao.gtaoMap;
     this.resize();
     // The foreground has no interior light when a peripheral is selected. Warm
@@ -131,7 +134,14 @@ export class StudioRenderer {
     await this.renderer.compileAsync(this.scene,this.camera);
     const warm=gltf.scene.clone(true);warm.traverse(object=>{if(object instanceof THREE.Light)object.visible=false;});
     this.foreground.add(warm);
-    try {await this.renderer.compileAsync(this.foreground,this.camera);} finally {this.foreground.remove(warm);}
+    try {
+      await this.renderer.compileAsync(this.foreground,this.camera);
+      // Drivers can defer pipeline creation and shadow/normal-pass programs
+      // until the first draw, even after compileAsync has resolved.
+      this.renderer.setRenderTarget(this.colorTarget);this.renderer.clear();
+      this.renderer.render(this.foreground,this.camera);this.occlusion(this.foreground);
+      this.renderer.getContext().finish();
+    } finally {this.foreground.remove(warm);}
     if(this.disposed)return;
     cancelAnimationFrame(this.frame);this.frame=0;
     await new Promise<void>(resolve=>requestAnimationFrame(now=>{this.render(now);resolve();}));
@@ -151,6 +161,7 @@ export class StudioRenderer {
     }
     this.camera.updateProjectionMatrix();this.camera.updateWorldMatrix(true,false);
     if(this.selected&&this.state.phase==='focused'){const pose=this.focusPose(this.state.active!,this.selected);this.selected.position.copy(pose.position);this.selected.quaternion.copy(pose.quaternion);this.selected.scale.copy(pose.scale);}
+    else if(this.selected&&this.state.phase==='opening'&&this.animation)this.animation.to=this.focusPose(this.state.active!,this.selected);
     this.requestFrame();
   }
 
@@ -158,24 +169,29 @@ export class StudioRenderer {
     const distance=2.25;
     const h=2*Math.tan(THREE.MathUtils.degToRad(this.camera.fov/2))*distance,w=h*this.camera.aspect;
     const original=this.originals.get(object)!.pose;
-    const ratio=id==='keyboard'?Math.min(w*.78/.397,h*.55/.150):id==='computer'?Math.min(h*.60/.465,w*.52/.55):id==='mouse'?Math.min(h*.53/.13,w*.5/.07):id==='speaker'?Math.min(h*.59/.168,w*.46/.105):Math.min(w*.75/.615,h*.7/.52);
+    const wideKeyboard=this.width>=1180;
+    const keyboardWidth=wideKeyboard?(this.width-416)/this.width:.84;
+    const ratio=id==='keyboard'?Math.min(w*keyboardWidth/.400,h*(wideKeyboard?.48:.44)/.154):id==='computer'?Math.min(h*.60/.465,w*.52/.55):id==='mouse'?Math.min(h*.53/.13,w*.5/.07):id==='speaker'?Math.min(h*.59/.168,w*.46/.105):Math.min(w*.75/.615,h*.7/.52);
     const quaternion=original.quaternion.clone();
-    if(id==='keyboard'||id==='mouse')quaternion.copy(this.camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),THREE.MathUtils.degToRad(id==='keyboard'?80:67)));
+    if(id==='keyboard'||id==='mouse')quaternion.copy(this.camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),THREE.MathUtils.degToRad(id==='keyboard'?73:67)));
     if(id==='mouse')quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),-.20));
     const localCenter=id==='keyboard'?new THREE.Vector3(0,.018,0):id==='computer'?new THREE.Vector3(0,.235,0):id==='mouse'?new THREE.Vector3(0,.023,0):id==='speaker'?new THREE.Vector3(0,.09,0):new THREE.Vector3(0,.27,0);
-    const center=new THREE.Vector3(id==='computer'?w*.06:0,id==='keyboard'?-h*.16:-h*.01,-distance).applyMatrix4(this.camera.matrixWorld);
+    const center=new THREE.Vector3(id==='keyboard'&&wideKeyboard?-w*160/this.width:id==='computer'?w*.06:0,id==='keyboard'?-h*(wideKeyboard?.035:.18):-h*.01,-distance).applyMatrix4(this.camera.matrixWorld);
     const scale=new THREE.Vector3(ratio,ratio,ratio);
     return{position:center.sub(localCenter.multiply(scale).applyQuaternion(quaternion)),quaternion,scale};
   }
 
   open(id:DeviceId,clickedRoot?:THREE.Object3D){
     if(!this.state.ready)return;
-    if(this.selected){if(this.state.active===id&&this.state.phase==='closing'){this.publish({phase:'opening'});this.animateTo(this.focusPose(id,this.selected),.78,id==='computer'?-1.22:0,()=>this.publish({phase:'focused'}));}return;}
+    // A native resize can precede ResizeObserver delivery. Start in the current
+    // layout and keep the target responsive while the opening animation runs.
+    this.resize();
+    if(this.selected){if(this.state.active===id&&this.state.phase==='closing'){this.publish({phase:'opening'});this.animateTo(this.focusPose(id,this.selected),.66,id==='computer'?-1.22:0,()=>this.publish({phase:'focused'}));}return;}
     const candidates=this.roots.get(id),root=clickedRoot&&candidates?.includes(clickedRoot)?clickedRoot:candidates?.[0];if(!root)return;
     this.restoreHover(root);this.hoverAnimations.delete(root);this.highlight(null);
     this.foreground.attach(root);this.selected=root;
     this.publish({active:id,selection:null,phase:'opening',hover:null,hoverSelection:null});
-    this.animateTo(this.focusPose(id,root),.78,id==='computer'?-1.22:0,()=>this.publish({phase:'focused'}));
+    this.animateTo(this.focusPose(id,root),.66,id==='computer'?-1.22:0,()=>this.publish({phase:'focused'}));
   }
 
   close(){
@@ -293,6 +309,6 @@ export class StudioRenderer {
   projectPart(id:string){const root=this.parts.get(id);const anchor=id==='cpu'?'cpu.face':id==='gpu'?'gpu.side.trim':id==='memory'?'memory.light':id==='storage'?'storage.m2.heatsink':id==='network'?'network.controller':null;return this.project(anchor?root?.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(anchor)):root);}
   private project(object?:THREE.Object3D){if(!object)return null;object.updateWorldMatrix(true,true);const position=new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3()).project(this.camera);return{x:(position.x+1)*this.width/2,y:(1-position.y)*this.height/2};}
   audit(){const gl=this.renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');return{state:this.state,gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),keys:this.keys.size,frames:this.frameCount,drawCalls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,devicePixelRatio:this.renderer.getPixelRatio(),materials:[...this.keys.entries()].map(([slot,root])=>({slot,label:root.userData.key_label,geometry:root.children.find(c=>c instanceof THREE.Mesh)?.uuid,selected:root===this.highlighted})),modelBytes:this.modelBytes};}
-  private disposeModel(root:THREE.Object3D){const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();root.traverse(object=>{if(object instanceof THREE.Mesh){geometries.add(object.geometry);for(const m of Array.isArray(object.material)?object.material:[object.material])materials.add(m);}});for(const g of geometries)g.dispose();for(const m of materials)m.dispose();}
+  private disposeModel(root:THREE.Object3D){const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>(),textures=new Set<THREE.Texture>();root.traverse(object=>{if(object instanceof THREE.Mesh){geometries.add(object.geometry);for(const m of Array.isArray(object.material)?object.material:[object.material])materials.add(m);}});for(const g of geometries)g.dispose();for(const m of materials){for(const value of Object.values(m))if(value instanceof THREE.Texture)textures.add(value);m.dispose();}for(const texture of textures)texture.dispose();}
   dispose(){this.disposed=true;this.abort.abort();cancelAnimationFrame(this.frame);this.observer.disconnect();this.highlight(null);this.disposeModel(this.scene);this.disposeModel(this.foreground);this.disposeModel(this.dimScene);this.environment.dispose();this.ao?.dispose();this.aoTarget.dispose();this.aoMaterial.dispose();this.aoQuad.dispose();this.colorTarget.dispose();this.bloom.dispose();this.output.dispose();this.renderer.dispose();this.renderer.domElement.remove();}
 }

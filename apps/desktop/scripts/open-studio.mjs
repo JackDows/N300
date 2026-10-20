@@ -42,6 +42,12 @@ if(/swiftshader|llvmpipe|software|basic render/i.test(gpu.renderer)){
   const summary=timings.map(run=>{const values=[...run.opening,...run.closing].filter(v=>v>0).sort((a,b)=>a-b);return{round:run.round,device:run.id,frames:values.length,medianMs:values[Math.floor(values.length/2)],p95Ms:values[Math.floor(values.length*.95)],maxMs:values.at(-1)};});
   await writeFile(path.join(output,'performance.json'),JSON.stringify({gpu,summary,timings},null,2));
   console.log(JSON.stringify({gpu,summary}));
+  await page.screenshot({path:path.join(output,'visible-desktop.png')});
+  await page.evaluate(()=>window.__studio.open('keyboard'));
+  await page.waitForFunction(()=>window.__studio.state.phase==='focused');
+  await page.evaluate(()=>window.__studio.selectKey(72));
+  await page.waitForTimeout(250);
+  await page.screenshot({path:path.join(output,'visible-keyboard.png')});
 }else console.log(JSON.stringify({gpu,url}));
 console.log('DeskHub preview is open. Close its window to end this process.');
 await context.waitForEvent('close',{timeout:0});

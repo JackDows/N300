@@ -13,6 +13,10 @@ import bpy
 from mathutils import Vector
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'design/studio'))
+from keyboard_asset import build_keyboard, validate_legends
+from studio_materials import prepare_surfaces, physical_uvs
+
 args = argparse.ArgumentParser()
 args.add_argument('--render', action='store_true')
 args.add_argument('--draft', action='store_true')
@@ -47,7 +51,7 @@ scene.render.image_settings.file_format = 'PNG'
 scene.render.film_transparent = False
 scene.view_settings.view_transform = 'AgX'
 scene.view_settings.look = 'AgX - Medium High Contrast'
-scene.view_settings.exposure = -.45
+scene.view_settings.exposure = .0
 scene.world.use_nodes = True
 scene.world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.07, 0.075, 0.08, 1)
 scene.world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.25
@@ -73,30 +77,34 @@ def material(name, color, rough=.4, metal=0, emission=0, transmission=0):
     return m
 
 M = {
-    'desk': material('Desk / charcoal satin', '262C30', .39, .22),
-    'wall': material('Wall / graphite', '171C20', .88),
-    'shell': material('Shell / graphite polymer', '292F34', .35, .12),
+    'desk': material('Desk / charcoal satin', '363D41', .58, 0),
+    'wall': material('Wall / graphite', '242B30', .88),
+    'shell': material('Shell / graphite polymer', '343B40', .58, 0),
     'black': material('Recess / near black', '10151A', .52),
     'rubber': material('Soft rubber', '171C20', .82),
-    'silver': material('Machined aluminium', '65747C', .29, .82),
-    'steel': material('Dark anodised aluminium', '4B555B', .3, .72),
-    'key': material('Keycap / charcoal PBT', '343D43', .62),
-    'mod': material('Keycap / warm grey PBT', 'A0A29B', .65),
+    'silver': material('Machined aluminium', '9AA4A7', .36, 1),
+    'steel': material('Dark anodised aluminium', '68747A', .38, 1),
+    'bezel': material('Keyboard / satin graphite aluminium', '515B60', .48, 1),
+    'plate': material('Keyboard / recessed switch plate', '282F34', .74),
+    'fabric': material('Desk mat / woven charcoal', '252C30', .9),
+    'key': material('Keycap / charcoal PBT', '53616B', .62),
+    'mod': material('Keycap / warm grey PBT', 'BABDB6', .65),
     'legend': material('Key legends / ivory', 'E2E5DF', .45),
     'ink': material('Dark printed legends', '242A2D', .5),
     'ivory': material('Mouse / neutral ivory', 'D9DCD5', .48),
     'thread': material('Pad stitching', '343D43', .9),
     'screen': material('Screen / midnight glass', '07141A', .18, .18),
     'cyan': material('Screen light / ice', '82DBE0', .3, 0, 1.1),
-    'trace': material('Screen light / secondary', '345D66', .5, 0, .2),
-    'kb_led': material('Keyboard diffuser', '82DBE0', .35, 0, 2),
-    'pc_led': material('Case diffuser', '72BCC4', .28, 0, 1.3),
+    'trace': material('Screen light / secondary', '345D66', .5, 0, .12),
+    'kb_led': material('Keyboard diffuser', '82DBE0', .35, 0, .85),
+    'pc_led': material('Case diffuser', '72BCC4', .28, 0, .65),
     'status': material('Speaker indicator', 'A5DCE0', .3, 0, 1.4),
     'cone': material('Woven speaker cone', '303A40', .62, .1),
     'glass': material('Clear tempered side panel', 'EEF5F6', .055, 0, 0, 1),
     'copper': material('Contacts', '9C8353', .35, .65),
     'pcb': material('Motherboard solder mask', '19292C', .48, .1),
 }
+prepare_surfaces(M)
 
 def root(name, loc=(0, 0, 0), parent=None, **metadata):
     ob = bpy.data.objects.new(name, None)
@@ -216,7 +224,7 @@ vertices=[(x,y,z) for z in (-.0015,.0015) for x,y in outline]
 faces=[tuple(range(count-1,-1,-1)),tuple(range(count,count*2))]
 faces.extend((i,(i+1)%count,(i+1)%count+count,i+count) for i in range(count))
 mesh=bpy.data.meshes.new('desk.pad');mesh.from_pydata(vertices,[],faces);mesh.update()
-pad=bpy.data.objects.new('desk.pad',mesh);scene.collection.objects.link(pad);finish(pad,'desk.pad',(-.12,-.225,.002),M['rubber'],environment)
+pad=bpy.data.objects.new('desk.pad',mesh);scene.collection.objects.link(pad);finish(pad,'desk.pad',(-.10,-.245,.002),M['fabric'],environment)
 bevel=pad.modifiers.new('Soft fabric edge','BEVEL');bevel.width=.00035;bevel.segments=3
 stitches=bpy.data.curves.new('desk.pad.stitches','CURVE');stitches.dimensions='3D';stitches.bevel_depth=.00013;stitches.bevel_resolution=2
 outline=pad_outline(.004)
@@ -235,7 +243,7 @@ box('wall.lower.trim', (1.8, .018, .015), (0, .60, .025), M['black'], .002, envi
 box('wall.diffuser', (1.20,.003,.002),(-.12,.588,.032),M['pc_led'],.0006,environment)
 
 # Monitor: thin bezel, a physically joined stand, restrained generated display geometry.
-monitor = root('device.monitor', (-.14, .235, 0), device_id='system')
+monitor = root('device.monitor', (-.14, .30, 0), device_id='system')
 box('monitor.body', (.615, .026, .36), (0, 0, .345), M['shell'], .006, monitor)
 box('monitor.display', (.594, .0014, .334), (0, -.014, .347), M['screen'], .003, monitor)
 box('monitor.chin', (.603, .003, .009), (0, -.014, .172), M['black'], .002, monitor)
@@ -246,15 +254,15 @@ for sign in (-1, 1):
     foot = box(f'monitor.foot.{sign}', (.20, .033, .012), (sign*.082, -.027, .013), M['steel'], .005, monitor)
     foot.rotation_euler.z = sign * -.28
 box('monitor.indicator', (.008, .0012, .001), (.25, -.017, .172), M['status'], .0003, monitor)
-text('monitor.brand', 'DeskHub', (-.175, -.016, .448), .034, M['legend'], monitor, (math.pi/2, 0, 0))
-text('monitor.subtitle', 'YOUR SPACE. CONNECTED.', (-.177, -.016, .424), .0065, M['trace'], monitor, (math.pi/2, 0, 0))
-for j in range(9):
+text('monitor.brand', 'DeskHub', (-.193, -.016, .448), .022, M['legend'], monitor, (math.pi/2, 0, 0))
+text('monitor.subtitle', 'YOUR SPACE. CONNECTED.', (-.179, -.016, .428), .005, M['trace'], monitor, (math.pi/2, 0, 0))
+for j in range(5):
     points = []
     for i in range(45):
         x = -.278 + i/44*.556
-        z = .28 + j*.0065 + .035*math.sin(x*11 + j*.09) + .016*math.cos(x*23-j*.035)
+        z = .29 + j*.008 + .025*math.sin(x*8 + j*.09)
         points.append((x, -.0161, z))
-    line(f'monitor.display.trace.{j}', points, .00042, M['cyan'] if j in (2,6) else M['trace'], monitor)
+    line(f'monitor.display.trace.{j}', points, .00032, M['trace'], monitor)
 
 def speaker(name, x):
     parent = root(name, (x, .105, .007), device_id='speaker')
@@ -282,60 +290,12 @@ def speaker(name, x):
     box(name+'.base',(.094,.096,.007),(0,0,.004),M['black'],.004,parent)
     return parent
 
-speaker('device.speaker.left', -.535)
-speaker('device.speaker.right', .282)
+speaker('device.speaker.left', -.505)
+speaker('device.speaker.right', .278)
 
 # Actual OG98 key map; only the small keycap geometry is shared, never the selection state.
-keyboard = root('device.keyboard', (-.205, -.235, .008), device_id='keyboard')
-box('keyboard.lower', (.397,.150,.016),(0,0,.010),M['black'],.006,keyboard)
-box('keyboard.frame', (.397,.150,.012),(0,0,.019),M['silver'],.004,keyboard)
-box('keyboard.plate', (.383,.135,.004),(0,0,.027),M['black'],.003,keyboard)
-box('keyboard.front.diffuser', (.135,.0013,.0008),(0,-.0753,.017),M['kb_led'],.0003,keyboard)
-text('keyboard.mark','OG98',(.167,-.0754,.017),.0032,M['ink'],keyboard,(math.pi/2,0,0))
 keymap = json.loads((ROOT/'modules/flesports-og98/assets/layout.json').read_text(encoding='utf-8-sig'))
-key_meshes = {}
-
-def cap_mesh(w,h):
-    cache_key=(round(w,6),round(h,6))
-    if cache_key in key_meshes:return key_meshes[cache_key]
-    rings=[(w,h,0),(w,h,.0006),(w-.0025,h-.0027,.0070),(w-.0032,h-.0034,.0076),((w-.0032)*.55,(h-.0034)*.55,.00735)]
-    vertices,faces=[],[];segments=32
-    for rw,rh,z in rings:
-        radius=.0011
-        for corner in range(4):
-            cx=(rw/2-radius)*(1 if corner in (0,3) else -1)
-            cy=(rh/2-radius)*(1 if corner in (0,1) else -1)
-            for i in range(8):
-                angle=corner*math.pi/2+i/7*math.pi/2
-                vertices.append((cx+radius*math.cos(angle),cy+radius*math.sin(angle),z))
-    for k in range(len(rings)-1):
-        for i in range(segments):faces.append((k*segments+i,k*segments+(i+1)%segments,(k+1)*segments+(i+1)%segments,(k+1)*segments+i))
-    center=len(vertices);vertices.append((0,0,.0072))
-    for i in range(segments):faces.append(((len(rings)-1)*segments+i,(len(rings)-1)*segments+(i+1)%segments,center))
-    faces.append(tuple(range(segments-1,-1,-1)))
-    mesh=bpy.data.meshes.new(f'keycap.{w:.4f}.{h:.4f}');mesh.from_pydata(vertices,[],faces);mesh.update()
-    for face in mesh.polygons:face.use_smooth=True
-    # Split the top lip from the sloped walls: smooth corners must not turn broad
-    # PBT faces into inflated pillows under a different runtime lighting rig.
-    for edge in mesh.edges:
-        if all(3*segments <= v < 4*segments for v in edge.vertices):edge.use_edge_sharp=True
-    key_meshes[cache_key]=mesh;return mesh
-
-labels={'Print\nScreen':'PrtSc','Page\nUp':'PgUp','Page\nDown':'PgDn','BackSpace':'Backspace','Caps Lock':'Caps','Num\nLock':'Num','(space)':'','R Shift':'Shift','R Ctrl':'Ctrl','R Alt':'Alt','fn':'Fn'}
-for key in keymap:
-    unit=.01905/33
-    w=(key['w']+7.5)*unit;h=(key['h']+3)*unit
-    x=((key['x']-117)+(key['w']+7.5)/2-645/2)*unit
-    y=-((key['y']-46)+(key['h']+3)/2-216/2)*unit
-    parent=root('key.'+str(key['slot']),(x,y,.028),keyboard,slot_id=key['slot'],key_label=key['label'])
-    mesh=cap_mesh(w,h)
-    ob=bpy.data.objects.new('keycap.'+str(key['slot']),mesh);scene.collection.objects.link(ob);ob.parent=parent
-    ob.data=mesh.copy()  # per-key material slots remain independent while editing selections.
-    mod=key['hid']>=224 or key['w']>35 or 'Enter' in key['label']
-    ob.data.materials.append(M['mod'] if mod else M['key'])
-    text('legend.'+str(key['slot']),labels.get(key['label'],key['label']),(0,0,.00785),.0036 if key['label'] in ['BackSpace','Delete','Insert'] else .0045,M['ink'] if mod else M['legend'],parent)
-for x in (-.17,.17):
-    for y in (-.055,.055):box('keyboard.foot',(.021,.012,.003),(x,y,0),M['rubber'],.002,keyboard)
+keyboard = build_keyboard(keymap, M, root, box, text)
 
 # Mouse +Y faces the monitor; -X is the user's thumb side in both scene states.
 mouse = root('device.mouse', (.145,-.242,.006), device_id='mouse')
@@ -406,7 +366,7 @@ def fan(name,loc,parent,axis='Z',lit=False):
         for y in (-.055,.055):screw(name+'.screw',(x,y,.012),frame,radius=.002)
     return frame
 
-computer=root('device.computer',(.62,.145,.008),device_id='computer')
+computer=root('device.computer',(.59,.23,.008),device_id='computer')
 computer.rotation_euler.z=.54
 W,D,H=.235,.435,.465
 box('case.bottom',(W,D,.012),(0,0,.012),M['shell'],.004,computer)
@@ -503,15 +463,20 @@ internal=bpy.data.lights.new('case.internal','POINT');internal.energy=.75;intern
 ob=bpy.data.objects.new('case.internal',internal);scene.collection.objects.link(ob);ob.location=(.60,.12,.39)
 ob.visible_camera=False;ob.visible_glossy=False;ob.visible_transmission=False
 light('wall.wash',(-.2,.48,.18),(-.2,.67,.34),6,'73C8D5',.62,.03)
-camera_data=bpy.data.cameras.new('camera.home');camera_data.type='PERSP';camera_data.lens=44
+camera_data=bpy.data.cameras.new('camera.home');camera_data.type='PERSP';camera_data.lens=46
 camera=bpy.data.objects.new('camera.home',camera_data);scene.collection.objects.link(camera)
-camera.location=(-.50,-1.85,.87);target=Vector((.03,.04,.20));camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler();scene.camera=camera
+camera.location=(-.20,-1.72,1.08);target=Vector((.025,.045,.155));camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler();scene.camera=camera
 root('camera.target',target)
 scene.render.filepath=str(OUT/'studio-overview.png')
 scene['visual_revision']='studio-v1'
 scene['keyboard_source']='modules/flesports-og98/assets/layout.json'
 scene['keyboard_key_count']=len(keymap)
 
+# Material maps use real-scale UVs in both the source scene and the runtime.
+for ob in scene.objects:
+    if ob.type == 'MESH':
+        physical_uvs(ob.data)
+keyboard_validation = validate_legends()
 # Keep a source scene before converting font/curve primitives for exchange.
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'deskhub-studio.blend'))
 if opt.render:bpy.ops.render.render(write_still=True)
@@ -522,5 +487,6 @@ for ob in list(scene.objects):
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.export_scene.gltf(filepath=str(OUT/'deskhub-studio.glb'),export_format='GLB',export_apply=True,export_cameras=True,export_lights=False,export_extras=True,export_animations=False)
 manifest={'blender':bpy.app.version_string,'revision':'studio-v1','keyCount':len(keymap),'objects':len(scene.objects),'camera':{'position':list(camera.location),'target':list(target),'type':'perspective','lens':camera_data.lens},'source':'design/studio/build_scene.py','modelBytes':(OUT/'deskhub-studio.glb').stat().st_size}
+manifest['keyboardValidation'] = keyboard_validation
 (OUT/'scene-manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
 print('DESKHUB_SCENE='+json.dumps(manifest))

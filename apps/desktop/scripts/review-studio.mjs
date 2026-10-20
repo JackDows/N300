@@ -14,9 +14,12 @@ try {
   await page.goto(`${url}/visual.html`);
   await page.waitForFunction(()=>window.__studio?.state.ready,{},{timeout:60000});
   await page.screenshot({path:path.join(output,'01-desktop.png')});
-  await page.evaluate(()=>window.__studio.open('keyboard'));
+  const keyboard=await page.evaluate(()=>window.__studio.projectDevice('keyboard'));
+  await page.mouse.move(keyboard.x,keyboard.y);await page.waitForTimeout(300);
+  await page.screenshot({path:path.join(output,'02-keyboard-hover.png')});
+  await page.mouse.click(keyboard.x,keyboard.y);
   await page.waitForFunction(()=>window.__studio.state.phase==='focused');
-  await page.screenshot({path:path.join(output,'02-keyboard.png')});
+  await page.screenshot({path:path.join(output,'check-keyboard-open.png')});
   const slot=72;
   const key=await page.evaluate(s=>window.__studio.projectKey(s),slot);
   await page.mouse.click(key.x,key.y);

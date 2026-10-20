@@ -65,16 +65,36 @@ test('case opens continuously; visible parts pick correctly; blank area closes',
 test('controls stay reachable at desktop minimum and narrow preview sizes',async({page})=>{
   await ready(page);
   for(const size of [{width:1280,height:800},{width:960,height:640},{width:375,height:812}]){
-    await page.setViewportSize(size);await focused(page,'keyboard');
+    await page.evaluate(()=>window.__studio.open('keyboard'));
+    await page.setViewportSize(size);
+    await page.waitForFunction(()=>window.__studio.state.phase==='focused');
     const p=await page.evaluate(()=>window.__studio.projectKey(72));await page.mouse.click(p.x,p.y);
+    await expect.poll(()=>page.evaluate(()=>window.__studio.state.selection?.slot)).toBe(72);
     const panel=page.getByRole('region',{name:'按键设置'});await expect(panel).toBeVisible();
     const box=await panel.boundingBox();
     expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(size.width);
     expect(box!.y).toBeGreaterThan(50);expect(box!.y+box!.height).toBeLessThan(size.height);
-    expect(box!.y+box!.height).toBeLessThan(p.y-12);
+    const separated=box!.x>p.x+12||box!.x+box!.width<p.x-12||box!.y+box!.height<p.y-12;
+    expect(separated,`Inspector overlaps at ${size.width}×${size.height}: ${JSON.stringify({key:p,panel:box})}`).toBe(true);
     await page.getByRole('button',{name:'返回桌面',exact:true}).click();
     await page.waitForFunction(()=>window.__studio.state.phase==='desk');
   }
+});
+
+test('key inspector keeps a pending assignment separate and can restore the original key',async({page})=>{
+  await ready(page);await focused(page,'keyboard');
+  await expect(page.getByRole('region',{name:'按键设置'})).toContainText('选择一个按键');
+  const key=await page.evaluate(()=>window.__studio.projectKey(72));await page.mouse.click(key.x,key.y);
+  const field=page.getByLabel('预览按键功能');
+  await field.selectOption('F13');
+  await expect(page.locator('.studio-key-summary strong')).toHaveText('F12');
+  await page.getByRole('button',{name:'应用到预览',exact:true}).click();
+  await expect(page.locator('.studio-key-summary strong')).toHaveText('F13');
+  await page.getByRole('button',{name:'恢复原键',exact:true}).click();
+  await expect(field).toHaveValue('F12');
+  await expect(page.locator('.studio-key-summary strong')).toHaveText('F13');
+  await page.getByRole('button',{name:'应用到预览',exact:true}).click();
+  await expect(page.locator('.studio-key-summary strong')).toHaveText('F12');
 });
 
 test('software WebGL is refused before expensive scene loading',async()=>{
