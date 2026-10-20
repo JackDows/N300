@@ -20,6 +20,7 @@ try {
   const slot=72;
   const key=await page.evaluate(s=>window.__studio.projectKey(s),slot);
   await page.mouse.click(key.x,key.y);
+  await page.getByLabel('预览按键功能').selectOption('F13');
   await page.waitForTimeout(220);
   await page.screenshot({path:path.join(output,'03-keyboard-selected.png')});
   await page.evaluate(()=>window.__studio.close());
@@ -31,6 +32,9 @@ try {
   await page.mouse.click(cpu.x,cpu.y);
   await page.waitForTimeout(220);
   await page.screenshot({path:path.join(output,'05-cpu.png')});
+  await page.evaluate(()=>window.__studio.close());await page.waitForFunction(()=>window.__studio.state.phase==='desk');
+  await page.evaluate(()=>window.__studio.open('mouse'));await page.waitForFunction(()=>window.__studio.state.phase==='focused');
+  await page.screenshot({path:path.join(output,'06-mouse.png')});
   const audit=await page.evaluate(()=>window.__studio.audit());
   for(const [label,width,height,dpr] of [['minimum',960,640,1.25],['narrow',375,812,2],['desktop-200',1280,800,2]]){
     const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:dpr});

@@ -7,7 +7,7 @@ const profile=path.resolve('../../.local/visual-runtime');
 const output=path.resolve('../../artifacts/visual');
 await mkdir(output,{recursive:true});
 const context=await chromium.launchPersistentContext(profile,{
-  channel:'msedge',headless:false,viewport:null,
+  channel:'msedge',headless:false,viewport:null,chromiumSandbox:true,
   args:[`--app=${url}/visual.html`,'--window-size=1440,900','--no-first-run'],
   ignoreDefaultArgs:['--enable-automation'],
 });
@@ -34,7 +34,7 @@ if(/swiftshader|llvmpipe|software|basic render/i.test(gpu.renderer)){
       while(window.__studio.state.phase!==target){await new Promise(resolve=>requestAnimationFrame(now=>{times.push(now-last);last=now;resolve();}));}
       return times;
     };
-    for(let round=0;round<2;round++)for(const id of ['keyboard','computer']){
+    for(let round=0;round<2;round++)for(const id of ['keyboard','mouse','computer']){
       const opening=await transition(id,true),closing=await transition(id,false);runs.push({round,id,opening,closing});
     }
     return runs;

@@ -10,12 +10,12 @@ import modelUrl from '../../../../artifacts/visual/studio-v1/deskhub-studio.glb?
 
 export type DeviceId='speaker'|'keyboard'|'mouse'|'computer'|'system';
 export type Selection={kind:'key';slot:number;label:string}|{kind:'part';id:string}|null;
-export interface StudioState {ready:boolean;active:DeviceId|null;hover:DeviceId|null;selection:Selection;phase:'desk'|'opening'|'focused'|'closing';error:string}
+export interface StudioState {ready:boolean;active:DeviceId|null;hover:DeviceId|null;hoverSelection:Selection;selection:Selection;phase:'desk'|'opening'|'focused'|'closing';error:string}
 type Pose={position:THREE.Vector3;quaternion:THREE.Quaternion;scale:THREE.Vector3};
 type Transition={from:Pose;to:Pose;start:number;duration:number;dimFrom:number;dimTo:number;doorFrom:number;doorTo:number;done():void};
-const initial:StudioState={ready:false,active:null,hover:null,selection:null,phase:'desk',error:''};
+const initial:StudioState={ready:false,active:null,hover:null,hoverSelection:null,selection:null,phase:'desk',error:''};
 const capture=(object:THREE.Object3D):Pose=>({position:object.position.clone(),quaternion:object.quaternion.clone(),scale:object.scale.clone()});
-const ease=(t:number)=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const ease=(t:number)=>t*t*t*(t*(t*6-15)+10);
 
 /** One model per device across every pose. Picking and feedback use its actual geometry. */
 export class StudioRenderer {
@@ -38,7 +38,7 @@ export class StudioRenderer {
   private highlighted:THREE.Object3D|null=null;
   private door:THREE.Object3D|null=null;
   private animation:Transition|null=null;
-  private hoverAnimation:{root:THREE.Object3D;from:number;to:number;start:number}|null=null;
+  private hoverAnimations=new Map<THREE.Object3D,{from:number;to:number;start:number;duration:number}>();
   private pointer=new THREE.Vector2();
   private raycaster=new THREE.Raycaster();
   private observer:ResizeObserver;
@@ -161,26 +161,27 @@ export class StudioRenderer {
     const ratio=id==='keyboard'?Math.min(w*.78/.397,h*.55/.150):id==='computer'?Math.min(h*.60/.465,w*.52/.55):id==='mouse'?Math.min(h*.53/.13,w*.5/.07):id==='speaker'?Math.min(h*.59/.168,w*.46/.105):Math.min(w*.75/.615,h*.7/.52);
     const quaternion=original.quaternion.clone();
     if(id==='keyboard'||id==='mouse')quaternion.copy(this.camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),THREE.MathUtils.degToRad(id==='keyboard'?80:67)));
+    if(id==='mouse')quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),-.20));
     const localCenter=id==='keyboard'?new THREE.Vector3(0,.018,0):id==='computer'?new THREE.Vector3(0,.235,0):id==='mouse'?new THREE.Vector3(0,.023,0):id==='speaker'?new THREE.Vector3(0,.09,0):new THREE.Vector3(0,.27,0);
     const center=new THREE.Vector3(id==='computer'?w*.06:0,id==='keyboard'?-h*.16:-h*.01,-distance).applyMatrix4(this.camera.matrixWorld);
     const scale=new THREE.Vector3(ratio,ratio,ratio);
     return{position:center.sub(localCenter.multiply(scale).applyQuaternion(quaternion)),quaternion,scale};
   }
 
-  open(id:DeviceId){
+  open(id:DeviceId,clickedRoot?:THREE.Object3D){
     if(!this.state.ready)return;
     if(this.selected){if(this.state.active===id&&this.state.phase==='closing'){this.publish({phase:'opening'});this.animateTo(this.focusPose(id,this.selected),.78,id==='computer'?-1.22:0,()=>this.publish({phase:'focused'}));}return;}
-    this.restoreHover();this.highlight(null);
-    const root=this.roots.get(id)?.[0];if(!root)return;
+    const candidates=this.roots.get(id),root=clickedRoot&&candidates?.includes(clickedRoot)?clickedRoot:candidates?.[0];if(!root)return;
+    this.restoreHover(root);this.hoverAnimations.delete(root);this.highlight(null);
     this.foreground.attach(root);this.selected=root;
-    this.publish({active:id,selection:null,phase:'opening',hover:null});
+    this.publish({active:id,selection:null,phase:'opening',hover:null,hoverSelection:null});
     this.animateTo(this.focusPose(id,root),.78,id==='computer'?-1.22:0,()=>this.publish({phase:'focused'}));
   }
 
   close(){
     if(!this.selected||this.state.phase==='closing')return;
     const object=this.selected,original=this.originals.get(object)!;
-    this.highlight(null);this.publish({selection:null,phase:'closing'});
+    this.highlight(null);this.publish({selection:null,hoverSelection:null,phase:'closing'});
     this.animateTo(original.pose,0,0,()=>{
       original.parent.add(object);object.position.copy(original.pose.position);object.quaternion.copy(original.pose.quaternion);object.scale.copy(original.pose.scale);
       this.selected=null;this.publish({active:null,phase:'desk',selection:null});
@@ -202,7 +203,7 @@ export class StudioRenderer {
     for(const [mesh,original] of this.materials){const current=Array.isArray(mesh.material)?mesh.material:[mesh.material];for(const material of current)material.dispose();mesh.material=original;}
     this.materials.clear();this.highlighted=object;
     object?.traverse(node=>{
-      if(!(node instanceof THREE.Mesh)||node.name.startsWith('legend'))return;
+      if(!(node instanceof THREE.Mesh)||node.name.startsWith('legend')||object.userData.part_id==='cpu'&&node.name.startsWith('cpucoolant'))return;
       this.materials.set(node,node.material);
       const update=(material:THREE.Material)=>{const clone=material.clone();if(clone instanceof THREE.MeshStandardMaterial){clone.color.lerp(new THREE.Color('#82dbe0'),hover?.035:object?.userData.part_id?.12:.23);clone.emissive.set('#64b9c0');clone.emissiveIntensity=hover?.014:.10;}return clone;};
       node.material=Array.isArray(node.material)?node.material.map(update):update(node.material);
@@ -224,21 +225,32 @@ export class StudioRenderer {
   }
 
   private move=(event:PointerEvent)=>{
-    if(!this.state.ready||this.state.phase==='closing')return;
+    if(!this.state.ready||this.state.phase==='closing'||this.state.phase==='opening')return;
     const hit=this.hit(event);this.renderer.domElement.style.cursor=hit?'pointer':'default';
-    if(this.selected)return;
+    if(this.selected){
+      const hoverSelection:Selection=typeof hit?.userData.slot_id==='number'?{kind:'key',slot:hit.userData.slot_id,label:hit.userData.key_label.replaceAll('\n',' ')}:hit?.userData.part_id?{kind:'part',id:hit.userData.part_id}:null;
+      if(JSON.stringify(hoverSelection)!==JSON.stringify(this.state.hoverSelection))this.publish({hoverSelection});
+      return;
+    }
     const id=(hit?.userData.device_id??null) as DeviceId|null;
-    if(id===this.state.hover)return;
+    if(id===this.state.hover&&hit===this.highlighted)return;
     this.restoreHover();this.highlight(hit,true);this.publish({hover:id});
-    if(hit&&id){const base=this.originals.get(hit)!.pose.position.y;this.hoverAnimation={root:hit,from:hit.position.y,to:base+.009,start:performance.now()};}
+    if(hit&&id){const base=this.originals.get(hit)!.pose.position.y;this.hoverAnimations.set(hit,{from:hit.position.y,to:base+.009,start:performance.now(),duration:200});}
     this.requestFrame();
   };
-  private restoreHover(){for(const roots of this.roots.values())for(const root of roots){if(root!==this.selected)root.position.copy(this.originals.get(root)!.pose.position);}this.hoverAnimation=null;}
-  private leave=()=>{if(!this.selected){this.restoreHover();this.highlight(null);this.publish({hover:null});this.requestFrame();}};
+  private restoreHover(except?:THREE.Object3D){
+    for(const roots of this.roots.values())for(const root of roots){
+      if(root===this.selected||root===except)continue;
+      const target=this.originals.get(root)!.pose.position.y;
+      if(Math.abs(root.position.y-target)>1e-7)this.hoverAnimations.set(root,{from:root.position.y,to:target,start:performance.now(),duration:240});
+      else this.hoverAnimations.delete(root);
+    }
+  }
+  private leave=()=>{if(!this.selected){this.restoreHover();this.highlight(null);this.publish({hover:null});this.requestFrame();}else if(this.state.hoverSelection)this.publish({hoverSelection:null});};
   private click=(event:MouseEvent)=>{
     if(this.state.phase==='opening'||this.state.phase==='closing')return;
     const hit=this.hit(event);
-    if(!this.selected){if(hit?.userData.device_id)this.open(hit.userData.device_id);return;}
+    if(!this.selected){if(hit?.userData.device_id)this.open(hit.userData.device_id,hit);return;}
     if(!hit){this.close();return;}
     if(typeof hit.userData.slot_id==='number')this.selectKey(hit.userData.slot_id);
     else if(hit.userData.part_id)this.selectPart(hit.userData.part_id);
@@ -252,16 +264,17 @@ export class StudioRenderer {
       const animation=this.animation,t=Math.min(1,(now-animation.start)/animation.duration),e=ease(t);
       this.selected.position.lerpVectors(animation.from.position,animation.to.position,e);this.selected.quaternion.slerpQuaternions(animation.from.quaternion,animation.to.quaternion,e);this.selected.scale.lerpVectors(animation.from.scale,animation.to.scale,e);
       this.dimMaterial.opacity=THREE.MathUtils.lerp(animation.dimFrom,animation.dimTo,e);
-      if(this.door)this.door.rotation.y=THREE.MathUtils.lerp(animation.doorFrom,animation.doorTo,e);
+      const doorT=animation.doorTo<animation.doorFrom?THREE.MathUtils.clamp((t-.15)/.85,0,1):THREE.MathUtils.clamp(t/.8,0,1);
+      if(this.door)this.door.rotation.y=THREE.MathUtils.lerp(animation.doorFrom,animation.doorTo,ease(doorT));
       if(t===1){this.animation=null;animation.done();}
     }
-    if(this.hoverAnimation){const a=this.hoverAnimation,t=Math.min(1,(now-a.start)/180);a.root.position.y=THREE.MathUtils.lerp(a.from,a.to,ease(t));if(t===1)this.hoverAnimation=null;}
+    for(const [root,a] of this.hoverAnimations){const t=Math.min(1,(now-a.start)/a.duration);root.position.y=THREE.MathUtils.lerp(a.from,a.to,ease(t));if(t===1)this.hoverAnimations.delete(root);}
     if(this.caseLight){const scale=this.roots.get('computer')![0].scale.y;this.caseLight.intensity=.045*scale*scale;this.caseLight.distance=.65*scale;}
     this.renderer.setRenderTarget(this.colorTarget);this.renderer.clear();this.renderer.render(this.scene,this.camera);this.occlusion(this.scene);
     if(this.selected){this.renderer.render(this.dimScene,this.dimCamera);this.renderer.clearDepth();this.renderer.render(this.foreground,this.camera);this.occlusion(this.foreground);}
     this.bloom.render(this.renderer,this.colorTarget,this.colorTarget,0,false);this.output.render(this.renderer,this.colorTarget,this.colorTarget,0,false);
     this.frameCount++;
-    if(this.animation||this.hoverAnimation)this.requestFrame();
+    if(this.animation||this.hoverAnimations.size)this.requestFrame();
   };
 
   private occlusion(scene:THREE.Scene){
@@ -273,7 +286,10 @@ export class StudioRenderer {
   }
 
   projectKey(slot:number){return this.project(this.keys.get(slot));}
-  projectDevice(id:DeviceId){return this.project(this.roots.get(id)?.[0]);}
+  projectDevice(id:DeviceId,index=0){return this.project(this.roots.get(id)?.[index]);}
+  projectMouseFeature(name:'wheel'|'mark'|'side.button.0'|'side.button.1'){return this.project(this.roots.get('mouse')?.[0].getObjectByName(THREE.PropertyBinding.sanitizeNodeName(`mouse.${name}`)));}
+  mouseAppearance(){const root=this.roots.get('mouse')?.[0];const color=(name:string)=>{const mesh=root?.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(`mouse.${name}`)) as THREE.Mesh|undefined;const material=mesh?.material as THREE.MeshStandardMaterial|undefined;return material?.color.getHexString();};return{body:color('shell'),sideButtons:[color('side.button.0'),color('side.button.1')]};}
+  devicePose(id:DeviceId,index=0){const root=this.roots.get(id)?.[index];return root?{name:root.name,position:root.position.toArray(),quaternion:root.quaternion.toArray(),scale:root.scale.toArray()}:null;}
   projectPart(id:string){const root=this.parts.get(id);const anchor=id==='cpu'?'cpu.face':id==='gpu'?'gpu.side.trim':id==='memory'?'memory.light':id==='storage'?'storage.m2.heatsink':id==='network'?'network.controller':null;return this.project(anchor?root?.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(anchor)):root);}
   private project(object?:THREE.Object3D){if(!object)return null;object.updateWorldMatrix(true,true);const position=new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3()).project(this.camera);return{x:(position.x+1)*this.width/2,y:(1-position.y)*this.height/2};}
   audit(){const gl=this.renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');return{state:this.state,gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),keys:this.keys.size,frames:this.frameCount,drawCalls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,devicePixelRatio:this.renderer.getPixelRatio(),materials:[...this.keys.entries()].map(([slot,root])=>({slot,label:root.userData.key_label,geometry:root.children.find(c=>c instanceof THREE.Mesh)?.uuid,selected:root===this.highlighted})),modelBytes:this.modelBytes};}

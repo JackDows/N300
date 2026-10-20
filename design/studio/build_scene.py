@@ -84,7 +84,8 @@ M = {
     'mod': material('Keycap / warm grey PBT', 'A0A29B', .65),
     'legend': material('Key legends / ivory', 'E2E5DF', .45),
     'ink': material('Dark printed legends', '242A2D', .5),
-    'ivory': material('Mouse / neutral ivory', 'D9DCD5', .3),
+    'ivory': material('Mouse / neutral ivory', 'D9DCD5', .48),
+    'thread': material('Pad stitching', '343D43', .9),
     'screen': material('Screen / midnight glass', '07141A', .18, .18),
     'cyan': material('Screen light / ice', '82DBE0', .3, 0, 1.1),
     'trace': material('Screen light / secondary', '345D66', .5, 0, .2),
@@ -123,7 +124,7 @@ def box(name, size, loc, mat, bevel=.002, parent=None):
     if bevel:
         mod = ob.modifiers.new('Soft machined edges', 'BEVEL')
         mod.width = min(bevel, min(size) * .45)
-        mod.segments = 4
+        mod.segments = 6 if bevel >= .004 else 3
         mod.harden_normals = True
         normal = ob.modifiers.new('Weighted face normals', 'WEIGHTED_NORMAL')
         normal.keep_sharp = True
@@ -200,7 +201,32 @@ def screw(name, loc, parent=None, axis='Z', radius=.002):
 environment = root('environment')
 box('desk.slab', (1.82, .88, .035), (0, 0, -.018), M['desk'], .012, environment)
 box('desk.front.inlay', (1.76, .002, .002), (0, -.436, -.012), M['steel'], .0005, environment)
-box('desk.pad', (.78, .33, .003), (-.12, -.225, .002), M['rubber'], .014, environment)
+# Planar corner radii are independent of the 3 mm thickness of the mousepad.
+pad_w,pad_d,pad_r=.78,.33,.014
+def pad_outline(inset=0):
+    points=[];rw=pad_w-2*inset;rd=pad_d-2*inset;r=pad_r-inset
+    for corner in range(4):
+        cx=(rw/2-r)*(1 if corner in (0,3) else -1);cy=(rd/2-r)*(1 if corner in (0,1) else -1)
+        for i in range(12):
+            angle=corner*math.pi/2+i/11*math.pi/2
+            points.append((cx+r*math.cos(angle),cy+r*math.sin(angle)))
+    return points
+outline=pad_outline();count=len(outline)
+vertices=[(x,y,z) for z in (-.0015,.0015) for x,y in outline]
+faces=[tuple(range(count-1,-1,-1)),tuple(range(count,count*2))]
+faces.extend((i,(i+1)%count,(i+1)%count+count,i+count) for i in range(count))
+mesh=bpy.data.meshes.new('desk.pad');mesh.from_pydata(vertices,[],faces);mesh.update()
+pad=bpy.data.objects.new('desk.pad',mesh);scene.collection.objects.link(pad);finish(pad,'desk.pad',(-.12,-.225,.002),M['rubber'],environment)
+bevel=pad.modifiers.new('Soft fabric edge','BEVEL');bevel.width=.00035;bevel.segments=3
+stitches=bpy.data.curves.new('desk.pad.stitches','CURVE');stitches.dimensions='3D';stitches.bevel_depth=.00013;stitches.bevel_resolution=2
+outline=pad_outline(.004)
+for a,b in zip(outline,outline[1:]+outline[:1]):
+    length=math.dist(a,b);steps=max(1,round(length/.004))
+    for i in range(steps):
+        spline=stitches.splines.new('POLY');spline.points.add(1)
+        for point,t in zip(spline.points,((i+.15)/steps,(i+.65)/steps)):
+            point.co=(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,.00162,1)
+ob=bpy.data.objects.new('desk.pad.stitches',stitches);scene.collection.objects.link(ob);ob.parent=pad;stitches.materials.append(M['thread'])
 box('backdrop', (8, .12, 5), (0, .68, 1.2), M['wall'], .01, environment)
 for index in range(20):
     x = -.89 + index * .035
@@ -311,10 +337,15 @@ for key in keymap:
 for x in (-.17,.17):
     for y in (-.055,.055):box('keyboard.foot',(.021,.012,.003),(x,y,0),M['rubber'],.002,keyboard)
 
-# Superlight silhouette: a continuous shaped shell, physical wheel and two side buttons.
+# Mouse +Y faces the monitor; -X is the user's thumb side in both scene states.
 mouse = root('device.mouse', (.145,-.242,.006), device_id='mouse')
-mouse.rotation_euler.z=-.10
-profile=[(-.064,.012,.008),(-.061,.022,.012),(-.054,.0275,.018),(-.04,.0295,.026),(-.02,.031,.035),(0,.031,.040),(.02,.0305,.039),(.04,.0275,.031),(.055,.020,.019),(.061,.010,.012),(.063,.0005,.009)]
+mouse.rotation_euler.z=.08
+mouse['front_axis']='+Y';mouse['side_buttons_finish']='white'
+profile=[(-.063,.002,.008),(-.060,.014,.016),(-.053,.025,.027),(-.037,.031,.0355),(-.018,.03175,.038),(.002,.0307,.0365),(.018,.0298,.0315),(.039,.0295,.0250),(.055,.0290,.0210),(.062,.0270,.0190)]
+def mouse_height(y):
+    for a,b in zip(profile,profile[1:]):
+        if a[0]<=y<=b[0]:return .002+a[2]+(b[2]-a[2])*(y-a[0])/(b[0]-a[0])
+    return .002+profile[-1][2]
 vertices,faces=[],[];sections=28
 for y,w,h in profile:
     for i in range(sections+1):
@@ -327,16 +358,32 @@ mesh=bpy.data.meshes.new('mouse.shell');mesh.from_pydata(vertices,[],faces);mesh
 ob=bpy.data.objects.new('mouse.shell',mesh);scene.collection.objects.link(ob);ob.parent=mouse;mesh.materials.append(M['ivory'])
 for face in mesh.polygons:face.use_smooth=True
 sub=ob.modifiers.new('Continuous shell curvature','SUBSURF');sub.levels=2;sub.render_levels=2
-box('mouse.base',(.052,.111,.003),(0,0,.002),M['black'],.015,mouse)
-line('mouse.button.split',[(0,y,.002+h+.00015) for y,w,h in profile[:6]],.00045,M['black'],mouse)
-line('mouse.button.seam',[(-.029,-.008,.016),(-.022,-.008,.033),(0,-.008,.040),(.022,-.008,.033),(.029,-.008,.016)],.00035,M['black'],mouse)
-cylinder('mouse.wheel',.008,.006,(0,-.038,.031),M['rubber'],'X',mouse,48)
-for n in range(24):
-    angle=n/24*math.tau
-    grip=box('mouse.wheel.grip',(.0065,.001,.001),(0,-.038+math.sin(angle)*.008,.031+math.cos(angle)*.008),M['steel'],.0003,mouse)
+shell=ob
+outline=[(w*.98,y) for y,w,h in profile]+[(-w*.98,y) for y,w,h in reversed(profile)]
+count=len(outline);vertices=[(x,y,z) for z in (.001,.003) for x,y in outline]
+faces=[tuple(range(count-1,-1,-1)),tuple(range(count,count*2))]
+faces.extend((i,(i+1)%count,(i+1)%count+count,i+count) for i in range(count))
+mesh=bpy.data.meshes.new('mouse.base');mesh.from_pydata(vertices,[],faces);mesh.update()
+base=bpy.data.objects.new('mouse.base',mesh);scene.collection.objects.link(base);base.parent=mouse;mesh.materials.append(M['black'])
+bevel=base.modifiers.new('Base edge','BEVEL');bevel.width=.00065;bevel.segments=4
+split=line('mouse.button.split',[(0,y,mouse_height(y)+.0006) for y in (.009,.018,.039,.052,.058)],.00014,M['ink'],mouse)
+seam=line('mouse.button.seam',[(x,.008,mouse_height(.008)*max(0,1-(x/.0305)**2)**.36+.0006) for x in (-.029,-.026,-.020,-.01,0,.01,.020,.026,.029)],.00013,M['ink'],mouse)
+for detail in (split,seam):
+    shrink=detail.modifiers.new('Follow shell contour','SHRINKWRAP');shrink.target=shell;shrink.wrap_method='PROJECT';shrink.use_project_z=True;shrink.use_negative_direction=True;shrink.use_positive_direction=False;shrink.offset=.00006
+wheel_y,wheel_z=.034,.0265
+box('mouse.wheel.recess',(.008,.020,.002),(0,wheel_y,.028),M['ink'],.001,mouse)
+cylinder('mouse.wheel',.0077,.0052,(0,wheel_y,wheel_z),M['rubber'],'X',mouse,64)
+for n in range(32):
+    angle=n/32*math.tau
+    grip=box('mouse.wheel.grip',(.0052,.00065,.00055),(0,wheel_y+math.sin(angle)*.0077,wheel_z+math.cos(angle)*.0077),M['rubber'],.0002,mouse)
     grip.rotation_euler.x=-angle
-for y in (-.005,.012):box('mouse.side.button',(.0025,.013,.004),(-.030,y,.019),M['black'],.0012,mouse)
-text('mouse.mark','G',(0,.025,.0398),.009,M['steel'],mouse)
+for index,y in enumerate((.002,.022)):
+    box('mouse.side.button.recess',(.0005,.0168,.0042),(-.0284,y,.0243),M['ink'],.0002,mouse)
+    button=box(f'mouse.side.button.{index}',(.0034,.016,.0038),(-.029,y,.0243),M['ivory'],.0012,mouse)
+    button.rotation_euler.y=.18
+box('mouse.usb.port',(.009,.002,.0034),(0,.0616,.010),M['black'],.0012,mouse)
+mark=text('mouse.mark','G',(0,-.030,mouse_height(-.030)+.0006),.010,M['steel'],mouse)
+shrink=mark.modifiers.new('Printed on shell','SHRINKWRAP');shrink.target=shell;shrink.wrap_method='PROJECT';shrink.use_project_z=True;shrink.use_negative_direction=True;shrink.use_positive_direction=False;shrink.offset=.00005
 
 def fan(name,loc,parent,axis='Z',lit=False):
     frame=root(name,loc,parent)

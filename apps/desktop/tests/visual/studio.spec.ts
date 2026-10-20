@@ -88,3 +88,39 @@ test('software WebGL is refused before expensive scene loading',async()=>{
     expect(await page.evaluate(()=>!!window.__studio)).toBe(false);
   }finally{await browser.close();}
 });
+
+test('mouse keeps white side buttons and a forward-facing wheel in both poses',async({page})=>{
+  await ready(page);
+  const home=await page.evaluate(()=>({wheel:window.__studio.projectMouseFeature('wheel'),rear:window.__studio.projectMouseFeature('mark'),appearance:window.__studio.mouseAppearance()}));
+  expect(home.wheel.y).toBeLessThan(home.rear.y);
+  expect(home.appearance.body).toBe('d9dcd5');
+  expect(home.appearance.sideButtons).toEqual([home.appearance.body,home.appearance.body]);
+  await focused(page,'mouse');
+  const front=await page.evaluate(()=>({wheel:window.__studio.projectMouseFeature('wheel'),rear:window.__studio.projectMouseFeature('mark'),side:window.__studio.projectMouseFeature('side.button.0')}));
+  expect(front.wheel.y).toBeLessThan(front.rear.y);
+  expect(front.side.x).toBeLessThan(front.wheel.x);
+  await page.keyboard.press('Escape');await page.waitForFunction(()=>window.__studio.state.phase==='desk');
+  expect(await page.evaluate(()=>window.__studio.projectMouseFeature('wheel'))).toEqual(home.wheel);
+});
+
+test('hover settles smoothly and the clicked speaker is the one that rises',async({page})=>{
+  await ready(page);
+  const base=await page.evaluate(()=>window.__studio.devicePose('mouse').position[1]);
+  const p=await page.evaluate(()=>window.__studio.projectDevice('mouse'));
+  await page.mouse.move(p.x,p.y);await page.waitForTimeout(240);
+  const lifted=await page.evaluate(()=>window.__studio.devicePose('mouse').position[1]);expect(lifted-base).toBeGreaterThan(.008);
+  await page.mouse.move(40,400);
+  const leaving=await page.evaluate(()=>window.__studio.devicePose('mouse').position[1]);expect(leaving-base).toBeGreaterThan(.004);
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(()=>window.__studio.devicePose('mouse').position[1])).toBeCloseTo(base,7);
+  const left=await page.evaluate(()=>window.__studio.projectDevice('speaker',0));
+  await page.mouse.move(left.x,left.y);await page.waitForTimeout(240);
+  const right=await page.evaluate(()=>window.__studio.projectDevice('speaker',1));
+  await page.mouse.move(right.x,right.y);await page.waitForTimeout(300);
+  const speakers=await page.evaluate(()=>[window.__studio.devicePose('speaker',0),window.__studio.devicePose('speaker',1)]);
+  expect(speakers[1].position[1]-speakers[0].position[1]).toBeCloseTo(.009,6);
+  await page.mouse.click(right.x,right.y);await page.waitForFunction(()=>window.__studio.state.phase==='focused');
+  expect(await page.evaluate(()=>window.__studio.devicePose('speaker',1).scale[0])).toBeGreaterThan(1);
+  expect(await page.evaluate(()=>window.__studio.devicePose('speaker',0).scale[0])).toBe(1);
+  await page.mouse.click(40,400);await page.waitForFunction(()=>window.__studio.state.phase==='desk');
+});
