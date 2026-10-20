@@ -48,6 +48,8 @@ if(/swiftshader|llvmpipe|software|basic render/i.test(gpu.renderer)){
   await page.evaluate(()=>window.__studio.selectKey(72));
   await page.waitForTimeout(250);
   await page.screenshot({path:path.join(output,'visible-keyboard.png')});
+  await page.evaluate(()=>window.__studio.close());
+  await page.waitForFunction(()=>window.__studio.state.phase==='desk');
 }else console.log(JSON.stringify({gpu,url}));
 console.log('DeskHub preview is open. Close its window to end this process.');
 await context.waitForEvent('close',{timeout:0});

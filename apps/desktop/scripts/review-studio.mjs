@@ -39,6 +39,31 @@ try {
   await page.evaluate(()=>window.__studio.open('mouse'));await page.waitForFunction(()=>window.__studio.state.phase==='focused');
   await page.screenshot({path:path.join(output,'06-mouse.png')});
   const audit=await page.evaluate(()=>window.__studio.audit());
+  // Repeatable asset views expose silhouette and side-control defects that a
+  // whole-desk screenshot can hide. Keep the runtime's existing material rig.
+  await page.setViewportSize({width:1000,height:860});
+  await page.waitForTimeout(120);
+  await page.addStyleTag({content:'.studio-header,.studio-focus-heading,.studio-caption,.studio-return-hint,.studio.has-focus::after{display:none!important}'});
+  for(const [label,pose] of [['07-mouse-top','top'],['08-mouse-side','side']]){
+    await page.evaluate(pose=>{
+      const studio=window.__studio,root=studio.selected;
+      const Vector=root.position.constructor,Quaternion=root.quaternion.constructor;
+      studio.scene.visible=false;
+      studio.camera.position.set(0,0,1.5);
+      studio.camera.quaternion.set(0,0,0,1);
+      studio.camera.fov=14;
+      studio.camera.updateProjectionMatrix();
+      studio.camera.updateMatrixWorld(true);
+      root.quaternion.copy(new Quaternion().setFromAxisAngle(
+        pose==='top'?new Vector(1,0,0):new Vector(0,1,0),Math.PI/2));
+      const scale=pose==='top'?2.17:2.47;
+      root.scale.setScalar(scale);
+      root.position.copy(new Vector(0,.020,0).multiplyScalar(-scale).applyQuaternion(root.quaternion));
+      studio.requestFrame();
+    },pose);
+    await page.waitForTimeout(200);
+    await page.screenshot({path:path.join(output,`${label}.png`)});
+  }
   for(const [label,width,height,dpr] of [['minimum',960,640,1.25],['narrow',375,812,2],['desktop-200',1280,800,2]]){
     const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:dpr});
     const check=await context.newPage();await check.goto(`${url}/visual.html`);await check.waitForFunction(()=>window.__studio?.state.ready);

@@ -173,7 +173,10 @@ export class StudioRenderer {
     const keyboardWidth=wideKeyboard?(this.width-416)/this.width:.84;
     const ratio=id==='keyboard'?Math.min(w*keyboardWidth/.400,h*(wideKeyboard?.48:.44)/.154):id==='computer'?Math.min(h*.60/.465,w*.52/.55):id==='mouse'?Math.min(h*.53/.13,w*.5/.07):id==='speaker'?Math.min(h*.59/.168,w*.46/.105):Math.min(w*.75/.615,h*.7/.52);
     const quaternion=original.quaternion.clone();
-    if(id==='keyboard'||id==='mouse')quaternion.copy(this.camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),THREE.MathUtils.degToRad(id==='keyboard'?73:67)));
+    if(id==='keyboard'||id==='mouse')quaternion.copy(this.camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),THREE.MathUtils.degToRad(id==='keyboard'?64:67)));
+    // The home pose keeps the tower compact; opening turns its glass side
+    // towards the viewer so parts remain accessible at the lower camera angle.
+    if(id==='computer')quaternion.setFromAxisAngle(new THREE.Vector3(0,1,0),.60);
     if(id==='mouse')quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),-.20));
     const localCenter=id==='keyboard'?new THREE.Vector3(0,.018,0):id==='computer'?new THREE.Vector3(0,.235,0):id==='mouse'?new THREE.Vector3(0,.023,0):id==='speaker'?new THREE.Vector3(0,.09,0):new THREE.Vector3(0,.27,0);
     const center=new THREE.Vector3(id==='keyboard'&&wideKeyboard?-w*160/this.width:id==='computer'?w*.06:0,id==='keyboard'?-h*(wideKeyboard?.035:.18):-h*.01,-distance).applyMatrix4(this.camera.matrixWorld);

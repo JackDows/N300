@@ -15,6 +15,8 @@ from mathutils import Vector
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'design/studio'))
 from keyboard_asset import build_keyboard, validate_legends
+from mouse_asset import build_mouse
+from screen_asset import build_display
 from studio_materials import prepare_surfaces, physical_uvs
 
 args = argparse.ArgumentParser()
@@ -210,7 +212,7 @@ environment = root('environment')
 box('desk.slab', (1.82, .88, .035), (0, 0, -.018), M['desk'], .012, environment)
 box('desk.front.inlay', (1.76, .002, .002), (0, -.436, -.012), M['steel'], .0005, environment)
 # Planar corner radii are independent of the 3 mm thickness of the mousepad.
-pad_w,pad_d,pad_r=.78,.33,.014
+pad_w,pad_d,pad_r=.78,.31,.014
 def pad_outline(inset=0):
     points=[];rw=pad_w-2*inset;rd=pad_d-2*inset;r=pad_r-inset
     for corner in range(4):
@@ -224,7 +226,7 @@ vertices=[(x,y,z) for z in (-.0015,.0015) for x,y in outline]
 faces=[tuple(range(count-1,-1,-1)),tuple(range(count,count*2))]
 faces.extend((i,(i+1)%count,(i+1)%count+count,i+count) for i in range(count))
 mesh=bpy.data.meshes.new('desk.pad');mesh.from_pydata(vertices,[],faces);mesh.update()
-pad=bpy.data.objects.new('desk.pad',mesh);scene.collection.objects.link(pad);finish(pad,'desk.pad',(-.10,-.245,.002),M['fabric'],environment)
+pad=bpy.data.objects.new('desk.pad',mesh);scene.collection.objects.link(pad);finish(pad,'desk.pad',(-.10,-.225,.002),M['fabric'],environment)
 bevel=pad.modifiers.new('Soft fabric edge','BEVEL');bevel.width=.00035;bevel.segments=3
 stitches=bpy.data.curves.new('desk.pad.stitches','CURVE');stitches.dimensions='3D';stitches.bevel_depth=.00013;stitches.bevel_resolution=2
 outline=pad_outline(.004)
@@ -242,27 +244,15 @@ for index in range(20):
 box('wall.lower.trim', (1.8, .018, .015), (0, .60, .025), M['black'], .002, environment)
 box('wall.diffuser', (1.20,.003,.002),(-.12,.588,.032),M['pc_led'],.0006,environment)
 
-# Monitor: thin bezel, a physically joined stand, restrained generated display geometry.
-monitor = root('device.monitor', (-.14, .30, 0), device_id='system')
-box('monitor.body', (.615, .026, .36), (0, 0, .345), M['shell'], .006, monitor)
-box('monitor.display', (.594, .0014, .334), (0, -.014, .347), M['screen'], .003, monitor)
-box('monitor.chin', (.603, .003, .009), (0, -.014, .172), M['black'], .002, monitor)
-text('monitor.wordmark', 'AOC', (0, -.016, .172), .004, M['steel'], monitor, (math.pi/2, 0, 0))
-box('monitor.neck', (.041, .034, .18), (0, .018, .103), M['steel'], .004, monitor)
+# Measured display class: approximately 600 × 340 mm active area.
+monitor = root('device.monitor', (-.14, .19, 0), device_id='system')
+build_display(monitor, M, root, box, text)
+box('monitor.neck', (.033, .029, .154), (0, .018, .090), M['steel'], .003, monitor)
+box('monitor.neck.insert', (.024, .0012, .116), (0, .0026, .086), M['black'], .001, monitor)
 box('monitor.stand.joint', (.056,.063,.016),(0,-.002,.018),M['steel'],.004,monitor)
 for sign in (-1, 1):
-    foot = box(f'monitor.foot.{sign}', (.20, .033, .012), (sign*.082, -.027, .013), M['steel'], .005, monitor)
+    foot = box(f'monitor.foot.{sign}', (.19, .023, .010), (sign*.080, -.027, .012), M['steel'], .003, monitor)
     foot.rotation_euler.z = sign * -.28
-box('monitor.indicator', (.008, .0012, .001), (.25, -.017, .172), M['status'], .0003, monitor)
-text('monitor.brand', 'DeskHub', (-.193, -.016, .448), .022, M['legend'], monitor, (math.pi/2, 0, 0))
-text('monitor.subtitle', 'YOUR SPACE. CONNECTED.', (-.179, -.016, .428), .005, M['trace'], monitor, (math.pi/2, 0, 0))
-for j in range(5):
-    points = []
-    for i in range(45):
-        x = -.278 + i/44*.556
-        z = .29 + j*.008 + .025*math.sin(x*8 + j*.09)
-        points.append((x, -.0161, z))
-    line(f'monitor.display.trace.{j}', points, .00032, M['trace'], monitor)
 
 def speaker(name, x):
     parent = root(name, (x, .105, .007), device_id='speaker')
@@ -296,54 +286,10 @@ speaker('device.speaker.right', .278)
 # Actual OG98 key map; only the small keycap geometry is shared, never the selection state.
 keymap = json.loads((ROOT/'modules/flesports-og98/assets/layout.json').read_text(encoding='utf-8-sig'))
 keyboard = build_keyboard(keymap, M, root, box, text)
+keyboard.location.y = -.225
 
 # Mouse +Y faces the monitor; -X is the user's thumb side in both scene states.
-mouse = root('device.mouse', (.145,-.242,.006), device_id='mouse')
-mouse.rotation_euler.z=.08
-mouse['front_axis']='+Y';mouse['side_buttons_finish']='white'
-profile=[(-.063,.002,.008),(-.060,.014,.016),(-.053,.025,.027),(-.037,.031,.0355),(-.018,.03175,.038),(.002,.0307,.0365),(.018,.0298,.0315),(.039,.0295,.0250),(.055,.0290,.0210),(.062,.0270,.0190)]
-def mouse_height(y):
-    for a,b in zip(profile,profile[1:]):
-        if a[0]<=y<=b[0]:return .002+a[2]+(b[2]-a[2])*(y-a[0])/(b[0]-a[0])
-    return .002+profile[-1][2]
-vertices,faces=[],[];sections=28
-for y,w,h in profile:
-    for i in range(sections+1):
-        angle=math.pi*i/sections
-        vertices.append((w*math.cos(angle),y,.002+h*math.sin(angle)**.72))
-for row in range(len(profile)-1):
-    for i in range(sections):a=row*(sections+1)+i;faces.append((a,a+sections+1,a+sections+2,a+1))
-faces.append(tuple(range(sections+1)));last=(len(profile)-1)*(sections+1);faces.append(tuple(last+i for i in range(sections,-1,-1)))
-mesh=bpy.data.meshes.new('mouse.shell');mesh.from_pydata(vertices,[],faces);mesh.update()
-ob=bpy.data.objects.new('mouse.shell',mesh);scene.collection.objects.link(ob);ob.parent=mouse;mesh.materials.append(M['ivory'])
-for face in mesh.polygons:face.use_smooth=True
-sub=ob.modifiers.new('Continuous shell curvature','SUBSURF');sub.levels=2;sub.render_levels=2
-shell=ob
-outline=[(w*.98,y) for y,w,h in profile]+[(-w*.98,y) for y,w,h in reversed(profile)]
-count=len(outline);vertices=[(x,y,z) for z in (.001,.003) for x,y in outline]
-faces=[tuple(range(count-1,-1,-1)),tuple(range(count,count*2))]
-faces.extend((i,(i+1)%count,(i+1)%count+count,i+count) for i in range(count))
-mesh=bpy.data.meshes.new('mouse.base');mesh.from_pydata(vertices,[],faces);mesh.update()
-base=bpy.data.objects.new('mouse.base',mesh);scene.collection.objects.link(base);base.parent=mouse;mesh.materials.append(M['black'])
-bevel=base.modifiers.new('Base edge','BEVEL');bevel.width=.00065;bevel.segments=4
-split=line('mouse.button.split',[(0,y,mouse_height(y)+.0006) for y in (.009,.018,.039,.052,.058)],.00014,M['ink'],mouse)
-seam=line('mouse.button.seam',[(x,.008,mouse_height(.008)*max(0,1-(x/.0305)**2)**.36+.0006) for x in (-.029,-.026,-.020,-.01,0,.01,.020,.026,.029)],.00013,M['ink'],mouse)
-for detail in (split,seam):
-    shrink=detail.modifiers.new('Follow shell contour','SHRINKWRAP');shrink.target=shell;shrink.wrap_method='PROJECT';shrink.use_project_z=True;shrink.use_negative_direction=True;shrink.use_positive_direction=False;shrink.offset=.00006
-wheel_y,wheel_z=.034,.0265
-box('mouse.wheel.recess',(.008,.020,.002),(0,wheel_y,.028),M['ink'],.001,mouse)
-cylinder('mouse.wheel',.0077,.0052,(0,wheel_y,wheel_z),M['rubber'],'X',mouse,64)
-for n in range(32):
-    angle=n/32*math.tau
-    grip=box('mouse.wheel.grip',(.0052,.00065,.00055),(0,wheel_y+math.sin(angle)*.0077,wheel_z+math.cos(angle)*.0077),M['rubber'],.0002,mouse)
-    grip.rotation_euler.x=-angle
-for index,y in enumerate((.002,.022)):
-    box('mouse.side.button.recess',(.0005,.0168,.0042),(-.0284,y,.0243),M['ink'],.0002,mouse)
-    button=box(f'mouse.side.button.{index}',(.0034,.016,.0038),(-.029,y,.0243),M['ivory'],.0012,mouse)
-    button.rotation_euler.y=.18
-box('mouse.usb.port',(.009,.002,.0034),(0,.0616,.010),M['black'],.0012,mouse)
-mark=text('mouse.mark','G',(0,-.030,mouse_height(-.030)+.0006),.010,M['steel'],mouse)
-shrink=mark.modifiers.new('Printed on shell','SHRINKWRAP');shrink.target=shell;shrink.wrap_method='PROJECT';shrink.use_project_z=True;shrink.use_negative_direction=True;shrink.use_positive_direction=False;shrink.offset=.00005
+mouse = build_mouse(M, root, box, cylinder, text)
 
 def fan(name,loc,parent,axis='Z',lit=False):
     frame=root(name,loc,parent)
@@ -353,21 +299,35 @@ def fan(name,loc,parent,axis='Z',lit=False):
     ring(name+'.outer',.055,.003,(0,0,-.001),M['shell'],parent=frame)
     if lit:ring(name+'.diffuser',.056,.0010,(0,0,.010),M['pc_led'],parent=frame)
     rotor=root(name+'.rotor',(0,0,0),frame,animation_role='fan')
-    cylinder(name+'.hub',.016,.012,(0,0,.004),M['black'],parent=rotor,vertices=32)
-    for i in range(7):
-        points=[(.012,-.004,0),(.023,-.025,.001),(.044,-.031,.003),(.052,-.013,.003),(.046,.003,.001),(.025,.009,0)]
-        angle=i/7*math.tau
-        vertices=[(x*math.cos(angle)-y*math.sin(angle),x*math.sin(angle)+y*math.cos(angle),z) for x,y,z in points]
-        mesh=bpy.data.meshes.new(name+'.blade');mesh.from_pydata(vertices,[],[tuple(range(6))]);mesh.update()
+    cylinder(name+'.hub',.016,.012,(0,0,.004),M['black'],parent=rotor,vertices=64)
+    cylinder(name+'.hub.cap',.013,.001,(0,0,.0105),M['shell'],parent=rotor,vertices=64)
+    for i in range(9):
+        vertices, faces = [], []
+        for radial in range(17):
+            t = radial/16
+            radius = .014 + .039*t
+            sweep = -.28 + .52*t
+            chord = .45 - .08*t
+            for across in range(13):
+                u = across/12
+                angle = i/9*math.tau + sweep + (u-.5)*chord
+                z = .001 + .007*(u-.5)*(1-.4*t) + .002*math.sin(u*math.pi)
+                vertices.append((radius*math.cos(angle), radius*math.sin(angle), z))
+        for radial in range(16):
+            for across in range(12):
+                a = radial*13+across
+                faces.append((a,a+13,a+14,a+1))
+        mesh=bpy.data.meshes.new(name+'.blade');mesh.from_pydata(vertices,[],faces);mesh.update()
         ob=bpy.data.objects.new(name+'.blade',mesh);scene.collection.objects.link(ob);ob.parent=rotor;mesh.materials.append(M['shell'])
-        solid=ob.modifiers.new('Blade thickness','SOLIDIFY');solid.thickness=.001
-        bevel=ob.modifiers.new('Blade edge','BEVEL');bevel.width=.001;bevel.segments=3
+        for face in mesh.polygons: face.use_smooth=True
+        solid=ob.modifiers.new('Blade thickness','SOLIDIFY');solid.thickness=.0007
+        bevel=ob.modifiers.new('Blade edge','BEVEL');bevel.width=.00025;bevel.segments=3
     for x in (-.055,.055):
         for y in (-.055,.055):screw(name+'.screw',(x,y,.012),frame,radius=.002)
     return frame
 
-computer=root('device.computer',(.59,.23,.008),device_id='computer')
-computer.rotation_euler.z=.54
+computer=root('device.computer',(.59,.26,.008),device_id='computer')
+computer.rotation_euler.z=.30
 W,D,H=.235,.435,.465
 box('case.bottom',(W,D,.012),(0,0,.012),M['shell'],.004,computer)
 box('case.right.panel',(.005,D,H),(.116,0,H/2),M['shell'],.003,computer)
@@ -463,9 +423,9 @@ internal=bpy.data.lights.new('case.internal','POINT');internal.energy=.75;intern
 ob=bpy.data.objects.new('case.internal',internal);scene.collection.objects.link(ob);ob.location=(.60,.12,.39)
 ob.visible_camera=False;ob.visible_glossy=False;ob.visible_transmission=False
 light('wall.wash',(-.2,.48,.18),(-.2,.67,.34),6,'73C8D5',.62,.03)
-camera_data=bpy.data.cameras.new('camera.home');camera_data.type='PERSP';camera_data.lens=46
+camera_data=bpy.data.cameras.new('camera.home');camera_data.type='PERSP';camera_data.lens=48
 camera=bpy.data.objects.new('camera.home',camera_data);scene.collection.objects.link(camera)
-camera.location=(-.20,-1.72,1.08);target=Vector((.025,.045,.155));camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler();scene.camera=camera
+camera.location=(-.10,-1.90,.80);target=Vector((.10,.02,.23));camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler();scene.camera=camera
 root('camera.target',target)
 scene.render.filepath=str(OUT/'studio-overview.png')
 scene['visual_revision']='studio-v1'
@@ -474,7 +434,7 @@ scene['keyboard_key_count']=len(keymap)
 
 # Material maps use real-scale UVs in both the source scene and the runtime.
 for ob in scene.objects:
-    if ob.type == 'MESH':
+    if ob.type == 'MESH' and not ob.get('preserve_uv'):
         physical_uvs(ob.data)
 keyboard_validation = validate_legends()
 # Keep a source scene before converting font/curve primitives for exchange.

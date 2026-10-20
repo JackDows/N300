@@ -26,10 +26,12 @@ npm --prefix apps/desktop run dev -- --host 127.0.0.1
 
 审核遵循 `refactoring-ui` 的层级、留白和可读性要求。三维造型与光照属于场景美术工作，需额外检查真实渲染。每次交付前人工检查和清理中间产物。
 
-模型制作分为三个源文件：
+模型制作按设备与材质分开：
 
 - `build_scene.py`：桌面构图、其他设备、光照和导出。
 - `keyboard_asset.py`：OG98 槽位、各排键帽高度与倾角、凹面、刻字、开放边框和分件。导出前检查刻字是否被键帽遮住。
+- `mouse_asset.py`：按官方顶视轮廓及侧视高度约束建模；外壳、左右主键、滚轮和两枚侧键独立分件。侧键有自己的侧平面，不向外壳曲面投影变形。
+- `screen_asset.py`：显示器边框、背壳和屏幕显示材质。屏幕图案由源码生成并打包，设备本体仍是几何模型。
 - `studio_materials.py`：生成塑料、金属与织物的法线和粗糙度贴图；物理 UV 尺寸为每单元 20 mm。使用 Blender 自带的 NumPy，图像打包在 `.blend` 和 GLB 内，无外部纹理依赖。
 
 ## 独立预览包
@@ -72,10 +74,12 @@ npm --prefix apps/desktop run review:visual
 
 检查已构建的预览包时，先运行 `preview:visual`，然后在当前终端设置 `$env:DESKHUB_VISUAL_URL='http://127.0.0.1:1421'` 再执行上述检查命令。测试记录写入 `artifacts/visual/validation.json`；截图脚本生成默认窗口、最小窗口、窄屏和显示缩放的画面，供人工审查。清理仍需人工逐项执行。
 
-实际窗口的性能验证：`npm --prefix apps/desktop run open:visual -- --benchmark`。记录位于 `artifacts/visual/performance.json`，包括 WebGL 显卡、实际尺寸和像素比、首次及重复交互的帧间隔。完成后保存实际窗口的 `visible-desktop.png`、`visible-keyboard.png`，并留在键盘近景便于检查。加载阶段预编译桌面与聚焦视图的光照变体，执行聚焦场景的离屏绘制以准备阴影、法线和驱动管线，减少首次点击的停顿。
+实际窗口的性能验证：`npm --prefix apps/desktop run open:visual -- --benchmark`。记录位于 `artifacts/visual/performance.json`，包括 WebGL 显卡、实际尺寸和像素比、首次及重复交互的帧间隔。完成后保存实际窗口的 `visible-desktop.png`、`visible-keyboard.png`，并回到桌面，便于从全景开始检查。加载阶段预编译桌面与聚焦视图的光照变体，执行聚焦场景的离屏绘制以准备阴影、法线和驱动管线，减少首次点击的停顿。
 
 本轮的具体发现和验证范围见 [REVIEW.md](REVIEW.md)。
 
 ## 资源
 
 模型几何由本目录脚本生成。`Inter.ttf` 来自 [Google Fonts 的 Inter 字体](https://github.com/google/fonts/tree/main/ofl/inter)，使用随附的 [SIL Open Font License](Inter-OFL.txt)。字体同时嵌入 Blender 源文件，打开源场景时不依赖本机字体安装。
+
+鼠标造型核对使用 [Logitech 官方产品页](https://www.logitechg.com/en-us/shop/p/pro-x-superlight-2-se) 的顶视、左侧视和斜视图片。参考页为黑色型号，样板外壳与侧键的白色以用户确认的实物为准。参考图不作为运行时贴图或构建依赖；轮廓参数随源码保留。
