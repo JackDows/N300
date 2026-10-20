@@ -15,7 +15,7 @@ function Studio(){
   const host=useRef<HTMLDivElement>(null),engine=useRef<StudioRenderer|null>(null);
   const [state,setState]=useState(start),[binding,setBinding]=useState('F12'),[applied,setApplied]=useState(false);
   const [bindings,setBindings]=useState<Record<number,string>>({});
-  useEffect(()=>{if(!host.current)return;const renderer=new StudioRenderer(host.current,setState);engine.current=renderer;(window as any).__studio=renderer;return()=>{renderer.dispose();engine.current=null;delete(window as any).__studio;};},[]);
+  useEffect(()=>{if(!host.current)return;let renderer:StudioRenderer;try{renderer=new StudioRenderer(host.current,setState);}catch(error){console.error('studio.graphics.startup',error);setState({...start,error:'无法启用图形加速，请使用独立预览入口打开。'});return;}engine.current=renderer;(window as any).__studio=renderer;return()=>{renderer.dispose();engine.current=null;delete(window as any).__studio;};},[]);
   useEffect(()=>{if(state.selection?.kind==='key'){setBinding(bindings[state.selection.slot]??state.selection.label);setApplied(false);}},[state.selection]);
   useEffect(()=>{const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();if(engine.current?.state.selection)engine.current.clearSelection();else engine.current?.close();}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);},[]);
   const chosenPart=state.selection?.kind==='part'?state.selection.id:null;

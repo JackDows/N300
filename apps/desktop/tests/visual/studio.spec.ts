@@ -1,9 +1,9 @@
-import {test,expect,type Page} from '@playwright/test';
+import {test,expect,chromium,type Page} from '@playwright/test';
 
 const ready=async(page:Page)=>{await page.goto('/visual.html');await page.waitForFunction(()=>window.__studio?.state.ready);};
 const focused=async(page:Page,id:string)=>{await page.evaluate(id=>window.__studio.open(id),id);await page.waitForFunction(()=>window.__studio.state.phase==='focused');};
 
-test('each actual key is picked independently; other keys keep identical pixels',async({page})=>{
+test('each actual key is picked independently; unselected keys stay visually unchanged',async({page},testInfo)=>{
   const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
   await ready(page);
   const deskKey=await page.evaluate(()=>window.__studio.projectDevice('keyboard'));
@@ -21,7 +21,14 @@ test('each actual key is picked independently; other keys keep identical pixels'
   await expect(page.getByRole('region',{name:'按键设置'})).toBeVisible();
   for(let i=0;i<neighbours.length;i++){
     const p=neighbours[i];
-    expect((await page.screenshot({clip:{x:Math.round(p.x)-14,y:Math.round(p.y)-14,width:28,height:28}})).equals(captures[i])).toBe(true);
+    const after=await page.screenshot({clip:{x:Math.round(p.x)-14,y:Math.round(p.y)-14,width:28,height:28}});
+    const maxDelta=await page.evaluate(async({before,after})=>{
+      const decode=async(data:string)=>{const image=await createImageBitmap(await(await fetch(`data:image/png;base64,${data}`)).blob());const canvas=new OffscreenCanvas(image.width,image.height);const context=canvas.getContext('2d')!;context.drawImage(image,0,0);return context.getImageData(0,0,image.width,image.height).data;};
+      const a=await decode(before),b=await decode(after);let max=0;for(let i=0;i<a.length;i++)max=Math.max(max,Math.abs(a[i]-b[i]));return max;
+    },{before:captures[i].toString('base64'),after:after.toString('base64')});
+    if(maxDelta>1){await testInfo.attach(`key-${i}-before`,{body:captures[i],contentType:'image/png'});await testInfo.attach(`key-${i}-after`,{body:after,contentType:'image/png'});}
+    // Half-float lighting and MSAA can round a few channels by one 8-bit unit.
+    expect(maxDelta,`Unselected key index ${i} changed`).toBeLessThanOrEqual(1);
   }
   for(const key of initial.materials){
     const p=await page.evaluate(slot=>window.__studio.projectKey(slot),key.slot);
@@ -68,4 +75,16 @@ test('controls stay reachable at desktop minimum and narrow preview sizes',async
     await page.getByRole('button',{name:'返回桌面',exact:true}).click();
     await page.waitForFunction(()=>window.__studio.state.phase==='desk');
   }
+});
+
+test('software WebGL is refused before expensive scene loading',async()=>{
+  const browser=await chromium.launch({channel:'msedge',headless:true,args:['--disable-gpu','--use-angle=swiftshader-webgl']});
+  try{
+    const page=await browser.newPage();const models:string[]=[];
+    page.on('request',request=>{if(request.url().includes('.glb'))models.push(request.url());});
+    await page.goto(`${process.env.DESKHUB_VISUAL_URL??'http://127.0.0.1:1420'}/visual.html`);
+    await expect(page.getByRole('status')).toHaveText('无法启用图形加速，请使用独立预览入口打开。');
+    expect(models).toEqual([]);
+    expect(await page.evaluate(()=>!!window.__studio)).toBe(false);
+  }finally{await browser.close();}
 });

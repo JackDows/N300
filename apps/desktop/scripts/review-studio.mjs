@@ -39,6 +39,6 @@ try {
     await check.evaluate(()=>window.__studio.selectKey(72));await check.waitForTimeout(220);
     await check.screenshot({path:path.join(output,`check-${label}.png`)});await context.close();
   }
-  await writeFile(path.join(output,'audit.json'),JSON.stringify({url,errors,state:audit.state,keys:audit.keys,modelBytes:audit.modelBytes,devicePixelRatio:audit.devicePixelRatio},null,2));
+  await writeFile(path.join(output,'audit.json'),JSON.stringify({url,errors,state:audit.state,gpu:audit.gpu,keys:audit.keys,modelBytes:audit.modelBytes,devicePixelRatio:audit.devicePixelRatio},null,2));
   console.log(JSON.stringify({errors,state:audit.state,keys:audit.keys,modelBytes:audit.modelBytes,output}));
 } finally {await browser.close();}

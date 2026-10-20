@@ -19,7 +19,8 @@
     "test:visual": "playwright test --config playwright.visual.config.ts",
     "review:visual": "node scripts/review-studio.mjs",
     "build:visual": "tsc -b && vite build --config vite.visual.config.ts",
-    "preview:visual": "vite preview --config vite.visual.config.ts"
+    "preview:visual": "vite preview --config vite.visual.config.ts",
+    "open:visual": "node scripts/open-studio.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",

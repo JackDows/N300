@@ -34,7 +34,15 @@ npm --prefix apps/desktop run build:visual
 npm --prefix apps/desktop run preview:visual
 ```
 
-打开 [本机视觉样板](http://127.0.0.1:1421/visual.html)。预览包位于 `artifacts/visual/preview`，模型、字体与脚本全部随包提供；运行时无需 Blender，也不调用 DeskHub 设备后台。开发入口是 `apps/desktop/visual.html`。
+保持预览服务器运行，在另一个终端执行：
+
+```powershell
+npm --prefix apps/desktop run open:visual
+```
+
+该入口使用工程内 `.local/visual-runtime` 的独立 Edge 配置，启动时输出实际 GPU。它不使用个人浏览器的硬件加速设置，也不修改个人浏览器或系统设置。关掉预览窗口会结束启动器进程。该目录在窗口使用期间需要保留，结束本轮工作后按工程规则人工检查清理。
+
+预览服务地址是 `http://127.0.0.1:1421/visual.html`。直接用个人浏览器打开时，其硬件加速必须可用；页面会拒绝性能严重受限的软件 WebGL，防止退回 CPU 后继续渲染。预览包位于 `artifacts/visual/preview`，模型、字体与脚本全部随包提供；运行时无需 Blender，也不调用 DeskHub 设备后台。开发入口是 `apps/desktop/visual.html`。
 
 移动鼠标到设备上可轻微浮起并高亮；点击设备进入聚焦。键盘的每个模型按键可独立选中，设置卡片里的功能保存在本次预览会话。点击机箱会打开侧板；点击内部部件显示已核对的型号。点击空白或按 Esc 收回，Esc 在有选择时先取消选择。
 
@@ -54,6 +62,8 @@ npm --prefix apps/desktop run review:visual
 ```
 
 检查已构建的预览包时，先运行 `preview:visual`，然后在当前终端设置 `$env:DESKHUB_VISUAL_URL='http://127.0.0.1:1421'` 再执行上述检查命令。测试记录写入 `artifacts/visual/validation.json`；截图脚本生成默认窗口、最小窗口、窄屏和显示缩放的画面，供人工审查。清理仍需人工逐项执行。
+
+实际窗口的性能验证：`npm --prefix apps/desktop run open:visual -- --benchmark`。记录位于 `artifacts/visual/performance.json`，包括 WebGL 显卡、实际尺寸和像素比、首次及重复交互的帧间隔。加载阶段预编译桌面与聚焦视图的光照变体，避免把首次编译停顿留到用户点击时。
 
 本轮的具体发现和验证范围见 [REVIEW.md](REVIEW.md)。
 

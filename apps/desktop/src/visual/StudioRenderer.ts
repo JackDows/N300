@@ -62,7 +62,7 @@ export class StudioRenderer {
 
   constructor(private host:HTMLElement,private onState:(state:StudioState)=>void){
     RectAreaLightUniformsLib.init();
-    this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+    this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance',failIfMajorPerformanceCaveat:true});
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
     this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
@@ -124,7 +124,18 @@ export class StudioRenderer {
     this.caseLight=new THREE.PointLight(0xb9d4db,.045,.65,2);this.caseLight.position.set(-.05,.38,.02);this.roots.get('computer')?.[0].add(this.caseLight);
     this.ao=new GTAOPass(this.scene,this.camera,512,512);this.ao.output=GTAOPass.OUTPUT.Off;this.ao.updateGtaoMaterial({radius:.12,distanceExponent:1,thickness:1,scale:1,samples:12});this.ao.updatePdMaterial({lumaPhi:10,depthPhi:2,normalPhi:3,radius:6,rings:2,samples:16});
     this.aoMaterial.uniforms.map.value=this.ao.gtaoMap;
-    this.resize();this.publish({ready:true});this.requestFrame();
+    this.resize();
+    // The foreground has no interior light when a peripheral is selected. Warm
+    // that lighting variant before accepting input, rather than compiling it on
+    // the user's first click. The clone shares assets and is never displayed.
+    await this.renderer.compileAsync(this.scene,this.camera);
+    const warm=gltf.scene.clone(true);warm.traverse(object=>{if(object instanceof THREE.Light)object.visible=false;});
+    this.foreground.add(warm);
+    try {await this.renderer.compileAsync(this.foreground,this.camera);} finally {this.foreground.remove(warm);}
+    if(this.disposed)return;
+    cancelAnimationFrame(this.frame);this.frame=0;
+    await new Promise<void>(resolve=>requestAnimationFrame(now=>{this.render(now);resolve();}));
+    if(!this.disposed)this.publish({ready:true});
   }
 
   private publish(patch:Partial<StudioState>){this.state={...this.state,...patch};this.onState(this.state);}
@@ -265,7 +276,7 @@ export class StudioRenderer {
   projectDevice(id:DeviceId){return this.project(this.roots.get(id)?.[0]);}
   projectPart(id:string){const root=this.parts.get(id);const anchor=id==='cpu'?'cpu.face':id==='gpu'?'gpu.side.trim':id==='memory'?'memory.light':id==='storage'?'storage.m2.heatsink':id==='network'?'network.controller':null;return this.project(anchor?root?.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(anchor)):root);}
   private project(object?:THREE.Object3D){if(!object)return null;object.updateWorldMatrix(true,true);const position=new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3()).project(this.camera);return{x:(position.x+1)*this.width/2,y:(1-position.y)*this.height/2};}
-  audit(){return{state:this.state,keys:this.keys.size,frames:this.frameCount,drawCalls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,devicePixelRatio:this.renderer.getPixelRatio(),materials:[...this.keys.entries()].map(([slot,root])=>({slot,label:root.userData.key_label,geometry:root.children.find(c=>c instanceof THREE.Mesh)?.uuid,selected:root===this.highlighted})),modelBytes:this.modelBytes};}
+  audit(){const gl=this.renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');return{state:this.state,gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),keys:this.keys.size,frames:this.frameCount,drawCalls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,devicePixelRatio:this.renderer.getPixelRatio(),materials:[...this.keys.entries()].map(([slot,root])=>({slot,label:root.userData.key_label,geometry:root.children.find(c=>c instanceof THREE.Mesh)?.uuid,selected:root===this.highlighted})),modelBytes:this.modelBytes};}
   private disposeModel(root:THREE.Object3D){const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();root.traverse(object=>{if(object instanceof THREE.Mesh){geometries.add(object.geometry);for(const m of Array.isArray(object.material)?object.material:[object.material])materials.add(m);}});for(const g of geometries)g.dispose();for(const m of materials)m.dispose();}
   dispose(){this.disposed=true;this.abort.abort();cancelAnimationFrame(this.frame);this.observer.disconnect();this.highlight(null);this.disposeModel(this.scene);this.disposeModel(this.foreground);this.disposeModel(this.dimScene);this.environment.dispose();this.ao?.dispose();this.aoTarget.dispose();this.aoMaterial.dispose();this.aoQuad.dispose();this.colorTarget.dispose();this.bloom.dispose();this.output.dispose();this.renderer.dispose();this.renderer.domElement.remove();}
 }
