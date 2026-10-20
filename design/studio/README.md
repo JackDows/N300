@@ -1,0 +1,62 @@
+# DeskHub 场景样板
+
+这份样板用于检查桌搭的构图、设备材质和浮起交互。模型由同一个 Blender 场景生成；键盘读取工程内的 OG98 真实配列。机箱、散热器及内部装配属于概念造型，CPU、GPU 等型号标识来自本机已核对的硬件。
+
+## 视觉约束
+
+- 主体是设备，控制界面随选择出现。背景与装饰保持低对比度。
+- 深石墨桌面、哑光外壳、中性金属，少量冰青色灯光。白色用于刻字和鼠标外壳，不以整屏色罩代替光照。
+- 固定观察角度；设备从桌面到聚焦状态复用同一份几何与材质。
+- 所有键帽保留实际槽位与独立对象。长键使用实际尺寸建模。
+- 机箱侧板和内部部件独立建模，侧板围绕铰链打开；部件选择反馈附着在对应模型上。
+- 交互样板只更新预览状态，不写入用户设备。
+
+## 生成与预览
+
+使用 Blender 5.2.2 LTS（渲染优先使用 OptiX，没有可用设备时使用 CPU）：
+
+```powershell
+npm --prefix apps/desktop ci
+& 'D:\Blender\blender.exe' --background --factory-startup --python design/studio/build_scene.py -- --render
+npm --prefix apps/desktop run dev -- --host 127.0.0.1
+```
+
+浏览器打开 `/visual.html`。`D:\Blender` 是本机完整安装位置；其他电脑可用自己的 Blender 路径运行相同命令。渲染与模型输出到 `artifacts/visual/studio-v1`，源码和配列保留在 Git。Blender 源场景、GLB 和审核图由构建生成，不依赖此前的拼贴素材。
+
+审核遵循 `refactoring-ui` 的层级、留白和可读性要求。三维造型与光照属于场景美术工作，需额外检查真实渲染。每次交付前人工检查和清理中间产物。
+
+## 独立预览包
+
+模型生成后，在工程根目录运行：
+
+```powershell
+npm --prefix apps/desktop run build:visual
+npm --prefix apps/desktop run preview:visual
+```
+
+打开 [本机视觉样板](http://127.0.0.1:1421/visual.html)。预览包位于 `artifacts/visual/preview`，模型、字体与脚本全部随包提供；运行时无需 Blender，也不调用 DeskHub 设备后台。开发入口是 `apps/desktop/visual.html`。
+
+移动鼠标到设备上可轻微浮起并高亮；点击设备进入聚焦。键盘的每个模型按键可独立选中，设置卡片里的功能保存在本次预览会话。点击机箱会打开侧板；点击内部部件显示已核对的型号。点击空白或按 Esc 收回，Esc 在有选择时先取消选择。
+
+## 渲染与模块边界
+
+- Blender 负责建模、真实尺度、配列、材质与初始镜头。导出的 GLB 保留 `device_id`、`slot_id`、`part_id` 和侧板铰链层级。
+- Three.js 使用固定镜头、抗锯齿、接触阴影和局部发光。设备聚焦复用同一个对象，选择反馈克隆目标材质，不改其他按键。
+- React 管理标题和上下文控件。模型里的槽位可以继续接入现有 OG98 接口；这份样板没有真实设备写入路径。
+- 桌面静止时停止逐帧渲染，交互和过渡动画期间才刷新。侧板动画可中断并反向播放。
+- 主机外观与内部装配是概念模型，并非对应实际机箱、散热器的精确型号。CPU、GPU、主板等名称来自此前核对结果，不代表实时检测或监测。
+
+## 检查
+
+```powershell
+npm --prefix apps/desktop run test:visual
+npm --prefix apps/desktop run review:visual
+```
+
+检查已构建的预览包时，先运行 `preview:visual`，然后在当前终端设置 `$env:DESKHUB_VISUAL_URL='http://127.0.0.1:1421'` 再执行上述检查命令。测试记录写入 `artifacts/visual/validation.json`；截图脚本生成默认窗口、最小窗口、窄屏和显示缩放的画面，供人工审查。清理仍需人工逐项执行。
+
+本轮的具体发现和验证范围见 [REVIEW.md](REVIEW.md)。
+
+## 资源
+
+模型几何由本目录脚本生成。`Inter.ttf` 来自 [Google Fonts 的 Inter 字体](https://github.com/google/fonts/tree/main/ofl/inter)，使用随附的 [SIL Open Font License](Inter-OFL.txt)。字体同时嵌入 Blender 源文件，打开源场景时不依赖本机字体安装。

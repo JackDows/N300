@@ -1,0 +1,12 @@
+{
+  "source": "simulation",
+  "parts": {
+    "cpu": [{"name":"AMD Ryzen 7 9800X3D","detail":"8 核心 · 16 线程"}],
+    "gpu": [{"name":"NVIDIA GeForce RTX 5080"}],
+    "memory": [{"name":"48 GB DDR5","detail":"2 × 24 GB · 6000 MT/s"}],
+    "motherboard": [{"name":"MAG B850 TOMAHAWK MAX WIFI","detail":"MSI · MS-7E62"}],
+    "storage": [{"name":"BIWIN NV7400 4TB","detail":"4 TB"},{"name":"Predator SSD GM9000 1TB","detail":"1 TB"},{"name":"WDC WUH721816ALE6L4","detail":"16 TB"},{"name":"Samsung SSD 980 1TB","detail":"1 TB"},{"name":"BIWIN NV7400 2TB","detail":"2 TB"}],
+    "network": [{"name":"Realtek PCIe 5GbE"},{"name":"Qualcomm FastConnect 7800 Wi-Fi 7"}]
+  },
+  "mangodisk": true
+}
