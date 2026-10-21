@@ -29,6 +29,56 @@ const write = async (client, id, capability, value) => {
   assert.deepEqual((await read(client, id, capability)).value, value);
 };
 for (const mode of ['native', 'browser']) {
+  test(`${mode}: normal/Fn key edits preserve all other bindings and partial options`, async()=>{
+    const backend=await open(mode,'keys'),c=backend.client;
+    const set=(layer,slot,action,profile)=>request(c,'devices.invoke','keyboard',{capability:'keyboard.keymap.set',arguments:{layer,slot,action,profile}});
+    try {
+      for(const [layer,capability]of [['normal','keyboard.keymap'],['fn','keyboard.fnKeymap']]){
+        const before=(await read(c,'keyboard',capability)).value,key=before.keys.find(k=>k.label==='F12');
+        assert.equal(before.keys.length,99);
+        const result=await set(layer,key.slot,{type:'key',modifier:224,key:225,second:6},before.profile);
+        assert.equal(result.verified,true);assert.deepEqual(result.after.raw,[0,224,225,6]);
+        const after=(await read(c,'keyboard',capability)).value,expected=before.matrix.slice();expected.splice(key.slot*4,4,0,224,225,6);assert.deepEqual(after.matrix,expected);
+        await assert.rejects(set(layer,key.slot,{type:'disabled'},99),{code:'profile_changed'});
+        await set(layer,key.slot,{type:'restore',raw:key.binding.raw},before.profile);
+        assert.deepEqual((await read(c,'keyboard',capability)).value.matrix,before.matrix);
+      }
+      for(const action of [{type:'key',modifier:1,key:4},{type:'media',code:999},{type:'restore',raw:[0,0,-1,0]}])await assert.rejects(set('normal',72,action));
+      const options=(await read(c,'keyboard','keyboard.options')).value;
+      await request(c,'devices.write','keyboard',{capability:'keyboard.options',value:{winLocked:!options.winLocked}});
+      const locked=(await read(c,'keyboard','keyboard.options')).value;assert.equal(locked.winLocked,!options.winLocked);assert.deepEqual(locked.raw.slice(1),options.raw.slice(1));assert.equal(locked.raw[0]&254,options.raw[0]&254);
+      await request(c,'devices.write','keyboard',{capability:'keyboard.options',value:{winLocked:options.winLocked}});
+      assert.deepEqual((await read(c,'keyboard','keyboard.options')).value,options);
+    } finally {await backend.close();}
+  });
+  test(`${mode}: macro CRUD, all repeat modes, button binding guards and restore`,async()=>{
+    const backend=await open(mode,'macros'),c=backend.client;
+    const invoke=(capability,args={})=>request(c,'devices.invoke','mouse',{capability,arguments:args});
+    try{
+      const view=(await read(c,'mouse','mouse.bindings')).value,profileId=view.profileId,side=view.buttons.find(b=>b.number===4&&!b.shifted);
+      const steps=[{type:'key',code:115,label:'F24',down:true},{type:'delay',ms:20},{type:'key',code:115,label:'F24',down:false},{type:'wheel',axis:'horizontal',positive:true},{type:'mouse',button:3,down:true},{type:'mouse',button:3,down:false}];
+      for(const mode of ['once','hold','toggle','sequence']){
+        const macro=await invoke('macros.save',{profileId,macro:{name:`测试 ${mode}`,mode,...(mode==='sequence'?{press:[],hold:steps,release:[]}: {steps})}});
+        assert.equal(macro.verified,true);assert.equal(macro.mode,mode);
+        assert.deepEqual((await invoke('macros.get',{id:macro.id}))[mode==='sequence'?'hold':'steps'],steps);
+        await invoke('mouse.bindings.set',{profileId,slotId:side.slotId,cardId:macro.id});
+        assert.equal((await read(c,'mouse','mouse.bindings')).value.buttons.find(b=>b.slotId===side.slotId).card.id,macro.id);
+        await assert.rejects(invoke('macros.remove',{id:macro.id}),{code:'macro_in_use'});
+        await assert.rejects(invoke('mouse.bindings.set',{profileId:'stale',slotId:side.slotId,restoreDefault:true}),{code:'profile_changed'});
+        await assert.rejects(invoke('mouse.bindings.set',{slotId:'foreign_g4_m1',cardId:macro.id}));
+        await request(c,'devices.write','mouse',{capability:'device.onboardMode',value:true});
+        await assert.rejects(invoke('mouse.bindings.set',{slotId:side.slotId,cardId:macro.id}),{code:'setting_read_only'});
+        await request(c,'devices.write','mouse',{capability:'device.onboardMode',value:false});
+        await invoke('mouse.bindings.set',{profileId,slotId:side.slotId,restoreDefault:true});
+        assert.equal((await read(c,'mouse','mouse.bindings')).value.buttons.find(b=>b.slotId===side.slotId).card.id,side.card.id);
+        const edited=await invoke('macros.save',{profileId,macro:{...macro,name:'已编辑'}});assert.equal(edited.id,macro.id);
+        await invoke('macros.remove',{profileId,id:macro.id});await assert.rejects(invoke('macros.get',{id:macro.id}));
+      }
+      await assert.rejects(invoke('macros.remove',{id:side.card.id}),{code:'setting_read_only'});
+      await assert.rejects(invoke('macros.save',{macro:{name:'不完整',mode:'once',steps:[steps[0]]}}),{code:'invalid_argument'});
+      const first=await invoke('macros.list',{limit:2}),second=await invoke('macros.list',{offset:2,limit:2});assert.equal(first.items.length,2);assert.notEqual(first.items[0].id,second.items[0].id);
+    }finally{await backend.close();}
+  });
   test(`${mode}: every declared reading and all writable settings`, async () => {
     const backend = await open(mode, 'settings'); const client = backend.client;
     try {

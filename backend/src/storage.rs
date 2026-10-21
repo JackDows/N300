@@ -30,6 +30,19 @@ pub fn lock_directory(directory: &Path) -> Result<File> {
     })
 }
 pub fn atomic_json(path: &Path, value: &Value) -> Result<()> {
+    // A packaged Windows parent can redirect individual AppData files without
+    // redirecting their directory. Resolve an existing target before creating
+    // its sibling, otherwise MoveFileExW can resolve the two names on different
+    // volumes even though they have the same textual parent.
+    #[cfg(windows)]
+    let existing = match path.canonicalize() {
+        Ok(target) => Some(target),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(error.into()),
+    };
+    #[cfg(windows)]
+    let temporary = existing.as_deref().unwrap_or(path).with_extension("json.tmp");
+    #[cfg(not(windows))]
     let temporary = path.with_extension("json.tmp");
     let mut file = File::create(&temporary)?;
     file.write_all(&serde_json::to_vec_pretty(value)?)?;
@@ -41,8 +54,14 @@ pub fn atomic_json(path: &Path, value: &Value) -> Result<()> {
         use windows_sys::Win32::Storage::FileSystem::{
             MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH,
         };
-        let from: Vec<u16> = temporary.as_os_str().encode_wide().chain(Some(0)).collect();
-        let to: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+        let physical_temporary = temporary.canonicalize()?;
+        let destination = existing.unwrap_or_else(|| {
+            // A new file belongs beside the file we actually created, including
+            // when Windows redirects that creation to a per-application store.
+            physical_temporary.with_file_name(path.file_name().expect("JSON file name"))
+        });
+        let from: Vec<u16> = physical_temporary.as_os_str().encode_wide().chain(Some(0)).collect();
+        let to: Vec<u16> = destination.as_os_str().encode_wide().chain(Some(0)).collect();
         if unsafe {
             MoveFileExW(
                 from.as_ptr(),

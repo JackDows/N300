@@ -24,6 +24,9 @@ export function TitleBar() {
         >
           <IconMinimize size={13} />
         </button>
+        <button className="winbtn" aria-label="最大化或还原窗口" title="最大化 / 还原" onClick={()=>runWindowCommand(w=>w.toggleMaximize())}>
+          <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="3" width="10" height="10" fill="none" stroke="currentColor"/></svg>
+        </button>
         <button
           className="winbtn winbtn--close"
           aria-label="关闭窗口"

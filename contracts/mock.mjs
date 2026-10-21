@@ -1,5 +1,7 @@
 import { DeskHubError } from './client.mjs';
 import { APP_VERSION, MOCK_UPDATE_VERSION } from './version.mjs';
+import { createMockControls } from './mock-controls.mjs';
+import workstation from './fixtures/workstation.json' with {type:'json'};
 
 /** Browser-only device simulator. Package integrity and filesystem export use the native host. */
 export function createMockClient(seed, { latencyMs = 20, updateScenario = 'success' } = {}) {
@@ -12,6 +14,7 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
   const jobs = new Map(), installed = new Map();
   let appVersion = APP_VERSION, lastResult = null, appChecked = false;
   const fail = (code, userMessage) => { throw new DeskHubError({ code, userMessage, message: code }); };
+  const controls = createMockControls(fail);
   const emit = (event) => { for (const listener of listeners) listener(structuredClone(event)); };
   const publish = (device) => { device.revision++; emit({ type: 'devices.changed', device }); return structuredClone(device); };
   const get = (id) => devices.get(id) ?? fail('device_not_found', '这个设备尚未添加。');
@@ -78,7 +81,7 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
     return publish(device);
   }
   function stop(device) {
-    device.generation++; sessions.delete(device.id); mouseSoftware.delete(device.id);
+    device.generation++; sessions.delete(device.id); mouseSoftware.delete(device.id); controls.reset(device.id);
     Object.assign(device, { phase: 'stopped', values: {}, error: null, valueState: 'unknown', unavailable: {} });
     return publish(device);
   }
@@ -91,6 +94,8 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
     if (method === 'diagnostics.export') fail('unsupported_mock_operation', '诊断文件导出请连接原生离线后端测试。');
     if (method === 'diagnostics.report') return {recorded:true};
     if (method === 'app.takeActivationNotice') return false;
+    if (method === 'app.hardware.inspect') return structuredClone(workstation);
+    if (method === 'app.mangodisk.open') return {opened:true,simulated:true};
     if (method === 'updates.list') return [...jobs.values()].map(jobView);
     if (method === 'updates.get') return jobView(jobGet(params.jobId));
     if (method === 'updates.cancel') {
@@ -139,7 +144,7 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
       const template = select(params);
       if (method === 'devices.replace' && template.moduleId !== device.moduleId) fail('invalid_argument', '更换设备类型请使用重新绑定。');
       if (method === 'devices.rebind' && (!params.target || typeof params.target !== 'object' || Array.isArray(params.target))) fail('invalid_argument', '请选择设备。');
-        const connected = device.phase === 'connected'; sessions.delete(device.id); mouseSoftware.delete(device.id);
+      const connected = device.phase === 'connected'; sessions.delete(device.id); mouseSoftware.delete(device.id); controls.reset(device.id);
       Object.assign(device, { moduleId: template.moduleId, moduleVersion: template.moduleVersion, capabilities: structuredClone(template.capabilities), values: {}, error: null, unavailable: {}, valueState: 'unknown', phase: 'disconnected', generation: device.generation + 1 });
       if (method === 'devices.rebind') Object.assign(device, { bindingTarget: structuredClone(params.target), target: structuredClone(params.target) });
       return connected ? connect(device) : publish(device);
@@ -158,7 +163,11 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
       if (closed) fail('transport_closed', '模拟器已经关闭。');
       if (device.generation !== generation || devices.get(device.id) !== device) fail('stale_session', '设备连接已更新，请重新读取状态。');
       let reading = device.values[params.capability];
-      if (operation === 'invoke' && params.capability === 'audio.eq.setBand') {
+      if (operation === 'invoke' && (params.capability === 'keyboard.keymap.set' || params.capability === 'mouse.bindings.set' || params.capability.startsWith('macros.'))) {
+        reading = controls.invoke(device, params.capability, params.arguments);
+      } else if (operation === 'write' && params.capability === 'keyboard.options') {
+        reading = controls.options(device, params.value);
+      } else if (operation === 'invoke' && params.capability === 'audio.eq.setBand') {
         const { band, gain } = params.arguments ?? {};
         reading = device.values['audio.eq'];
         if (!['customized', 'audiophile'].includes(device.values['audio.preset']?.value) || !Number.isInteger(band) || !reading?.value[band] || typeof gain !== 'number' || !Number.isFinite(gain) || gain < reading.gain_min || gain > reading.gain_max || Math.abs(gain / reading.gain_step - Math.round(gain / reading.gain_step)) > 1e-8) fail('invalid_argument', '请先选择自定义音效，再设置允许范围内的均衡器增益。');
@@ -198,6 +207,7 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
             }
             device.values['mouse.dpiStage'].writable=!value;
             device.values['mouse.reportRate'].writable=!value;
+            if(device.values['mouse.bindings'])device.values['mouse.bindings'].value.softwareMode=!value;
           }
           if (params.capability === 'lighting.brightness') { device.values['lighting.state'].value.brightness = value; reading = { ...reading, verified: true }; }
         }
@@ -213,7 +223,7 @@ export function createMockClient(seed, { latencyMs = 20, updateScenario = 'succe
       throw error;
     }
   }
-  const methods = ['hub.describe', 'modules.list', 'modules.inspect','modules.catalog','modules.checkUpdates','modules.download','modules.install','updates.list','updates.get','updates.cancel','app.updates.info','app.updates.check','app.updates.download','app.updates.install','app.takeActivationNotice', 'devices.list', 'devices.add', 'devices.get', 'devices.start', 'devices.stop', 'devices.restart', 'devices.replace', 'devices.rebind', 'devices.rename', 'devices.remove', 'devices.scan', 'devices.connect', 'devices.disconnect', 'devices.refresh', 'devices.read', 'devices.write', 'devices.invoke', 'diagnostics.export','diagnostics.report'];
+  const methods = ['hub.describe', 'modules.list', 'modules.inspect','modules.catalog','modules.checkUpdates','modules.download','modules.install','updates.list','updates.get','updates.cancel','app.updates.info','app.updates.check','app.updates.download','app.updates.install','app.takeActivationNotice','app.hardware.inspect','app.mangodisk.open', 'devices.list', 'devices.add', 'devices.get', 'devices.start', 'devices.stop', 'devices.restart', 'devices.replace', 'devices.rebind', 'devices.rename', 'devices.remove', 'devices.scan', 'devices.connect', 'devices.disconnect', 'devices.refresh', 'devices.read', 'devices.write', 'devices.invoke', 'diagnostics.export','diagnostics.report'];
   return {
     request(method, params = {}) {
       const id = ++nextId;

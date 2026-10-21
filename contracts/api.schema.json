@@ -54,7 +54,9 @@
         "app.updates.check",
         "app.updates.download",
         "app.updates.install",
-        "app.takeActivationNotice"
+        "app.takeActivationNotice",
+        "app.hardware.inspect",
+        "app.mangodisk.open"
       ]
     },
     "params": {

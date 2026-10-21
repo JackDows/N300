@@ -1,7 +1,7 @@
 {
   "id": "logitech-ghub",
   "name": "Logitech G HUB",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "protocolVersion": 1,
   "executable": "deskhub-ghub.exe",
   "transport": ["ghub-local"],

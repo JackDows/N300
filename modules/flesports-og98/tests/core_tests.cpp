@@ -128,9 +128,32 @@ void diagnostics() {
     std::filesystem::remove(path); std::filesystem::remove(backup);
     require(tx && rx && response, "API and feature evidence missing from logs");
 }
+void keyBindings() {
+    Receiver receiver(makeSimulator());
+    const auto baseline = receiver.keymap(false), fn = receiver.keymap(true);
+    require(baseline["keys"].size() == 99, "OG98 layout identity");
+    for (const auto* layer : {"normal", "fn"}) {
+        const auto before = receiver.keymap(std::string(layer) == "fn");
+        const auto result = receiver.setKey({{"layer", layer}, {"slot", 72}, {"action", {{"type", "key"}, {"modifier", 224}, {"key", 6}, {"second", 0}}}});
+        require(result["verified"] == true, "Key write confirmation");
+        auto expected = before["matrix"]; expected[288] = 0; expected[289] = 224; expected[290] = 6; expected[291] = 0;
+        require(receiver.keymap(std::string(layer) == "fn")["matrix"] == expected, "Key write changed unrelated slots");
+        receiver.setKey({{"layer", layer}, {"slot", 72}, {"action", {{"type", "restore"}, {"raw", result["before"]["raw"]}}}});
+        require(receiver.keymap(std::string(layer) == "fn")["matrix"] == before["matrix"], "Binding restore");
+    }
+    expectError("invalid_argument", [&] { receiver.setKey({{"slot", 127}, {"action", {{"type", "disabled"}}}}); });
+    expectError("invalid_argument", [&] { receiver.setKey({{"slot", 72}, {"action", {{"type", "key"}, {"modifier", 5}, {"key", 6}}}}); });
+    receiver.setKey({{"slot", 72}, {"action", {{"type", "media"}, {"code", 0xcd}}}});
+    receiver.setKey({{"slot", 72}, {"action", {{"type", "default"}}}});
+    require(receiver.keymap(false)["matrix"] == baseline["matrix"], "Default restoration");
+    receiver.setOptions({{"winLocked", true}, {"wasdSwapped", true}});
+    require(receiver.query(0x86)[2] == 9, "Keyboard option bits");
+    receiver.setOptions({{"winLocked", false}});
+    require(receiver.query(0x86)[2] == 8, "Option update preserves other bits");
+}
 int main() {
     try {
-        packets(); polling(); writes(); api(); diagnostics();
+        packets(); polling(); writes(); api(); diagnostics(); keyBindings();
         std::cout << "PASS packet fixtures, receiver polling, verified writes, API, C ABI and diagnostic logs\n";
         return 0;
     } catch (const std::exception& e) { std::cerr << e.what() << '\n'; return 1; }

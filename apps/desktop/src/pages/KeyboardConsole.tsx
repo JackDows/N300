@@ -1,4 +1,5 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
+import { KeymapEditor } from "./KeymapEditor";
 import { ConsoleHeader } from "../components/ConsoleHeader";
 import { IconLight } from "../components/icons";
 import { radioKeys } from "../components/radioKeys";
@@ -13,7 +14,8 @@ const BRIGHTNESS_STEPS = [
 ];
 const MODE_NAMES: Record<number, string> = { 0: "恒定常亮", 1: "呼吸律动", 2: "光谱流转", 3: "涟漪扩散", 13: "自定义光效" };
 
-export function KeyboardConsole({ onClose }: { onClose(): void }) {
+export function KeyboardConsole({ onClose, active=true }: { onClose(): void; active?:boolean }) {
+  const [panel,setPanel]=useState("keys");
   const { keyboard, kbBusy, connectKeyboard, refreshKeyboard, setKeyboardBrightness } = useDevice();
   const connected = keyboard.connected;
   const level = connected ? (keyboard.brightness?.value ?? keyboard.lighting?.brightness) : undefined;
@@ -24,11 +26,13 @@ export function KeyboardConsole({ onClose }: { onClose(): void }) {
   return <div className="console-modal console-modal--keyboard" style={{ "--kb-color": rgbHex } as CSSProperties}>
     <ConsoleHeader title="OG98" subtitle={`键盘 · ${connected ? "已连接" : connecting ? "正在连接" : "未连接"}`}
       status={connected ? "ok" : connecting ? "busy" : "off"} onClose={onClose}
-      actions={<button className="console-icon-toggle" disabled={kbBusy || connecting}
+      actions={(panel==="lighting"||!connected)&&<button className="console-icon-toggle" disabled={kbBusy || connecting}
         onClick={() => void (connected ? refreshKeyboard() : connectKeyboard())}>
         {connecting ? "连接中…" : kbBusy ? "同步中…" : connected ? "同步状态" : "连接键盘"}
       </button>} />
-    <div className="kb-deck">
+    <div className="console-tabs" role="tablist" aria-label="键盘设置页面"><button role="tab" aria-selected={panel==="keys"} onClick={()=>setPanel("keys")}>按键</button><button role="tab" aria-selected={panel==="lighting"} onClick={()=>setPanel("lighting")}>灯光</button></div>
+    <div hidden={panel!=="keys"}><KeymapEditor active={active&&panel==="keys"}/></div>
+    <div className="kb-deck" hidden={panel!=="lighting"}>
       <section className="kb-lumina-panel" aria-label="键盘灯光">
         <div className="kb-lumina-main">
           <div className="kb-lumina-head">
@@ -49,8 +53,7 @@ export function KeyboardConsole({ onClose }: { onClose(): void }) {
         </div>
         <div className="kb-spectrum-box">
           <div className="kb-spectrum-orb" aria-hidden="true" style={connected && rgbHex && level ? {
-            background: `radial-gradient(circle at 32% 25%, #dcece9, ${rgbHex} 55%, #17282b)`,
-            boxShadow: `0 8px 24px -14px ${rgbHex}`,
+            background: rgbHex,
           } : undefined} />
           <div className="kb-spectrum-meta"><span className="kb-spectrum-mode">{modeName}</span><span className="kb-spectrum-hex">{connected ? rgbHex ?? "—" : "—"}</span></div>
         </div>

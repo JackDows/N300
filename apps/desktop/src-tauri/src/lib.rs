@@ -1,5 +1,6 @@
 //! Desktop host for the same DeskHub supervisor used by the CLI and tests.
 mod updates;
+mod workstation;
 use deskhub_backend::{
     error::{self, Error},
     Hub,
@@ -15,6 +16,7 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent};
 pub struct Desktop {
     pub hub: Hub,
     notice: AtomicBool,
+    offline: bool,
 }
 
 #[tauri::command]
@@ -30,6 +32,14 @@ async fn hub_request(app: AppHandle, request: Value) -> Value {
         );
     }
     let method = request["method"].as_str().unwrap_or("").to_owned();
+    if workstation::METHODS.contains(&method.as_str()) {
+        let offline = app.state::<Desktop>().offline;
+        let operation = method.clone();
+        let result = tauri::async_runtime::spawn_blocking(move || workstation::request(&operation, offline)).await
+            .unwrap_or_else(|e| Err(Error::new("host_error", e.to_string(), "操作未完成，请重试。")));
+        if let Err(error) = &result { app.state::<Desktop>().hub.record(&method, json!({"error":error})); }
+        return error::response(id, result);
+    }
     if method == "app.takeActivationNotice" {
         return error::response(
             id,
@@ -55,6 +65,7 @@ async fn hub_request(app: AppHandle, request: Value) -> Value {
             if method == "hub.describe" && response.get("result").is_some() {
                 let methods = response["result"]["methods"].as_array_mut().unwrap();
                 methods.extend(updates::METHODS.iter().map(|s| json!(s)));
+                methods.extend(workstation::METHODS.iter().map(|s| json!(s)));
                 methods.push(json!("app.takeActivationNotice"));
                 response["result"]["desktop"] =
                     json!({"version":app.package_info().version.to_string(),"updater":true});
@@ -126,6 +137,7 @@ pub fn run() {
             app.manage(Desktop {
                 hub,
                 notice: AtomicBool::new(false),
+                offline,
             });
             updates::initialize(app.handle())?;
             Ok(())

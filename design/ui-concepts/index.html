@@ -1,0 +1,40 @@
+<!doctype html>
+<!--
+DeskHub 视觉提案 / 2026-10-21。独立离线样稿，不调用设备或生产接口。
+灰阶骨架：设备导航 → 当前任务 → 操作对象 → 对象编辑器。
+主内容：当前设备、选中的键 / 宏步骤；次内容：配置与读数；辅助：连接与解释。
+唯一主要动作：编辑页的保存。总览以直接控制为主，不人为添加 CTA。
+三套共用设备与任务，各自组织页面；A 是仪器面板，B 是平面图形构图，C 是数字控制区。
+字体 12/14/16/20/24/30/36/48，间距 4/8/12/16/24/32/48，常规/强调两组字重。
+色彩来自 refactoring-ui 调色脚本与现有项目 tokens；所有新增样稿文件位于本目录。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeskHub · 三套视觉提案</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="directions.css">
+  <script defer src="layout.js"></script>
+  <script defer src="directions.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="review-bar" aria-label="设计稿切换">
+    <a class="review-title" href="compare.html">DeskHub <span>视觉提案</span></a>
+    <nav class="style-picker" aria-label="视觉语言">
+      <button data-style="industrial"><span>A</span> 精密工业</button>
+      <button data-style="graphic"><span>B</span> 现代平面</button>
+      <button data-style="future"><span>C</span> 数字未来</button>
+    </nav>
+    <div class="review-tools">
+      <label><input id="grayscale" type="checkbox">灰阶对照</label>
+      <button id="spec-open">控件规范</button>
+      <span class="prototype-label">交互样稿 · 模拟数据</span>
+    </div>
+  </header>
+  <div id="app" class="app" data-theme="industrial"></div>
+  <div id="announce" class="sr-only" role="status" aria-live="polite"></div>
+</body>
+</html>

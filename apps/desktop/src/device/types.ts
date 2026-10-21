@@ -107,6 +107,7 @@ export interface KeyboardOptionsValue {
 
 export interface KeyboardView {
   id: string;
+  generation: number;
   label: string;
   phase: "stopped" | "starting" | "connecting" | "waiting" | "connected" | "disconnected" | "faulted";
   offline: boolean;

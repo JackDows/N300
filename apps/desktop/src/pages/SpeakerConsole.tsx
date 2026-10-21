@@ -4,7 +4,7 @@ import { EqCurve } from "../components/EqCurve";
 import { ExpandRow, Group, HoldRow, Row, Toggle } from "../components/List";
 import { PresetPicker } from "../components/PresetPicker";
 import { Segmented } from "../components/Segmented";
-import { VolumeDial } from "../components/VolumeDial";
+import { ValueSlider } from "../components/ValueSlider";
 import {
   IconCheck,
   IconClose,
@@ -110,13 +110,13 @@ export function SpeakerConsole({ onClose }: { onClose(): void }) {
   const [timerOpen, setTimerOpen] = useState(false);
 
   const connected = phase === "connected";
-  const volume = values.volume;
-  const input = values.input;
-  const preset = values.preset;
-  const eq = values.eq;
-  const led = values.led?.value;
-  const idle = values.idle_shutdown?.value;
-  const timer = values.timer?.value;
+  const volume = connected ? values.volume : undefined;
+  const input = connected ? values.input : undefined;
+  const preset = connected ? values.preset : undefined;
+  const eq = connected ? values.eq : undefined;
+  const led = connected ? values.led?.value : undefined;
+  const idle = connected ? values.idle_shutdown?.value : undefined;
+  const timer = connected ? values.timer?.value : undefined;
 
   const customChoice = preset?.choices.find(
     (c) => c.value === "customized" || c.value === "audiophile",
@@ -149,16 +149,15 @@ export function SpeakerConsole({ onClose }: { onClose(): void }) {
           {/* 左翼：阻尼旋钮与输入源切换 */}
           <div className="speaker-studio__left">
             <div className="speaker-studio__dial-wrap">
-              <VolumeDial
-                value={volume?.value ?? null}
+              <div className="speaker-volume-readout"><strong>{connected?volume?.value??"—":"—"}</strong><span>/ {volume?.max??16}</span></div>
+              <ValueSlider label="音量"
+                value={connected?volume?.value ?? null:null}
                 min={volume?.min ?? 0}
                 max={volume?.max ?? 16}
                 step={volume?.step ?? 1}
-                loading={phase === "connecting" || phase === "starting"}
-                statusLabel={
-                  phase === "waiting" ? "等待重试" : phase === "disconnected" ? "未连接" : undefined
-                }
-                onCommit={(v) => void set("volume", v)}
+                disabled={!connected}
+                showValue={false}
+                onCommit={(v) => set("volume", v)}
               />
             </div>
 

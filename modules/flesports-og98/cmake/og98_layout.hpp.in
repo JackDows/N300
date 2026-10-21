@@ -1,0 +1,2 @@
+#pragma once
+namespace og98 { inline constexpr auto keyLayoutJson = R"layout(@OG98_LAYOUT_JSON@)layout"; }

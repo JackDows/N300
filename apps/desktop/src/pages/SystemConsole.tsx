@@ -5,6 +5,7 @@ import { getTransport, isTauri } from "../device/transport";
 import { recordUiError } from "../diagnostics";
 import { UpdatePanel } from "../updates/UpdatePanel";
 import { useMouse } from "../device/MouseContext";
+import { ModulePanel } from "../updates/ModulePanel";
 
 export function SystemConsole({ onClose, onSelectDevice }: {
   onClose(): void;
@@ -49,6 +50,7 @@ export function SystemConsole({ onClose, onSelectDevice }: {
         </div>)}
       </div>
       <UpdatePanel />
+      <ModulePanel />
       <div className="diagnostics-row">
         <div className="diagnostics-row__head"><span>问题排查</span>
           <button className="btn-ghost" disabled={!isTauri || exporting} onClick={exportLogs}>{exporting ? "正在导出…" : "导出日志"}</button>

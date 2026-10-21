@@ -1,67 +1,18 @@
-/*
- * 设计变量 —— 换主题只需要改这个文件。
- * 颜色分三层：背景 / 表面 / 文字，强调色只用于“当前值”和“正在发生的事”。
- */
+/* DeskHub B: approved flat graphic language. Existing semantic token names are retained. */
 :root {
-  /* 背景 */
-  --bg: #0c0f13;
-  --bg-elev: #191d23;
-  --bg-sunken: #111419;
-
-  /* 表面（叠加在背景上的半透明层） */
-  --surface: rgba(255, 255, 255, 0.025);
-  --surface-hover: rgba(255, 255, 255, 0.055);
-  --surface-active: rgba(255, 255, 255, 0.085);
-  --hairline: rgba(214, 224, 236, 0.08);
-  --hairline-strong: rgba(214, 224, 236, 0.16);
-
-  /* 文字 */
-  --text: #edf0f2;
-  --text-2: #aab0b8;
-  --text-3: #818a96;
-
-  /* 强调色：香槟琥珀 */
-  --accent: #dfb77b;
-  --accent-hi: #f0d7ae;
-  --accent-lo: #ac7f47;
-  --accent-soft: rgba(223, 183, 123, 0.1);
-  --accent-glow: rgba(223, 183, 123, 0.22);
-  --on-accent: #1d1409;
-  --keyboard-accent: #8bcac3;
-  --control-accent: var(--accent);
-  --control-soft: var(--accent-soft);
-
-  /* 状态 */
-  --ok: #8ac8a6;
-  --warn: #e8ad55;
-  --danger: #f08a7e;
-  --danger-soft: rgba(240, 138, 126, 0.14);
-
-  /* 形状 */
-  --radius-xs: 8px;
-  --radius-s: 10px;
-  --radius-m: 14px;
-  --radius-l: 20px;
-  --radius-pill: 999px;
-
-  /* 阴影 */
-  --shadow-float: 0 12px 32px -8px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.3);
-  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-
-  /* 动效 */
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
-  --dur-fast: 140ms;
-  --dur: 240ms;
-  --dur-slow: 420ms;
-
-  /* 字体 */
-  --font: "Segoe UI Variable Text", "Segoe UI", "HarmonyOS Sans SC", "MiSans", "PingFang SC",
-    "Microsoft YaHei UI", system-ui, sans-serif;
-  --font-display: "Segoe UI Variable Display", "Segoe UI", "HarmonyOS Sans SC", "MiSans",
-    "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
-  --font-mono: "Cascadia Code", Consolas, monospace;
-
-  /* 窗口 */
-  --titlebar-h: 44px;
+ --bg:#fafafa;--bg-elev:#fdfdfd;--bg-sunken:#eeeeee;--floating-surface:#fdfdfd;
+ --surface:#fdfdfd;--surface-hover:#e5e5e5;--surface-active:#dbdbdb;
+ --hairline:#dbdbdb;--hairline-strong:#a8a8a8;
+ --text:#181818;--text-2:#555555;--text-3:#626262;
+ --accent:#181818;--accent-hi:#404040;--accent-lo:#555555;--accent-soft:#e5e5e5;--accent-glow:transparent;--on-accent:#fafafa;
+ --keyboard-accent:var(--accent);--control-accent:var(--accent);--control-soft:var(--accent-soft);
+ --ok:#256342;--warn:#805100;--danger:#ad2929;--danger-soft:#fbe9e9;
+ --radius-xs:0px;--radius-s:0px;--radius-m:0px;--radius-l:0px;--radius-pill:999px;
+ --shadow-float:0 8px 24px #0002;--shadow-inset:none;
+ --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;
+ --type-caption:12px;--type-body:14px;--type-title:16px;--control-height:36px;
+ --ease:cubic-bezier(.2,.8,.2,1);--ease-spring:var(--ease);--dur-fast:140ms;--dur:180ms;--dur-slow:240ms;
+ --font:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",system-ui,sans-serif;
+ --font-display:"Segoe UI Variable Display",var(--font);--font-mono:"Cascadia Code",Consolas,monospace;
+ --titlebar-h:36px;
 }

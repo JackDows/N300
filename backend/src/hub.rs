@@ -176,7 +176,12 @@ impl Hub {
         emit: Events,
     ) -> Result<Self> {
         let lock = lock_directory(&data)?;
-        let data = data.canonicalize()?;
+        // Windows may expose an AppData directory in the user profile while
+        // redirecting its files to a packaged application's store. The lock
+        // has actually been opened, so its resolved parent is the data store
+        // used by this process, including for later log/download renames.
+        let data = data.join("backend.lock").canonicalize()?
+            .parent().expect("Backend lock directory").to_path_buf();
         let logger = Logger::new(&data.join("logs"))?;
         let update_config = UpdateConfig::load()?;
         let downloads = Downloads::open(

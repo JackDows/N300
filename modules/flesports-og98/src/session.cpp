@@ -52,6 +52,7 @@ Json Session::get(const std::string& setting) {
         return {{"bluetoothSeconds", p[1] | (p[2] << 8)}, {"wirelessSeconds", p[3] | (p[4] << 8)},
                 {"bluetoothDeepSeconds", p[5] | (p[6] << 8)}, {"wirelessDeepSeconds", p[7] | (p[8] << 8)}};
     }
+    if (setting == "keymap" || setting == "fnKeymap") return receiver_->keymap(setting == "fnKeymap");
     if (setting == "keyboardOptions") {
         const auto profile = receiver_->query(0x85)[1];
         const auto p = receiver_->query(0x86, profile);
@@ -74,11 +75,11 @@ Json Session::dispatch(const std::string& method, const Json& params) {
         }
         receiver_.reset(); devicePath_.clear();
         offline_ = params.value("offline", false); logPath_ = logFile; logError_.clear();
-        log("session.initialize", {{"offline", offline_}, {"version", "0.1.0"}});
-        return {{"version", "0.1.0"}, {"offline", offline_}};
+        log("session.initialize", {{"offline", offline_}, {"version", "0.2.0"}});
+        return {{"version", "0.2.0"}, {"offline", offline_}};
     }
     if (method == "describe") return {
-        {"version", "0.1.0"}, {"apiVersion", 1}, {"transport", "Windows USB HID / 2.4GHz"},
+        {"version", "0.2.0"}, {"apiVersion", 1}, {"transport", "Windows USB HID / 2.4GHz"},
         {"get", {"firmware", "profile", "reportRate", "lighting", "debounce", "sleep", "autoOS", "keyboardOptions"}},
         {"set", {{"brightness", {{"min", 0}, {"max", 4}, {"readback", true}}}}},
         {"modelDetection", "candidate_only; connect requires model=OG98"}};
@@ -120,6 +121,15 @@ Json Session::dispatch(const std::string& method, const Json& params) {
         for (const auto* name : {"firmware", "profile", "reportRate", "lighting", "debounce", "sleep", "autoOS", "keyboardOptions"})
             status[name] = get(name);
         return status;
+    }
+    if (method == "setKey") {
+        if (!receiver_) throw Error("not_connected", "No receiver session", "请先连接键盘。");
+        return receiver_->setKey(params);
+    }
+    if (method == "set" && textParam(params, "name") == "keyboardOptions") {
+        if (!receiver_) throw Error("not_connected", "No receiver session", "请先连接键盘。");
+        const auto result = receiver_->setOptions(params.value("value", Json::object()));
+        return {{"after", get("keyboardOptions")}, {"verified", result["verified"]}};
     }
     if (method == "set") {
         if (textParam(params, "name") != "brightness")

@@ -1,0 +1,83 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "errors": [],
+  "pages": [
+    {
+      "style": "industrial",
+      "view": "overview",
+      "keyCount": 0
+    },
+    {
+      "style": "industrial",
+      "view": "keyboard",
+      "keyCount": 99
+    },
+    {
+      "style": "industrial",
+      "view": "macros",
+      "keyCount": 0
+    },
+    {
+      "style": "industrial",
+      "view": "specs",
+      "keyCount": 0
+    },
+    {
+      "style": "graphic",
+      "view": "overview",
+      "keyCount": 0
+    },
+    {
+      "style": "graphic",
+      "view": "keyboard",
+      "keyCount": 99
+    },
+    {
+      "style": "graphic",
+      "view": "macros",
+      "keyCount": 0
+    },
+    {
+      "style": "graphic",
+      "view": "specs",
+      "keyCount": 0
+    },
+    {
+      "style": "future",
+      "view": "overview",
+      "keyCount": 0
+    },
+    {
+      "style": "future",
+      "view": "keyboard",
+      "keyCount": 99
+    },
+    {
+      "style": "future",
+      "view": "macros",
+      "keyCount": 0
+    },
+    {
+      "style": "future",
+      "view": "specs",
+      "keyCount": 0
+    }
+  ],
+  "interactions": [
+    "industrial: key binding/save/layer/offline/theme persistence passed",
+    "industrial: macro edit/reorder/empty/record/save passed",
+    "industrial: independent overview controls passed",
+    "graphic: key binding/save/layer/offline/theme persistence passed",
+    "graphic: macro edit/reorder/empty/record/save passed",
+    "graphic: independent overview controls passed",
+    "future: key binding/save/layer/offline/theme persistence passed",
+    "future: macro edit/reorder/empty/record/save passed",
+    "future: independent overview controls passed",
+    "comparison page: view switch and entry link passed"
+  ],
+  "overflow": [],
+  "result": "passed"
+}

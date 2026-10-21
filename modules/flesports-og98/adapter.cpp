@@ -42,10 +42,13 @@ public:
     Json describe() const override {
         Json capabilities = Json::array();
         for (const auto& [capability, property] : properties) {
-            Json c{{"id", capability}, {"read", true}, {"write", capability == "lighting.brightness"}, {"valueType", "device-defined"}};
+            Json c{{"id", capability}, {"read", true}, {"write", capability == "lighting.brightness" || capability == "keyboard.options"}, {"valueType", "device-defined"}};
             if (capability == "lighting.brightness") { c["valueType"] = "integer"; c["min"] = 0; c["max"] = 4; c["step"] = 1; }
             capabilities.push_back(c);
         }
+        capabilities.push_back({{"id", "keyboard.keymap"}, {"read", true}, {"valueType", "device-defined"}});
+        capabilities.push_back({{"id", "keyboard.fnKeymap"}, {"read", true}, {"valueType", "device-defined"}});
+        capabilities.push_back({{"id", "keyboard.keymap.set"}, {"invoke", true}});
         return {{"id", DESKHUB_MODULE_ID}, {"version", DESKHUB_MODULE_VERSION}, {"protocolVersion", 1}, {"capabilities", capabilities}, {"simulation", true}};
     }
     Json execute(const std::string& method, const Json& params) override {
@@ -80,6 +83,17 @@ public:
         if (method == "device.snapshot") return connected_ ? refresh() : snapshot();
         if (!connected_) throw Error("not_connected", "Device is not connected", "请先连接键盘。");
         const auto capability = stringParam(params, "capability");
+        if (method == "capability.read" && (capability == "keyboard.keymap" || capability == "keyboard.fnKeymap"))
+            return reading(call("get", {{"name", capability == "keyboard.keymap" ? "keymap" : "fnKeymap"}}));
+        if (method == "capability.invoke" && capability == "keyboard.keymap.set") {
+            const auto result = call("setKey", params.value("arguments", Json::object()));
+            publish(); return result;
+        }
+        if (method == "capability.write" && capability == "keyboard.options") {
+            const auto result = call("set", {{"name", "keyboardOptions"}, {"value", params.value("value", Json::object())}});
+            values_[capability] = reading(result["after"]); publish();
+            auto value = values_[capability]; value["verified"] = result["verified"]; return value;
+        }
         if (method == "capability.read" && properties.contains(capability)) {
             auto value = valueFor(capability, call("get", {{"name", properties.at(capability)}}));
             values_[capability] = value; publish(); return value;

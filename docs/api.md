@@ -51,12 +51,14 @@
 | 模块 | 能力 |
 | --- | --- |
 | N300 | audio.volume、audio.input、audio.preset、audio.eq、lighting.enabled、device.idleShutdown、device.timer、device.name、device.firmware；invoke：audio.eq.setBand、device.powerOff |
-| OG98 | device.firmware、keyboard.profile、keyboard.reportRate、lighting.state、lighting.brightness、keyboard.debounce、keyboard.sleep、keyboard.autoOS、keyboard.options；目前只有亮度可写 |
-| Logitech G HUB | device.info、device.battery；可写：device.onboardMode、mouse.dpiStage、mouse.reportRate、mouse.profile，实际可写性由读取结果的 writable 决定 |
+| OG98 | device.firmware、keyboard.profile、keyboard.reportRate、lighting.state、lighting.brightness、keyboard.debounce、keyboard.sleep、keyboard.autoOS、keyboard.options、keyboard.keymap、keyboard.fnKeymap；亮度及部分 options 可写，invoke：keyboard.keymap.set |
+| Logitech G HUB | device.info、device.battery、mouse.bindings；可写：device.onboardMode、mouse.dpiStage、mouse.reportRate、mouse.profile，实际可写性由读取结果的 writable 决定；invoke：mouse.bindings.set、macros.list/get/save/remove |
 
 G HUB 的 DPI、回报率和板载配置通过读取结果的 `choices` 生成选项；DPI 的 `value` 是档位 ID 字符串，显示值取 `label`，不能把 DPI 数字直接当作档位。板载模式只读取默认 DPI 和回报率，允许切换已启用的板载配置；软件模式允许选择已有 DPI 档位和回报率。详见 [鼠标接口与使用方式](../modules/logitech-ghub/README.md)。
 
 N300 EQ 调用示例：`devices.invoke`，`capability:"audio.eq.setBand"`，`arguments:{band:0,gain:2}`。关机的返回值可能标明状态未验证，不能仅凭请求完成推断硬件已经关机。
+
+键位、Fn 层、宏动作与按键绑定的完整结构、约束及示例见 [控制接口](controls.md)。大对象按需读取；原生快照不在每次刷新时携带完整键位和宏库。
 
 ## 真实设备绑定
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(logitech_ghub VERSION 0.1.0 LANGUAGES CXX)
+project(logitech_ghub VERSION 0.2.0 LANGUAGES CXX)
 if(NOT WIN32 OR NOT MSVC OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(FATAL_ERROR "Use Windows x64 and Visual Studio 2022 C++ tools.")
 endif()
@@ -14,7 +14,7 @@ FetchContent_Declare(nlohmann_json
   URL_HASH SHA256=42f6e95cad6ec532fd372391373363b62a14af6d771056dbfc86160e6dfff7aa
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 FetchContent_MakeAvailable(nlohmann_json)
-add_library(ghub_engine STATIC src/client.cpp src/settings.cpp src/simulator.cpp)
+add_library(ghub_engine STATIC src/client.cpp src/settings.cpp src/simulator.cpp src/macros.cpp)
 target_include_directories(ghub_engine PUBLIC src ../sdk/include)
 target_link_libraries(ghub_engine PUBLIC nlohmann_json::nlohmann_json winhttp)
 target_compile_definitions(ghub_engine PUBLIC NOMINMAX WIN32_LEAN_AND_MEAN)

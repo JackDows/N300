@@ -38,11 +38,16 @@ class Receiver {
     Trace trace_;
     void send(Payload, Checksum);
     InReport receive();
+    Payload transact(Payload request, bool rawReply = false);
+    Payload keyPage(bool fn, uint8_t profile, unsigned page);
 public:
     explicit Receiver(std::unique_ptr<FeatureIo> io, Trace trace = {});
     Payload query(uint8_t command, uint8_t profile = 0);
     // A setting write is sent once. Only its readback is retried.
     Json setBrightness(int value);
+    Json keymap(bool fn = false);
+    Json setKey(const Json& parameters);
+    Json setOptions(const Json& value);
 };
 std::unique_ptr<FeatureIo> makeSimulator();
 Json enumerateDevices();

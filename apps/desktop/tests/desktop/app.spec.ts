@@ -36,8 +36,9 @@ test('keyboard and speaker remain independent inside the actual desktop process'
   const speaker=await app.request('devices.get',{deviceId:'speaker'});
   await app.request('devices.add',{id:'keyboard',moduleId:'flesports-og98',offline:true});await app.request('devices.connect',{deviceId:'keyboard'});
   await app.request('devices.write',{deviceId:'keyboard',capability:'lighting.brightness',value:2});
-  await app.page.getByRole('button',{name:'关闭浮窗'}).click();
+  await app.page.getByRole('button',{name:'返回总览'}).click();
   await app.page.getByRole('button',{name:'键盘设置',exact:true}).click();
+  await app.page.getByRole('tab',{name:'灯光',exact:true}).click();
   await expect(app.page.getByRole('radio',{name:'柔和',exact:true})).toBeChecked();
   await app.page.getByRole('radio',{name:'明亮',exact:true}).click();
   await until(async()=>(await app.request('devices.read',{deviceId:'keyboard',capability:'lighting.brightness'})).value===3);
@@ -45,12 +46,29 @@ test('keyboard and speaker remain independent inside the actual desktop process'
   expect((await app.request('devices.get',{deviceId:'speaker'})).processId).toBe(speaker.processId);
   expect((await app.request('devices.read',{deviceId:'speaker',capability:'audio.volume'})).value).toBe(10);
 });
+test('key editor and macro recorder use the native device modules',async()=>{
+  await app.page.getByRole('tab',{name:'按键',exact:true}).click();
+  await expect(app.page.getByRole('button',{name:'按键 F12',exact:true})).toBeEnabled();
+  await app.page.getByRole('button',{name:'按键 F12',exact:true}).click();await app.page.getByLabel('目标按键',{exact:true}).selectOption('104');await app.page.getByRole('button',{name:'保存按键',exact:true}).click();
+  await expect(app.page.getByText('当前：F13',{exact:true})).toBeVisible();
+  const keys=await app.request('devices.read',{deviceId:'keyboard',capability:'keyboard.keymap'});expect(keys.value.keys.find((k:any)=>k.label==='F12').binding.raw).toEqual([0,0,104,0]);
+  await app.page.getByRole('button',{name:'恢复原键',exact:true}).click();await expect(app.page.getByText('当前：F12',{exact:true})).toBeVisible();
+  await app.page.getByRole('button',{name:'返回总览'}).click();await app.page.getByRole('button',{name:'鼠标设置',exact:true}).click();
+  await app.page.getByRole('tab',{name:'宏',exact:true}).click();await expect(app.page.getByRole('button',{name:'录制键盘',exact:true})).toBeEnabled();
+  await app.page.getByLabel('宏名称',{exact:true}).fill('桌面验收');await app.page.getByRole('button',{name:'录制键盘',exact:true}).click();await app.page.keyboard.press('Control+c');await app.page.keyboard.press('Escape');
+  await app.page.getByRole('button',{name:'保存宏',exact:true}).click();await expect(app.page.getByText('宏已保存，可在按键页绑定使用。',{exact:true})).toBeVisible();
+  const library=await app.request('devices.invoke',{deviceId:'mouse',capability:'macros.list'});expect(library.items.some((m:any)=>m.name==='桌面验收')).toBe(true);
+  await app.page.getByRole('tab',{name:'按键',exact:true}).click();const row=app.page.locator('.mouse-binding').filter({has:app.page.getByText('后退侧键',{exact:true})});await row.getByRole('combobox').selectOption({label:'桌面验收'});await row.getByRole('button',{name:'应用',exact:true}).click();await expect(row.locator('.mouse-binding__name span')).toHaveText('桌面验收');
+  await row.getByRole('button',{name:'恢复默认',exact:true}).click();await expect(row.locator('.mouse-binding__name span')).toHaveText('后退');
+  await app.page.getByRole('tab',{name:'宏',exact:true}).click();await app.page.getByRole('button',{name:'删除宏',exact:true}).click();await expect(app.page.getByRole('button',{name:'桌面验收',exact:true})).toHaveCount(0);
+});
+
 test('mouse controls use the native module and replacement leaves both other devices running',async()=>{
   await until(async()=>(await app.request('devices.get',{deviceId:'mouse'})).phase==='connected');
   const peers=await Promise.all(['speaker','keyboard'].map(deviceId=>app.request('devices.get',{deviceId})));
-  await app.page.getByRole('button',{name:'关闭浮窗'}).click();
+  await app.page.getByRole('button',{name:'返回总览'}).click();
   await app.page.getByRole('button',{name:'鼠标设置',exact:true}).click();
-  await app.page.getByRole('radio',{name:'800',exact:true}).click();
+  await app.page.getByRole('tab',{name:'灵敏度',exact:true}).click();await app.page.getByRole('radio',{name:'800',exact:true}).click();
   await until(async()=>(await app.request('devices.read',{deviceId:'mouse',capability:'mouse.dpiStage'})).value==='1');
   await app.page.getByRole('combobox',{name:'回报率',exact:true}).selectOption('500');
   await until(async()=>(await app.request('devices.read',{deviceId:'mouse',capability:'mouse.reportRate'})).value===500);
@@ -88,8 +106,8 @@ test('second launch activates the existing host and diagnostics export includes 
   const second=spawn(executable,['--offline'],{env:app.env,stdio:'ignore',windowsHide:true});
   await until(()=>second.exitCode!==null);expect(second.exitCode).toBe(0);
   await expect(app.page.getByText('程序已在运行',{exact:true})).toBeVisible();
-  await app.page.getByRole('button',{name:'关闭浮窗'}).click();
-  await app.page.getByRole('button',{name:'显示器与系统中枢'}).click();
+  await app.page.getByRole('button',{name:'返回总览'}).click();
+  await app.page.getByRole('button',{name:'设备与应用'}).click();
   await app.page.getByRole('button',{name:'导出日志'}).click();
   const location=app.page.getByRole('textbox',{name:'日志保存位置'});
   await expect(location).toBeVisible();

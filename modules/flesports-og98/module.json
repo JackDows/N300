@@ -1,7 +1,7 @@
 {
   "id":"flesports-og98",
   "name":"F·L OG98",
-  "version":"0.1.0",
+  "version":"0.2.0",
   "protocolVersion":1,
   "executable":"deskhub-og98.exe",
   "transport":["hid-2.4g"],

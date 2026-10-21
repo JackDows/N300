@@ -25,7 +25,7 @@ struct Client {
     }
 };
 void help() {
-    std::cout << "OG98 0.1.0 - Windows control foundation\n"
+    std::cout << "OG98 0.2.0 - Windows control foundation\n"
                  "og98 [--offline] [--model OG98] [--device PATH] [--log PATH|--no-log] COMMAND\n"
                  "Commands: scan, status, get NAME, brightness 0..4, shell, serve, describe\n"
                  "Real-device status/get/brightness require --model OG98.\n"

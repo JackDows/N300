@@ -1,4 +1,5 @@
 #include "settings.hpp"
+#include "macros.hpp"
 #include <iostream>
 #include <stdexcept>
 using namespace ghub;
@@ -57,6 +58,20 @@ int main() {
         Classic changedProfile; changedProfile.switchProfile = true;
         rejects([&] { writeSetting(changedProfile, device, "mouse.dpiStage", "1"); }, "profile_changed");
         check(changedProfile.mutations == 0, "Profile change must prevent stale write");
-        std::cout << "G HUB settings, modes, validation and preservation passed\n";
+        auto macros = simulator(); auto mouse = mice(*macros).at(0);
+        check(readBindings(*macros,mouse)["buttons"].size() == 10, "Button and G-Shift bindings");
+        Json spec{{"name","测试宏"},{"mode","once"},{"steps",Json::array({{{"type","key"},{"code",115},{"down",true}},{{"type","delay"},{"ms",20}},{{"type","key"},{"code",115},{"down",false}}})}};
+        const auto saved = macroOperation(*macros,mouse,"macros.save",{{"macro",spec},{"profileId","default"}});
+        check(saved["verified"] == true && saved["editable"] == true,"Macro creation and readback");
+        const auto id = saved["id"];
+        macroOperation(*macros,mouse,"mouse.bindings.set",{{"slotId","demo_g4_m1"},{"cardId",id},{"profileId","default"}});
+        rejects([&] { macroOperation(*macros,mouse,"macros.remove",{{"id",id}}); },"macro_in_use");
+        rejects([&] { macroOperation(*macros,mouse,"mouse.bindings.set",{{"slotId","another_g4_m1"},{"cardId",id}}); },"invalid_argument");
+        rejects([&] { macroOperation(*macros,mouse,"macros.save",{{"macro",spec},{"profileId","another"}}); },"profile_changed");
+        macroOperation(*macros,mouse,"mouse.bindings.set",{{"slotId","demo_g4_m1"},{"restoreDefault",true}});
+        check(macroOperation(*macros,mouse,"macros.remove",{{"id",id}})["removed"] == true,"Unassigned macro removal");
+        rejects([&] { macroOperation(*macros,mouse,"macros.remove",{{"id","button-1"}}); },"setting_read_only");
+        spec["steps"].erase(2); rejects([&] { encodeSequence(spec); },"invalid_argument");
+        std::cout << "G HUB settings, macros, bindings, modes, validation and preservation passed\n";
     } catch (const std::exception& e) { std::cerr << e.what() << '\n'; return 1; }
 }

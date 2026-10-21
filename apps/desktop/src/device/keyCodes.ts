@@ -1,0 +1,10 @@
+// USB keyboard usages, shared by the keyboard editor and the explicit macro recorder.
+const names: Record<number, string> = {40:"Enter",41:"Esc",42:"Backspace",43:"Tab",44:"Space",45:"−",46:"=",47:"[",48:"]",49:"\\",51:";",52:"'",53:"`",54:",",55:".",56:"/",57:"Caps Lock",70:"Print Screen",71:"Scroll Lock",72:"Pause",73:"Insert",74:"Home",75:"Page Up",76:"Delete",77:"End",78:"Page Down",79:"→",80:"←",81:"↓",82:"↑",83:"Num Lock",84:"Num /",85:"Num *",86:"Num −",87:"Num +",88:"Num Enter",99:"Num .",101:"Menu",224:"左 Ctrl",225:"左 Shift",226:"左 Alt",227:"左 Win",228:"右 Ctrl",229:"右 Shift",230:"右 Alt",231:"右 Win"};
+const codes: Record<string, number> = {Enter:40,Escape:41,Backspace:42,Tab:43,Space:44,Minus:45,Equal:46,BracketLeft:47,BracketRight:48,Backslash:49,Semicolon:51,Quote:52,Backquote:53,Comma:54,Period:55,Slash:56,CapsLock:57,PrintScreen:70,ScrollLock:71,Pause:72,Insert:73,Home:74,PageUp:75,Delete:76,End:77,PageDown:78,ArrowRight:79,ArrowLeft:80,ArrowDown:81,ArrowUp:82,NumLock:83,NumpadDivide:84,NumpadMultiply:85,NumpadSubtract:86,NumpadAdd:87,NumpadEnter:88,NumpadDecimal:99,ContextMenu:101,ControlLeft:224,ShiftLeft:225,AltLeft:226,MetaLeft:227,ControlRight:228,ShiftRight:229,AltRight:230,MetaRight:231};
+for (let i=0;i<26;i++) { names[4+i]=String.fromCharCode(65+i); codes[`Key${names[4+i]}`]=4+i; }
+for (let i=0;i<10;i++) { names[30+i]=String((i+1)%10); codes[`Digit${names[30+i]}`]=30+i; names[89+i]=`Num ${(i+1)%10}`; codes[`Numpad${(i+1)%10}`]=89+i; }
+for (let i=0;i<24;i++) { const usage=i<12?58+i:104+i-12; names[usage]=`F${i+1}`; codes[`F${i+1}`]=usage; }
+export const keyChoices = Object.entries(names).map(([code,label])=>({code:Number(code),label}));
+export const keyName = (code:number) => names[code] ?? "自定义键";
+export const keyCode = (code:string) => codes[code];
+export const mediaChoices = [{code:205,label:"播放 / 暂停"},{code:182,label:"上一曲"},{code:181,label:"下一曲"},{code:183,label:"停止播放"},{code:226,label:"静音"},{code:234,label:"音量 −"},{code:233,label:"音量 +"},{code:402,label:"计算器"},{code:387,label:"媒体播放器"}];

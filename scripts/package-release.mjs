@@ -16,8 +16,10 @@ if(mode==='app'){
   writeFileSync(join(directory,'SHA256SUMS'),`${artifact.sha256}  ${filename}\n`);
   console.log(`Signed DeskHub ${version} release ready: ${directory}`);
 }else if(mode==='modules'){
-  const selected=option('--module');
-  const ids=readdirSync(resolve(root,'modules'),{withFileTypes:true}).filter(d=>d.isDirectory()&&existsSync(resolve(root,'modules',d.name,'module.json'))&&(!selected||selected===d.name)).map(d=>d.name);
+  const selected=args.flatMap((value,index)=>value==='--module'?[args[index+1]]:[]);
+  if(selected.some(id=>!id||! /^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(id)))throw new Error('Each --module requires a module ID');
+  const ids=readdirSync(resolve(root,'modules'),{withFileTypes:true}).filter(d=>d.isDirectory()&&existsSync(resolve(root,'modules',d.name,'module.json'))&&(!selected.length||selected.includes(d.name))).map(d=>d.name);
+  if(selected.some(id=>!ids.includes(id)))throw new Error('Unknown selected module');
   if(!ids.length)throw new Error('No matching module');
   const directory=resolve(root,'artifacts/module-releases');mkdirSync(directory,{recursive:true});
   const modules=[];

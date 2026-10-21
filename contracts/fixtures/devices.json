@@ -223,7 +223,7 @@
         "id": "keyboard.options",
         "read": true,
         "valueType": "device-defined",
-        "write": false
+        "write": true
       },
       {
         "id": "keyboard.profile",
@@ -257,6 +257,20 @@
         "read": true,
         "valueType": "device-defined",
         "write": false
+      },
+      {
+        "id": "keyboard.keymap",
+        "read": true,
+        "valueType": "device-defined"
+      },
+      {
+        "id": "keyboard.fnKeymap",
+        "read": true,
+        "valueType": "device-defined"
+      },
+      {
+        "id": "keyboard.keymap.set",
+        "invoke": true
       }
     ],
     "error": null,
@@ -264,7 +278,7 @@
     "id": "keyboard",
     "label": "桌面键盘",
     "moduleId": "flesports-og98",
-    "moduleVersion": "0.1.0",
+    "moduleVersion": "0.2.0",
     "offline": true,
     "phase": "connected",
     "processId": null,
@@ -340,6 +354,7572 @@
           "speedRaw": 4,
           "userPictureSlot": 2
         }
+      },
+      "keyboard.keymap": {
+        "value": {
+          "keys": [
+            {
+              "binding": {
+                "key": 41,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  41,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 41,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  41,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 41,
+              "label": "Esc",
+              "slot": 0,
+              "w": 23,
+              "x": 117,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 58,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  58,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 58,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  58,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 58,
+              "label": "F1",
+              "slot": 6,
+              "w": 23,
+              "x": 159,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 59,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  59,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 59,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  59,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 59,
+              "label": "F2",
+              "slot": 12,
+              "w": 23,
+              "x": 192,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 60,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  60,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 60,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  60,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 60,
+              "label": "F3",
+              "slot": 18,
+              "w": 23,
+              "x": 225,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 61,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  61,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 61,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  61,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 61,
+              "label": "F4",
+              "slot": 24,
+              "w": 23,
+              "x": 259,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 62,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  62,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 62,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  62,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 62,
+              "label": "F5",
+              "slot": 30,
+              "w": 23,
+              "x": 300,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 63,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  63,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 63,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  63,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 63,
+              "label": "F6",
+              "slot": 36,
+              "w": 23,
+              "x": 333,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 64,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  64,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 64,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  64,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 64,
+              "label": "F7",
+              "slot": 42,
+              "w": 23,
+              "x": 366,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 65,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  65,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 65,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  65,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 65,
+              "label": "F8",
+              "slot": 48,
+              "w": 23,
+              "x": 400,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 66,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  66,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 66,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  66,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 66,
+              "label": "F9",
+              "slot": 54,
+              "w": 23,
+              "x": 441,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 67,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  67,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 67,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  67,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 67,
+              "label": "F10",
+              "slot": 60,
+              "w": 23,
+              "x": 474,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 68,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  68,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 68,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  68,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 68,
+              "label": "F11",
+              "slot": 66,
+              "w": 23,
+              "x": 507,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 69,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  69,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 69,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  69,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 69,
+              "label": "F12",
+              "slot": 72,
+              "w": 23,
+              "x": 541,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 70,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  70,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 70,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  70,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 70,
+              "label": "Print\nScreen",
+              "slot": 78,
+              "w": 23,
+              "x": 583,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 76,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  76,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 76,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  76,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 76,
+              "label": "Delete",
+              "slot": 84,
+              "w": 23,
+              "x": 631,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 73,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  73,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 73,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  73,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 73,
+              "label": "Insert",
+              "slot": 90,
+              "w": 23,
+              "x": 665,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 75,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  75,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 75,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  75,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 75,
+              "label": "Page\nUp",
+              "slot": 96,
+              "w": 23,
+              "x": 698,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 78,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  78,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 78,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  78,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 78,
+              "label": "Page\nDown",
+              "slot": 102,
+              "w": 23,
+              "x": 731,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 53,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  53,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 53,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  53,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 53,
+              "label": "`",
+              "slot": 1,
+              "w": 23,
+              "x": 117,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 30,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  30,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 30,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  30,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 30,
+              "label": "1",
+              "slot": 7,
+              "w": 23,
+              "x": 151,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 31,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  31,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 31,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  31,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 31,
+              "label": "2",
+              "slot": 13,
+              "w": 23,
+              "x": 184,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 32,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  32,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 32,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  32,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 32,
+              "label": "3",
+              "slot": 19,
+              "w": 23,
+              "x": 217,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 33,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  33,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 33,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  33,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 33,
+              "label": "4",
+              "slot": 25,
+              "w": 23,
+              "x": 250,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 34,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  34,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 34,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  34,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 34,
+              "label": "5",
+              "slot": 31,
+              "w": 23,
+              "x": 284,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 35,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  35,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 35,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  35,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 35,
+              "label": "6",
+              "slot": 37,
+              "w": 23,
+              "x": 317,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 36,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  36,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 36,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  36,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 36,
+              "label": "7",
+              "slot": 43,
+              "w": 23,
+              "x": 350,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 37,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  37,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 37,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  37,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 37,
+              "label": "8",
+              "slot": 49,
+              "w": 23,
+              "x": 383,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 38,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  38,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 38,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  38,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 38,
+              "label": "9",
+              "slot": 55,
+              "w": 23,
+              "x": 417,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 39,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  39,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 39,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  39,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 39,
+              "label": "0",
+              "slot": 61,
+              "w": 23,
+              "x": 450,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 45,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  45,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 45,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  45,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 45,
+              "label": "-",
+              "slot": 67,
+              "w": 23,
+              "x": 483,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 46,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  46,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 46,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  46,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 46,
+              "label": "=",
+              "slot": 73,
+              "w": 23,
+              "x": 516,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 42,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  42,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 42,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  42,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 42,
+              "label": "BackSpace",
+              "slot": 79,
+              "w": 56,
+              "x": 550,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 83,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  83,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 83,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  83,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 83,
+              "label": "Num\nLock",
+              "slot": 85,
+              "w": 23,
+              "x": 631,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 84,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  84,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 84,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  84,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 84,
+              "label": "/",
+              "slot": 91,
+              "w": 23,
+              "x": 665,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 85,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  85,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 85,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  85,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 85,
+              "label": "*",
+              "slot": 97,
+              "w": 23,
+              "x": 698,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 86,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  86,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 86,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  86,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 86,
+              "label": "-",
+              "slot": 103,
+              "w": 23,
+              "x": 731,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 43,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  43,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 43,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  43,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 43,
+              "label": "Tab",
+              "slot": 2,
+              "w": 40,
+              "x": 117,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 20,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  20,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 20,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  20,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 20,
+              "label": "Q",
+              "slot": 8,
+              "w": 23,
+              "x": 168,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 26,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  26,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 26,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  26,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 26,
+              "label": "W",
+              "slot": 14,
+              "w": 23,
+              "x": 201,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 8,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  8,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 8,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  8,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 8,
+              "label": "E",
+              "slot": 20,
+              "w": 23,
+              "x": 234,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 21,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  21,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 21,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  21,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 21,
+              "label": "R",
+              "slot": 26,
+              "w": 23,
+              "x": 267,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 23,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  23,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 23,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  23,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 23,
+              "label": "T",
+              "slot": 32,
+              "w": 23,
+              "x": 301,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 28,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  28,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 28,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  28,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 28,
+              "label": "Y",
+              "slot": 38,
+              "w": 23,
+              "x": 334,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 24,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  24,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 24,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  24,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 24,
+              "label": "U",
+              "slot": 44,
+              "w": 23,
+              "x": 367,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 12,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  12,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 12,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  12,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 12,
+              "label": "I",
+              "slot": 50,
+              "w": 23,
+              "x": 400,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 18,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  18,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 18,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  18,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 18,
+              "label": "O",
+              "slot": 56,
+              "w": 23,
+              "x": 433,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 19,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  19,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 19,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  19,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 19,
+              "label": "P",
+              "slot": 62,
+              "w": 23,
+              "x": 467,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 47,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  47,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 47,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  47,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 47,
+              "label": "[",
+              "slot": 68,
+              "w": 23,
+              "x": 500,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 48,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  48,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 48,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  48,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 48,
+              "label": "]",
+              "slot": 74,
+              "w": 23,
+              "x": 533,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 49,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  49,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 49,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  49,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 49,
+              "label": "\\",
+              "slot": 80,
+              "w": 40,
+              "x": 566,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 95,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  95,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 95,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  95,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 95,
+              "label": "7",
+              "slot": 86,
+              "w": 23,
+              "x": 631,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 96,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  96,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 96,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  96,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 96,
+              "label": "8",
+              "slot": 92,
+              "w": 23,
+              "x": 665,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 97,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  97,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 97,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  97,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 97,
+              "label": "9",
+              "slot": 98,
+              "w": 23,
+              "x": 698,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 87,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  87,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 87,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  87,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 60,
+              "hid": 87,
+              "label": "+",
+              "slot": 105,
+              "w": 23,
+              "x": 731,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 57,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  57,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 57,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  57,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 57,
+              "label": "Caps Lock",
+              "slot": 3,
+              "w": 47,
+              "x": 117,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 4,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  4,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 4,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  4,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 4,
+              "label": "A",
+              "slot": 9,
+              "w": 23,
+              "x": 176,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 22,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  22,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 22,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  22,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 22,
+              "label": "S",
+              "slot": 15,
+              "w": 23,
+              "x": 209,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 7,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  7,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 7,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  7,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 7,
+              "label": "D",
+              "slot": 21,
+              "w": 23,
+              "x": 242,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 9,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  9,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 9,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  9,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 9,
+              "label": "F",
+              "slot": 27,
+              "w": 23,
+              "x": 275,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 10,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  10,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 10,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  10,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 10,
+              "label": "G",
+              "slot": 33,
+              "w": 23,
+              "x": 309,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 11,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  11,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 11,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  11,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 11,
+              "label": "H",
+              "slot": 39,
+              "w": 23,
+              "x": 342,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 13,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  13,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 13,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  13,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 13,
+              "label": "J",
+              "slot": 45,
+              "w": 23,
+              "x": 375,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 14,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  14,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 14,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  14,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 14,
+              "label": "K",
+              "slot": 51,
+              "w": 23,
+              "x": 408,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 15,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  15,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 15,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  15,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 15,
+              "label": "L",
+              "slot": 57,
+              "w": 23,
+              "x": 441,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 51,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  51,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 51,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  51,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 51,
+              "label": ";",
+              "slot": 63,
+              "w": 23,
+              "x": 475,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 52,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  52,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 52,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  52,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 52,
+              "label": "'",
+              "slot": 69,
+              "w": 23,
+              "x": 508,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 40,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  40,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 40,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  40,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 40,
+              "label": "Enter",
+              "slot": 81,
+              "w": 65,
+              "x": 541,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 92,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  92,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 92,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  92,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 92,
+              "label": "4",
+              "slot": 87,
+              "w": 23,
+              "x": 631,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 93,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  93,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 93,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  93,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 93,
+              "label": "5",
+              "slot": 93,
+              "w": 23,
+              "x": 665,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 94,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  94,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 94,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  94,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 94,
+              "label": "6",
+              "slot": 99,
+              "w": 23,
+              "x": 698,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 225,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  225,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 225,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  225,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 225,
+              "label": "Shift",
+              "slot": 4,
+              "w": 65,
+              "x": 117,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 29,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  29,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 29,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  29,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 29,
+              "label": "Z",
+              "slot": 16,
+              "w": 23,
+              "x": 192,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 27,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  27,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 27,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  27,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 27,
+              "label": "X",
+              "slot": 22,
+              "w": 23,
+              "x": 225,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 6,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  6,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 6,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  6,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 6,
+              "label": "C",
+              "slot": 28,
+              "w": 23,
+              "x": 258,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 25,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  25,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 25,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  25,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 25,
+              "label": "V",
+              "slot": 34,
+              "w": 23,
+              "x": 291,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 5,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  5,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 5,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  5,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 5,
+              "label": "B",
+              "slot": 40,
+              "w": 23,
+              "x": 325,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 17,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  17,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 17,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  17,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 17,
+              "label": "N",
+              "slot": 46,
+              "w": 23,
+              "x": 358,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 16,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  16,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 16,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  16,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 16,
+              "label": "M",
+              "slot": 52,
+              "w": 23,
+              "x": 391,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 54,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  54,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 54,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  54,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 54,
+              "label": ",",
+              "slot": 58,
+              "w": 23,
+              "x": 424,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 55,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  55,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 55,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  55,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 55,
+              "label": ".",
+              "slot": 64,
+              "w": 23,
+              "x": 458,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 56,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  56,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 56,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  56,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 56,
+              "label": "/",
+              "slot": 70,
+              "w": 23,
+              "x": 491,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 229,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  229,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 229,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  229,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 229,
+              "label": "R Shift",
+              "slot": 76,
+              "w": 47,
+              "x": 525,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 89,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  89,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 89,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  89,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 89,
+              "label": "1",
+              "slot": 88,
+              "w": 23,
+              "x": 631,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 90,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  90,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 90,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  90,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 90,
+              "label": "2",
+              "slot": 94,
+              "w": 23,
+              "x": 665,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 91,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  91,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 91,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  91,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 91,
+              "label": "3",
+              "slot": 100,
+              "w": 23,
+              "x": 698,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 88,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  88,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 88,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  88,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 60,
+              "hid": 88,
+              "label": "Enter",
+              "slot": 107,
+              "w": 23,
+              "x": 731,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 224,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  224,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 224,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  224,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 224,
+              "label": "Ctrl",
+              "slot": 5,
+              "w": 32,
+              "x": 117,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 227,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  227,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 227,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  227,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 227,
+              "label": "Win",
+              "slot": 17,
+              "w": 32,
+              "x": 159,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 226,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  226,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 226,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  226,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 226,
+              "label": "Alt",
+              "slot": 23,
+              "w": 32,
+              "x": 200,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 44,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  44,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 44,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  44,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 44,
+              "label": "(space)",
+              "slot": 41,
+              "w": 199,
+              "x": 241,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 230,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  230,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 230,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  230,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 230,
+              "label": "R Alt",
+              "slot": 59,
+              "w": 23,
+              "x": 450,
+              "y": 224
+            },
+            {
+              "binding": {
+                "raw": [
+                  10,
+                  1,
+                  0,
+                  0
+                ],
+                "type": "special"
+              },
+              "defaultBinding": {
+                "raw": [
+                  10,
+                  1,
+                  0,
+                  0
+                ],
+                "type": "special"
+              },
+              "h": 27,
+              "hid": 167837696,
+              "label": "fn",
+              "slot": 65,
+              "w": 23,
+              "x": 483,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 228,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  228,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 228,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  228,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 228,
+              "label": "R Ctrl",
+              "slot": 71,
+              "w": 23,
+              "x": 516,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 98,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  98,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 98,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  98,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 98,
+              "label": "0",
+              "slot": 95,
+              "w": 23,
+              "x": 665,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 99,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  99,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 99,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  99,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 99,
+              "label": ".",
+              "slot": 101,
+              "w": 23,
+              "x": 698,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 82,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  82,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 82,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  82,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 82,
+              "label": "↑",
+              "slot": 82,
+              "w": 23,
+              "x": 591,
+              "y": 199
+            },
+            {
+              "binding": {
+                "key": 80,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  80,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 80,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  80,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 80,
+              "label": "←",
+              "slot": 77,
+              "w": 23,
+              "x": 557,
+              "y": 232
+            },
+            {
+              "binding": {
+                "key": 81,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  81,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 81,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  81,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 81,
+              "label": "↓",
+              "slot": 83,
+              "w": 23,
+              "x": 591,
+              "y": 232
+            },
+            {
+              "binding": {
+                "key": 79,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  79,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 79,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  79,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 79,
+              "label": "→",
+              "slot": 89,
+              "w": 23,
+              "x": 624,
+              "y": 232
+            }
+          ],
+          "layer": "normal",
+          "matrix": [
+            0,
+            0,
+            41,
+            0,
+            0,
+            0,
+            53,
+            0,
+            0,
+            0,
+            43,
+            0,
+            0,
+            0,
+            57,
+            0,
+            0,
+            0,
+            225,
+            0,
+            0,
+            0,
+            224,
+            0,
+            0,
+            0,
+            58,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            20,
+            0,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            100,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            59,
+            0,
+            0,
+            0,
+            31,
+            0,
+            0,
+            0,
+            26,
+            0,
+            0,
+            0,
+            22,
+            0,
+            0,
+            0,
+            29,
+            0,
+            0,
+            0,
+            227,
+            0,
+            0,
+            0,
+            60,
+            0,
+            0,
+            0,
+            32,
+            0,
+            0,
+            0,
+            8,
+            0,
+            0,
+            0,
+            7,
+            0,
+            0,
+            0,
+            27,
+            0,
+            0,
+            0,
+            226,
+            0,
+            0,
+            0,
+            61,
+            0,
+            0,
+            0,
+            33,
+            0,
+            0,
+            0,
+            21,
+            0,
+            0,
+            0,
+            9,
+            0,
+            0,
+            0,
+            6,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            62,
+            0,
+            0,
+            0,
+            34,
+            0,
+            0,
+            0,
+            23,
+            0,
+            0,
+            0,
+            10,
+            0,
+            0,
+            0,
+            25,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            63,
+            0,
+            0,
+            0,
+            35,
+            0,
+            0,
+            0,
+            28,
+            0,
+            0,
+            0,
+            11,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            44,
+            0,
+            0,
+            0,
+            64,
+            0,
+            0,
+            0,
+            36,
+            0,
+            0,
+            0,
+            24,
+            0,
+            0,
+            0,
+            13,
+            0,
+            0,
+            0,
+            17,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            65,
+            0,
+            0,
+            0,
+            37,
+            0,
+            0,
+            0,
+            12,
+            0,
+            0,
+            0,
+            14,
+            0,
+            0,
+            0,
+            16,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            66,
+            0,
+            0,
+            0,
+            38,
+            0,
+            0,
+            0,
+            18,
+            0,
+            0,
+            0,
+            15,
+            0,
+            0,
+            0,
+            54,
+            0,
+            0,
+            0,
+            230,
+            0,
+            0,
+            0,
+            67,
+            0,
+            0,
+            0,
+            39,
+            0,
+            0,
+            0,
+            19,
+            0,
+            0,
+            0,
+            51,
+            0,
+            0,
+            0,
+            55,
+            0,
+            10,
+            1,
+            0,
+            0,
+            0,
+            0,
+            68,
+            0,
+            0,
+            0,
+            45,
+            0,
+            0,
+            0,
+            47,
+            0,
+            0,
+            0,
+            52,
+            0,
+            0,
+            0,
+            56,
+            0,
+            0,
+            0,
+            228,
+            0,
+            0,
+            0,
+            69,
+            0,
+            0,
+            0,
+            46,
+            0,
+            0,
+            0,
+            48,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            229,
+            0,
+            0,
+            0,
+            80,
+            0,
+            0,
+            0,
+            70,
+            0,
+            0,
+            0,
+            42,
+            0,
+            0,
+            0,
+            49,
+            0,
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            82,
+            0,
+            0,
+            0,
+            81,
+            0,
+            0,
+            0,
+            76,
+            0,
+            0,
+            0,
+            83,
+            0,
+            0,
+            0,
+            95,
+            0,
+            0,
+            0,
+            92,
+            0,
+            0,
+            0,
+            89,
+            0,
+            0,
+            0,
+            79,
+            0,
+            0,
+            0,
+            73,
+            0,
+            0,
+            0,
+            84,
+            0,
+            0,
+            0,
+            96,
+            0,
+            0,
+            0,
+            93,
+            0,
+            0,
+            0,
+            90,
+            0,
+            0,
+            0,
+            98,
+            0,
+            0,
+            0,
+            75,
+            0,
+            0,
+            0,
+            85,
+            0,
+            0,
+            0,
+            97,
+            0,
+            0,
+            0,
+            94,
+            0,
+            0,
+            0,
+            91,
+            0,
+            0,
+            0,
+            99,
+            0,
+            0,
+            0,
+            78,
+            0,
+            0,
+            0,
+            86,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            87,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            88,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "profile": 0
+        }
+      },
+      "keyboard.fnKeymap": {
+        "value": {
+          "keys": [
+            {
+              "binding": {
+                "key": 41,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  41,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 41,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  41,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 41,
+              "label": "Esc",
+              "slot": 0,
+              "w": 23,
+              "x": 117,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 58,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  58,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 58,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  58,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 58,
+              "label": "F1",
+              "slot": 6,
+              "w": 23,
+              "x": 159,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 59,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  59,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 59,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  59,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 59,
+              "label": "F2",
+              "slot": 12,
+              "w": 23,
+              "x": 192,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 60,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  60,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 60,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  60,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 60,
+              "label": "F3",
+              "slot": 18,
+              "w": 23,
+              "x": 225,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 61,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  61,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 61,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  61,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 61,
+              "label": "F4",
+              "slot": 24,
+              "w": 23,
+              "x": 259,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 62,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  62,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 62,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  62,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 62,
+              "label": "F5",
+              "slot": 30,
+              "w": 23,
+              "x": 300,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 63,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  63,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 63,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  63,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 63,
+              "label": "F6",
+              "slot": 36,
+              "w": 23,
+              "x": 333,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 64,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  64,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 64,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  64,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 64,
+              "label": "F7",
+              "slot": 42,
+              "w": 23,
+              "x": 366,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 65,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  65,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 65,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  65,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 65,
+              "label": "F8",
+              "slot": 48,
+              "w": 23,
+              "x": 400,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 66,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  66,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 66,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  66,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 66,
+              "label": "F9",
+              "slot": 54,
+              "w": 23,
+              "x": 441,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 67,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  67,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 67,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  67,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 67,
+              "label": "F10",
+              "slot": 60,
+              "w": 23,
+              "x": 474,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 68,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  68,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 68,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  68,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 68,
+              "label": "F11",
+              "slot": 66,
+              "w": 23,
+              "x": 507,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 69,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  69,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 69,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  69,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 69,
+              "label": "F12",
+              "slot": 72,
+              "w": 23,
+              "x": 541,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 70,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  70,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 70,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  70,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 70,
+              "label": "Print\nScreen",
+              "slot": 78,
+              "w": 23,
+              "x": 583,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 76,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  76,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 76,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  76,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 76,
+              "label": "Delete",
+              "slot": 84,
+              "w": 23,
+              "x": 631,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 73,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  73,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 73,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  73,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 73,
+              "label": "Insert",
+              "slot": 90,
+              "w": 23,
+              "x": 665,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 75,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  75,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 75,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  75,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 75,
+              "label": "Page\nUp",
+              "slot": 96,
+              "w": 23,
+              "x": 698,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 78,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  78,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 78,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  78,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 78,
+              "label": "Page\nDown",
+              "slot": 102,
+              "w": 23,
+              "x": 731,
+              "y": 46
+            },
+            {
+              "binding": {
+                "key": 53,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  53,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 53,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  53,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 53,
+              "label": "`",
+              "slot": 1,
+              "w": 23,
+              "x": 117,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 30,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  30,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 30,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  30,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 30,
+              "label": "1",
+              "slot": 7,
+              "w": 23,
+              "x": 151,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 31,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  31,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 31,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  31,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 31,
+              "label": "2",
+              "slot": 13,
+              "w": 23,
+              "x": 184,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 32,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  32,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 32,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  32,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 32,
+              "label": "3",
+              "slot": 19,
+              "w": 23,
+              "x": 217,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 33,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  33,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 33,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  33,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 33,
+              "label": "4",
+              "slot": 25,
+              "w": 23,
+              "x": 250,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 34,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  34,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 34,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  34,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 34,
+              "label": "5",
+              "slot": 31,
+              "w": 23,
+              "x": 284,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 35,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  35,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 35,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  35,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 35,
+              "label": "6",
+              "slot": 37,
+              "w": 23,
+              "x": 317,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 36,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  36,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 36,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  36,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 36,
+              "label": "7",
+              "slot": 43,
+              "w": 23,
+              "x": 350,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 37,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  37,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 37,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  37,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 37,
+              "label": "8",
+              "slot": 49,
+              "w": 23,
+              "x": 383,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 38,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  38,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 38,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  38,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 38,
+              "label": "9",
+              "slot": 55,
+              "w": 23,
+              "x": 417,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 39,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  39,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 39,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  39,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 39,
+              "label": "0",
+              "slot": 61,
+              "w": 23,
+              "x": 450,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 45,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  45,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 45,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  45,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 45,
+              "label": "-",
+              "slot": 67,
+              "w": 23,
+              "x": 483,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 46,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  46,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 46,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  46,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 46,
+              "label": "=",
+              "slot": 73,
+              "w": 23,
+              "x": 516,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 42,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  42,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 42,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  42,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 42,
+              "label": "BackSpace",
+              "slot": 79,
+              "w": 56,
+              "x": 550,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 83,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  83,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 83,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  83,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 83,
+              "label": "Num\nLock",
+              "slot": 85,
+              "w": 23,
+              "x": 631,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 84,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  84,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 84,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  84,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 84,
+              "label": "/",
+              "slot": 91,
+              "w": 23,
+              "x": 665,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 85,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  85,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 85,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  85,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 85,
+              "label": "*",
+              "slot": 97,
+              "w": 23,
+              "x": 698,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 86,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  86,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 86,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  86,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 86,
+              "label": "-",
+              "slot": 103,
+              "w": 23,
+              "x": 731,
+              "y": 92
+            },
+            {
+              "binding": {
+                "key": 43,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  43,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 43,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  43,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 43,
+              "label": "Tab",
+              "slot": 2,
+              "w": 40,
+              "x": 117,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 20,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  20,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 20,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  20,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 20,
+              "label": "Q",
+              "slot": 8,
+              "w": 23,
+              "x": 168,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 26,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  26,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 26,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  26,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 26,
+              "label": "W",
+              "slot": 14,
+              "w": 23,
+              "x": 201,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 8,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  8,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 8,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  8,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 8,
+              "label": "E",
+              "slot": 20,
+              "w": 23,
+              "x": 234,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 21,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  21,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 21,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  21,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 21,
+              "label": "R",
+              "slot": 26,
+              "w": 23,
+              "x": 267,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 23,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  23,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 23,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  23,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 23,
+              "label": "T",
+              "slot": 32,
+              "w": 23,
+              "x": 301,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 28,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  28,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 28,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  28,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 28,
+              "label": "Y",
+              "slot": 38,
+              "w": 23,
+              "x": 334,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 24,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  24,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 24,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  24,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 24,
+              "label": "U",
+              "slot": 44,
+              "w": 23,
+              "x": 367,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 12,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  12,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 12,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  12,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 12,
+              "label": "I",
+              "slot": 50,
+              "w": 23,
+              "x": 400,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 18,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  18,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 18,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  18,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 18,
+              "label": "O",
+              "slot": 56,
+              "w": 23,
+              "x": 433,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 19,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  19,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 19,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  19,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 19,
+              "label": "P",
+              "slot": 62,
+              "w": 23,
+              "x": 467,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 47,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  47,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 47,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  47,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 47,
+              "label": "[",
+              "slot": 68,
+              "w": 23,
+              "x": 500,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 48,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  48,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 48,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  48,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 48,
+              "label": "]",
+              "slot": 74,
+              "w": 23,
+              "x": 533,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 49,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  49,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 49,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  49,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 49,
+              "label": "\\",
+              "slot": 80,
+              "w": 40,
+              "x": 566,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 95,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  95,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 95,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  95,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 95,
+              "label": "7",
+              "slot": 86,
+              "w": 23,
+              "x": 631,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 96,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  96,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 96,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  96,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 96,
+              "label": "8",
+              "slot": 92,
+              "w": 23,
+              "x": 665,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 97,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  97,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 97,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  97,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 97,
+              "label": "9",
+              "slot": 98,
+              "w": 23,
+              "x": 698,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 87,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  87,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 87,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  87,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 60,
+              "hid": 87,
+              "label": "+",
+              "slot": 105,
+              "w": 23,
+              "x": 731,
+              "y": 125
+            },
+            {
+              "binding": {
+                "key": 57,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  57,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 57,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  57,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 57,
+              "label": "Caps Lock",
+              "slot": 3,
+              "w": 47,
+              "x": 117,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 4,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  4,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 4,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  4,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 4,
+              "label": "A",
+              "slot": 9,
+              "w": 23,
+              "x": 176,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 22,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  22,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 22,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  22,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 22,
+              "label": "S",
+              "slot": 15,
+              "w": 23,
+              "x": 209,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 7,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  7,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 7,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  7,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 7,
+              "label": "D",
+              "slot": 21,
+              "w": 23,
+              "x": 242,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 9,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  9,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 9,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  9,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 9,
+              "label": "F",
+              "slot": 27,
+              "w": 23,
+              "x": 275,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 10,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  10,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 10,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  10,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 10,
+              "label": "G",
+              "slot": 33,
+              "w": 23,
+              "x": 309,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 11,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  11,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 11,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  11,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 11,
+              "label": "H",
+              "slot": 39,
+              "w": 23,
+              "x": 342,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 13,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  13,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 13,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  13,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 13,
+              "label": "J",
+              "slot": 45,
+              "w": 23,
+              "x": 375,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 14,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  14,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 14,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  14,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 14,
+              "label": "K",
+              "slot": 51,
+              "w": 23,
+              "x": 408,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 15,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  15,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 15,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  15,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 15,
+              "label": "L",
+              "slot": 57,
+              "w": 23,
+              "x": 441,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 51,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  51,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 51,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  51,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 51,
+              "label": ";",
+              "slot": 63,
+              "w": 23,
+              "x": 475,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 52,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  52,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 52,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  52,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 52,
+              "label": "'",
+              "slot": 69,
+              "w": 23,
+              "x": 508,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 40,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  40,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 40,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  40,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 40,
+              "label": "Enter",
+              "slot": 81,
+              "w": 65,
+              "x": 541,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 92,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  92,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 92,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  92,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 92,
+              "label": "4",
+              "slot": 87,
+              "w": 23,
+              "x": 631,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 93,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  93,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 93,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  93,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 93,
+              "label": "5",
+              "slot": 93,
+              "w": 23,
+              "x": 665,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 94,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  94,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 94,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  94,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 94,
+              "label": "6",
+              "slot": 99,
+              "w": 23,
+              "x": 698,
+              "y": 158
+            },
+            {
+              "binding": {
+                "key": 225,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  225,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 225,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  225,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 225,
+              "label": "Shift",
+              "slot": 4,
+              "w": 65,
+              "x": 117,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 29,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  29,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 29,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  29,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 29,
+              "label": "Z",
+              "slot": 16,
+              "w": 23,
+              "x": 192,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 27,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  27,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 27,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  27,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 27,
+              "label": "X",
+              "slot": 22,
+              "w": 23,
+              "x": 225,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 6,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  6,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 6,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  6,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 6,
+              "label": "C",
+              "slot": 28,
+              "w": 23,
+              "x": 258,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 25,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  25,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 25,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  25,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 25,
+              "label": "V",
+              "slot": 34,
+              "w": 23,
+              "x": 291,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 5,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  5,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 5,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  5,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 5,
+              "label": "B",
+              "slot": 40,
+              "w": 23,
+              "x": 325,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 17,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  17,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 17,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  17,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 17,
+              "label": "N",
+              "slot": 46,
+              "w": 23,
+              "x": 358,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 16,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  16,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 16,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  16,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 16,
+              "label": "M",
+              "slot": 52,
+              "w": 23,
+              "x": 391,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 54,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  54,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 54,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  54,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 54,
+              "label": ",",
+              "slot": 58,
+              "w": 23,
+              "x": 424,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 55,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  55,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 55,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  55,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 55,
+              "label": ".",
+              "slot": 64,
+              "w": 23,
+              "x": 458,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 56,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  56,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 56,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  56,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 56,
+              "label": "/",
+              "slot": 70,
+              "w": 23,
+              "x": 491,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 229,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  229,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 229,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  229,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 229,
+              "label": "R Shift",
+              "slot": 76,
+              "w": 47,
+              "x": 525,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 89,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  89,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 89,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  89,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 89,
+              "label": "1",
+              "slot": 88,
+              "w": 23,
+              "x": 631,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 90,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  90,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 90,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  90,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 90,
+              "label": "2",
+              "slot": 94,
+              "w": 23,
+              "x": 665,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 91,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  91,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 91,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  91,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 91,
+              "label": "3",
+              "slot": 100,
+              "w": 23,
+              "x": 698,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 88,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  88,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 88,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  88,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 60,
+              "hid": 88,
+              "label": "Enter",
+              "slot": 107,
+              "w": 23,
+              "x": 731,
+              "y": 191
+            },
+            {
+              "binding": {
+                "key": 224,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  224,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 224,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  224,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 224,
+              "label": "Ctrl",
+              "slot": 5,
+              "w": 32,
+              "x": 117,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 227,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  227,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 227,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  227,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 227,
+              "label": "Win",
+              "slot": 17,
+              "w": 32,
+              "x": 159,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 226,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  226,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 226,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  226,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 226,
+              "label": "Alt",
+              "slot": 23,
+              "w": 32,
+              "x": 200,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 44,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  44,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 44,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  44,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 44,
+              "label": "(space)",
+              "slot": 41,
+              "w": 199,
+              "x": 241,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 230,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  230,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 230,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  230,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 230,
+              "label": "R Alt",
+              "slot": 59,
+              "w": 23,
+              "x": 450,
+              "y": 224
+            },
+            {
+              "binding": {
+                "raw": [
+                  10,
+                  1,
+                  0,
+                  0
+                ],
+                "type": "special"
+              },
+              "defaultBinding": {
+                "raw": [
+                  10,
+                  1,
+                  0,
+                  0
+                ],
+                "type": "special"
+              },
+              "h": 27,
+              "hid": 167837696,
+              "label": "fn",
+              "slot": 65,
+              "w": 23,
+              "x": 483,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 228,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  228,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 228,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  228,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 228,
+              "label": "R Ctrl",
+              "slot": 71,
+              "w": 23,
+              "x": 516,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 98,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  98,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 98,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  98,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 98,
+              "label": "0",
+              "slot": 95,
+              "w": 23,
+              "x": 665,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 99,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  99,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 99,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  99,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 99,
+              "label": ".",
+              "slot": 101,
+              "w": 23,
+              "x": 698,
+              "y": 224
+            },
+            {
+              "binding": {
+                "key": 82,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  82,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 82,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  82,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 82,
+              "label": "↑",
+              "slot": 82,
+              "w": 23,
+              "x": 591,
+              "y": 199
+            },
+            {
+              "binding": {
+                "key": 80,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  80,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 80,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  80,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 80,
+              "label": "←",
+              "slot": 77,
+              "w": 23,
+              "x": 557,
+              "y": 232
+            },
+            {
+              "binding": {
+                "key": 81,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  81,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 81,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  81,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 81,
+              "label": "↓",
+              "slot": 83,
+              "w": 23,
+              "x": 591,
+              "y": 232
+            },
+            {
+              "binding": {
+                "key": 79,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  79,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "defaultBinding": {
+                "key": 79,
+                "modifier": 0,
+                "raw": [
+                  0,
+                  0,
+                  79,
+                  0
+                ],
+                "second": 0,
+                "type": "key"
+              },
+              "h": 27,
+              "hid": 79,
+              "label": "→",
+              "slot": 89,
+              "w": 23,
+              "x": 624,
+              "y": 232
+            }
+          ],
+          "layer": "fn",
+          "matrix": [
+            0,
+            0,
+            41,
+            0,
+            0,
+            0,
+            53,
+            0,
+            0,
+            0,
+            43,
+            0,
+            0,
+            0,
+            57,
+            0,
+            0,
+            0,
+            225,
+            0,
+            0,
+            0,
+            224,
+            0,
+            0,
+            0,
+            58,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            20,
+            0,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            100,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            59,
+            0,
+            0,
+            0,
+            31,
+            0,
+            0,
+            0,
+            26,
+            0,
+            0,
+            0,
+            22,
+            0,
+            0,
+            0,
+            29,
+            0,
+            0,
+            0,
+            227,
+            0,
+            0,
+            0,
+            60,
+            0,
+            0,
+            0,
+            32,
+            0,
+            0,
+            0,
+            8,
+            0,
+            0,
+            0,
+            7,
+            0,
+            0,
+            0,
+            27,
+            0,
+            0,
+            0,
+            226,
+            0,
+            0,
+            0,
+            61,
+            0,
+            0,
+            0,
+            33,
+            0,
+            0,
+            0,
+            21,
+            0,
+            0,
+            0,
+            9,
+            0,
+            0,
+            0,
+            6,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            62,
+            0,
+            0,
+            0,
+            34,
+            0,
+            0,
+            0,
+            23,
+            0,
+            0,
+            0,
+            10,
+            0,
+            0,
+            0,
+            25,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            63,
+            0,
+            0,
+            0,
+            35,
+            0,
+            0,
+            0,
+            28,
+            0,
+            0,
+            0,
+            11,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            44,
+            0,
+            0,
+            0,
+            64,
+            0,
+            0,
+            0,
+            36,
+            0,
+            0,
+            0,
+            24,
+            0,
+            0,
+            0,
+            13,
+            0,
+            0,
+            0,
+            17,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            65,
+            0,
+            0,
+            0,
+            37,
+            0,
+            0,
+            0,
+            12,
+            0,
+            0,
+            0,
+            14,
+            0,
+            0,
+            0,
+            16,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            66,
+            0,
+            0,
+            0,
+            38,
+            0,
+            0,
+            0,
+            18,
+            0,
+            0,
+            0,
+            15,
+            0,
+            0,
+            0,
+            54,
+            0,
+            0,
+            0,
+            230,
+            0,
+            0,
+            0,
+            67,
+            0,
+            0,
+            0,
+            39,
+            0,
+            0,
+            0,
+            19,
+            0,
+            0,
+            0,
+            51,
+            0,
+            0,
+            0,
+            55,
+            0,
+            10,
+            1,
+            0,
+            0,
+            0,
+            0,
+            68,
+            0,
+            0,
+            0,
+            45,
+            0,
+            0,
+            0,
+            47,
+            0,
+            0,
+            0,
+            52,
+            0,
+            0,
+            0,
+            56,
+            0,
+            0,
+            0,
+            228,
+            0,
+            0,
+            0,
+            69,
+            0,
+            0,
+            0,
+            46,
+            0,
+            0,
+            0,
+            48,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            229,
+            0,
+            0,
+            0,
+            80,
+            0,
+            0,
+            0,
+            70,
+            0,
+            0,
+            0,
+            42,
+            0,
+            0,
+            0,
+            49,
+            0,
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            82,
+            0,
+            0,
+            0,
+            81,
+            0,
+            0,
+            0,
+            76,
+            0,
+            0,
+            0,
+            83,
+            0,
+            0,
+            0,
+            95,
+            0,
+            0,
+            0,
+            92,
+            0,
+            0,
+            0,
+            89,
+            0,
+            0,
+            0,
+            79,
+            0,
+            0,
+            0,
+            73,
+            0,
+            0,
+            0,
+            84,
+            0,
+            0,
+            0,
+            96,
+            0,
+            0,
+            0,
+            93,
+            0,
+            0,
+            0,
+            90,
+            0,
+            0,
+            0,
+            98,
+            0,
+            0,
+            0,
+            75,
+            0,
+            0,
+            0,
+            85,
+            0,
+            0,
+            0,
+            97,
+            0,
+            0,
+            0,
+            94,
+            0,
+            0,
+            0,
+            91,
+            0,
+            0,
+            0,
+            99,
+            0,
+            0,
+            0,
+            78,
+            0,
+            0,
+            0,
+            86,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            87,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            88,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "profile": 0
+        }
       }
     }
   },
@@ -381,6 +7961,31 @@
         "read": true,
         "valueType": "device-defined",
         "write": true
+      },
+      {
+        "id": "mouse.bindings",
+        "read": true,
+        "valueType": "device-defined"
+      },
+      {
+        "id": "macros.list",
+        "invoke": true
+      },
+      {
+        "id": "macros.get",
+        "invoke": true
+      },
+      {
+        "id": "macros.save",
+        "invoke": true
+      },
+      {
+        "id": "macros.remove",
+        "invoke": true
+      },
+      {
+        "id": "mouse.bindings.set",
+        "invoke": true
       }
     ],
     "error": null,
@@ -388,7 +7993,7 @@
     "id": "mouse",
     "label": "罗技鼠标",
     "moduleId": "logitech-ghub",
-    "moduleVersion": "0.1.0",
+    "moduleVersion": "0.2.0",
     "offline": true,
     "phase": "connected",
     "processId": null,
@@ -457,7 +8062,7 @@
         "writable": true
       },
       "mouse.profile": {
-        "label": "默认配置",
+        "label": "桌面",
         "value": "default",
         "writable": false
       },
@@ -487,6 +8092,125 @@
         "value": 1000,
         "wireless": true,
         "writable": true
+      },
+      "mouse.bindings": {
+        "value": {
+          "buttons": [
+            {
+              "card": {
+                "id": "button-1",
+                "name": "PRIMARY_CLICK",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 1,
+              "shifted": false,
+              "slotId": "demo_g1_m1"
+            },
+            {
+              "card": {
+                "id": "button-1",
+                "name": "PRIMARY_CLICK",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 1,
+              "shifted": true,
+              "slotId": "demo_g1_m1_shifted"
+            },
+            {
+              "card": {
+                "id": "button-2",
+                "name": "SECONDARY_CLICK",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 2,
+              "shifted": false,
+              "slotId": "demo_g2_m1"
+            },
+            {
+              "card": {
+                "id": "button-2",
+                "name": "SECONDARY_CLICK",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 2,
+              "shifted": true,
+              "slotId": "demo_g2_m1_shifted"
+            },
+            {
+              "card": {
+                "id": "button-3",
+                "name": "MIDDLE_CLICK",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 3,
+              "shifted": false,
+              "slotId": "demo_g3_m1"
+            },
+            {
+              "card": {
+                "id": "button-3",
+                "name": "MIDDLE_CLICK",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 3,
+              "shifted": true,
+              "slotId": "demo_g3_m1_shifted"
+            },
+            {
+              "card": {
+                "id": "button-4",
+                "name": "BACK",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 4,
+              "shifted": false,
+              "slotId": "demo_g4_m1"
+            },
+            {
+              "card": {
+                "id": "button-4",
+                "name": "BACK",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 4,
+              "shifted": true,
+              "slotId": "demo_g4_m1_shifted"
+            },
+            {
+              "card": {
+                "id": "button-5",
+                "name": "FORWARD",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 5,
+              "shifted": false,
+              "slotId": "demo_g5_m1"
+            },
+            {
+              "card": {
+                "id": "button-5",
+                "name": "FORWARD",
+                "readOnly": true,
+                "type": "MOUSE"
+              },
+              "number": 5,
+              "shifted": true,
+              "slotId": "demo_g5_m1_shifted"
+            }
+          ],
+          "profileId": "default",
+          "profileName": "桌面",
+          "softwareMode": true
+        }
       }
     }
   }

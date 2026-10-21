@@ -115,6 +115,7 @@ export function buildKeyboardView(
   if (!snapshot) {
     return {
       id: "keyboard",
+      generation: 0,
       label: "腹灵 OG98",
       phase: connecting ? "connecting" : "disconnected",
       offline: true,
@@ -151,6 +152,7 @@ export function buildKeyboardView(
 
   return {
     id: snapshot.id,
+    generation: snapshot.generation,
     label: snapshot.label || "腹灵 OG98",
     phase: connecting ? "connecting" : snapshot.phase,
     offline: snapshot.offline,

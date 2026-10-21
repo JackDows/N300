@@ -1,4 +1,5 @@
 #include "protocol.hpp"
+#include "key_layout.hpp"
 #include <algorithm>
 #include <chrono>
 #include <thread>
@@ -59,6 +60,10 @@ InReport Receiver::receive() {
 }
 Payload Receiver::query(uint8_t command, uint8_t profile) {
     Payload request{}; request[0] = command; request[1] = profile;
+    return transact(request);
+}
+Payload Receiver::transact(Payload request, bool rawReply) {
+    const auto command = request[0];
     send(request, Checksum::Bit7);
     // Bounded protocol polling. A Windows HID call itself is synchronous.
     for (unsigned attempt = 0; attempt < 50; ++attempt) {
@@ -72,7 +77,10 @@ Payload Receiver::query(uint8_t command, uint8_t profile) {
         Payload fetch{}; fetch[0] = 0xfc;
         send(fetch, Checksum::None); io_->delay(20);
         const auto response = receive();
-        if (response[0] == 0 && response[1] == command) return decode(response, command);
+        if (response[0] == 0 && rawReply && response[1] < 0x80) {
+            Payload data{}; std::copy_n(response.begin() + 1, 64, data.begin()); return data;
+        }
+        if (!rawReply && response[0] == 0 && response[1] == command) return decode(response, command);
         if (trace_) trace_("hid.stale_reply", {{"expectedCommand", command}, {"actualCommand", response[1]}});
     }
     throw Error("device_not_responding", "Receiver did not return the requested keyboard reply within 50 polls",
@@ -104,6 +112,8 @@ Json Receiver::setBrightness(int value) {
 
 class Simulator final : public FeatureIo {
     Payload reply_{}, light_{0x87, 13, 4, 4, 16, 0, 200, 200};
+    std::array<uint8_t, 512> keys_ = defaultKeyMatrix, fn_ = defaultKeyMatrix;
+    Payload options_{0x86};
     uint8_t last_{};
 public:
     void delay(unsigned) override {}
@@ -114,6 +124,12 @@ public:
             std::copy_n(r.begin() + 2, 7, light_.begin() + 1);
             return;
         }
+        if (last_ == 0x13 || last_ == 0x15) {
+            auto& matrix = last_ == 0x13 ? keys_ : fn_;
+            if (r[3] < 128) std::copy_n(r.begin() + 9, 4, matrix.begin() + r[3] * 4);
+            return;
+        }
+        if (last_ == 0x06) { std::copy_n(r.begin() + 2, 4, options_.begin() + 1); return; }
         reply_ = {}; reply_[0] = last_;
         switch (last_) {
         case 0x80: reply_[1] = 2; reply_[2] = 1; break;
@@ -123,7 +139,12 @@ public:
         case 0x91: reply_[2] = 1; break;
         case 0x92: reply_[1] = 120; reply_[3] = 120; reply_[5] = 88; reply_[6] = 2; break;
         case 0x97: reply_[1] = 1; break;
-        case 0x86: break;
+        case 0x86: reply_ = options_; break;
+        case 0x89: case 0x90: {
+            const auto& matrix = last_ == 0x89 ? keys_ : fn_;
+            if (r[3] < 8) std::copy_n(matrix.begin() + r[3] * 64, 64, reply_.begin());
+            break;
+        }
         default: throw Error("unsupported_command", "Simulator command not implemented", "暂不支持此操作。" );
         }
     }

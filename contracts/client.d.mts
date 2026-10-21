@@ -44,6 +44,8 @@ export interface Api {
   'app.updates.download': { params: Empty; result: UpdateJob };
   'app.updates.install': { params: { jobId: string }; result: UpdateJob };
   'app.takeActivationNotice': { params: Empty; result: boolean };
+  'app.hardware.inspect': { params: Empty; result: {source:'windows'|'simulation';parts:Record<'cpu'|'gpu'|'memory'|'storage'|'network'|'motherboard', {name:string;detail?:string}[]>;mangodisk:boolean;warnings?:string[]} };
+  'app.mangodisk.open': { params: Empty; result: {opened:boolean;simulated:boolean} };
   'devices.list': { params: Empty; result: DeviceSnapshot[] };
   'devices.add': { params: ModuleSelection & { id: string; label?: string; offline?: boolean; target?: Record<string, unknown>; config?: Record<string, unknown> }; result: DeviceSnapshot };
   'devices.get': { params: Device; result: DeviceSnapshot };

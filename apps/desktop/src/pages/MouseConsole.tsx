@@ -1,11 +1,14 @@
 import { ConsoleHeader } from "../components/ConsoleHeader";
+import { useState } from "react";
+import { MouseTools } from "./MouseTools";
 import { Segmented } from "../components/Segmented";
 import { useMouse, type MouseReading } from "../device/MouseContext";
 import "./MouseConsole.css";
 
-export function MouseConsole({ onClose }: { onClose(): void }) {
+export function MouseConsole({ onClose, active=true }: { onClose(): void; active?:boolean }) {
+  const [panel,setPanel]=useState<"sensitivity"|"buttons"|"macros">("sensitivity");
   const mouse = useMouse();
-  const values = mouse.snapshot?.values ?? {};
+  const values = mouse.connected ? mouse.snapshot?.values ?? {} : {};
   const stage = values["mouse.dpiStage"] as MouseReading<string> | undefined;
   const rate = values["mouse.reportRate"] as MouseReading<number> | undefined;
   const mode = values["device.onboardMode"] as MouseReading<boolean> | undefined;
@@ -13,13 +16,15 @@ export function MouseConsole({ onClose }: { onClose(): void }) {
   const battery = values["device.battery"]?.value as { percentage?: number; charging?: boolean } | undefined;
   const selected = stage?.choices?.find(choice => choice.value === stage.value);
   const disabled = !mouse.connected || mouse.busy;
-  return <div className="console-modal console-modal--mouse">
+  return <div className="console-modal console-modal--mouse" data-panel={panel}>
     <ConsoleHeader title={mouse.info?.name ?? "Logitech 鼠标"} subtitle={`鼠标 · ${mouse.status}`}
       status={mouse.connected ? "ok" : mouse.busy || mouse.snapshot?.phase === "waiting" ? "busy" : "off"} onClose={onClose}
-      actions={<button className="console-icon-toggle" disabled={mouse.busy} onClick={mouse.connected ? mouse.refresh : mouse.connect}>
+      actions={(panel==="sensitivity"||!mouse.connected)&&<button className="console-icon-toggle" disabled={mouse.busy} onClick={mouse.connected ? mouse.refresh : mouse.connect}>
         {mouse.busy ? "请稍候…" : mouse.connected ? "刷新状态" : "重新连接"}
       </button>} />
-    <div className="mouse-console">
+    <div className="console-tabs" role="tablist" aria-label="鼠标设置页面">{([["sensitivity","灵敏度"],["buttons","按键"],["macros","宏"]] as const).map(([value,label])=><button key={value} role="tab" aria-selected={panel===value} onClick={()=>setPanel(value)}>{label}</button>)}</div>
+    <div hidden={panel==="sensitivity"}><MouseTools active={active&&panel!=="sensitivity"} panel={panel==="macros"?"macros":"buttons"}/></div>
+    <div className="mouse-console" hidden={panel!=="sensitivity"}>
       {mouse.message && <p className="mouse-message" role="status">{mouse.message}</p>}
       <section className="mouse-sensitivity" aria-label="鼠标灵敏度">
         <div className="mouse-sensitivity__head">

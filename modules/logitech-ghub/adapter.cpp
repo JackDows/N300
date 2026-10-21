@@ -1,5 +1,6 @@
 #include <deskhub/module.hpp>
 #include "src/settings.hpp"
+#include "src/macros.hpp"
 #include <chrono>
 #include <thread>
 #include <mutex>
@@ -63,6 +64,8 @@ public:
         for (const auto* id : {"device.info", "device.battery", "device.onboardMode", "mouse.dpiStage", "mouse.reportRate", "mouse.profile"})
             capabilities.push_back({{"id", id}, {"read", true}, {"write", std::string(id) != "device.info" && std::string(id) != "device.battery"},
                 {"valueType", std::string(id) == "device.onboardMode" ? "boolean" : std::string(id) == "mouse.reportRate" ? "integer" : "device-defined"}});
+        capabilities.push_back({{"id","mouse.bindings"},{"read",true},{"valueType","device-defined"}});
+        for (const auto* id : {"macros.list","macros.get","macros.save","macros.remove","mouse.bindings.set"}) capabilities.push_back({{"id",id},{"invoke",true}});
         return {{"id", DESKHUB_MODULE_ID}, {"version", DESKHUB_MODULE_VERSION}, {"protocolVersion", 1}, {"capabilities", capabilities}, {"simulation", true}};
     }
     Json execute(const std::string& method, const Json& params) override {
@@ -90,6 +93,11 @@ public:
         if (method == "device.snapshot") return wanted_ ? refresh() : snapshot();
         if (phase_ != "connected") throw Error("not_connected", "Mouse is not active", "请先连接并唤醒鼠标。");
         const auto capability = stringParam(params, "capability");
+        if (method == "capability.read" && capability == "mouse.bindings") return reading(ghub::readBindings(*backend_,info_));
+        if (method == "capability.invoke") {
+            emit_("diagnostic",{{"operation",capability}});
+            return ghub::macroOperation(*backend_,info_,capability,params.value("arguments",Json::object()));
+        }
         if (method != "capability.read" && method != "capability.write") throw Error("unsupported_capability", "Unsupported operation", "此设备暂不支持这项操作。");
         refresh();
         if (phase_ != "connected") throw Error("not_connected", "Mouse disconnected before operation", "鼠标连接已断开，请重新连接。");

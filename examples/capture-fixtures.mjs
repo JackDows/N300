@@ -13,6 +13,9 @@ try {
   for (const [id,moduleId,label] of [['speaker','edifier-n300','桌面音响'],['keyboard','flesports-og98','桌面键盘'],['mouse','logitech-ghub','罗技鼠标']]) {
     await backend.client.request('devices.add', { id,moduleId,label });
     const device = await backend.client.request('devices.connect', { deviceId:id });
+    for (const capability of id==='keyboard'?['keyboard.keymap','keyboard.fnKeymap']:id==='mouse'?['mouse.bindings']:[]) {
+      device.values[capability]=await backend.client.request('devices.read',{deviceId:id,capability});
+    }
     device.processId = null; device.generation = 1; device.revision = 1;
     devices.push(device);
   }
