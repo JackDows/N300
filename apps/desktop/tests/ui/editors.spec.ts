@@ -1,5 +1,49 @@
 import {test,expect} from '@playwright/test';
 
+test('Fn assignments include firmware functions and change only after saving',async({page})=>{
+  await page.goto('/');
+  await page.evaluate(async()=>{
+    const url=performance.getEntriesByType('resource').map(e=>e.name).find(n=>new URL(n).pathname==='/src/device/transport.ts')!;
+    const c=await (await import(url)).getTransport();
+    const {value:map}=await c.request('devices.read',{deviceId:'keyboard',capability:'keyboard.fnKeymap'});
+    // Seed only the isolated browser simulator: a normal key, media, macro and firmware action.
+    const assigned:Record<string,number[]>={F1:[0,0,58,0],F2:[3,0,233,0],F3:[9,0,1,0],F4:[13,6,0,0]};
+    for(const key of map.keys)await c.request('devices.invoke',{deviceId:'keyboard',capability:'keyboard.keymap.set',arguments:{layer:'fn',slot:key.slot,action:{type:'restore',raw:assigned[key.label]??[0,0,0,0]}}});
+    const request=c.request.bind(c),w=window as any;w.keyWrites=[];
+    c.request=async(method:string,params:any={})=>{
+      if(['devices.invoke','devices.write'].includes(method)&&params.deviceId==='keyboard')w.keyWrites.push(params);
+      const result=await request(method,params);
+      if(method==='devices.read'&&params.capability==='keyboard.fnKeymap')await new Promise<void>(resolve=>w.releaseFn=resolve);
+      return result;
+    };
+  });
+  await page.getByRole('button',{name:'键盘设置',exact:true}).click();
+  await expect(page.getByRole('button',{name:'按键 F12',exact:true})).toBeEnabled();
+  await page.getByRole('button',{name:'Fn 层',exact:true}).click();
+  await expect(page.getByRole('button',{name:'读取中…',exact:true})).toBeVisible();
+  await expect(page.locator('.model-key.is-assigned')).toHaveCount(0);
+  await page.waitForFunction(()=>typeof (window as any).releaseFn==='function');
+  await page.evaluate(()=>(window as any).releaseFn());
+  await expect(page.locator('.model-key.is-assigned')).toHaveCount(4);
+  for(const label of ['F1','F2','F3','F4'])await expect(page.getByRole('button',{name:`按键 ${label}`,exact:true})).toHaveAttribute('aria-description','Fn 层已设置功能');
+  await expect(page.getByText('已设置 4 键',{exact:true})).toBeVisible();
+  const key=page.getByRole('button',{name:'按键 A',exact:true});await key.click();
+  await expect(key).toHaveAttribute('aria-pressed','true');await expect(key).toHaveAttribute('aria-description','Fn 层未设置功能');
+  await page.getByLabel('按键功能',{exact:true}).selectOption('key');
+  await expect(key).not.toHaveClass(/is-assigned/);
+  expect(await page.evaluate(()=>(window as any).keyWrites.length)).toBe(0);
+  await page.getByRole('button',{name:'保存按键',exact:true}).click();
+  await expect(key).toHaveClass(/is-assigned/);await expect(page.getByText('已设置 5 键',{exact:true})).toBeVisible();
+  await page.getByLabel('按键功能',{exact:true}).selectOption('disabled');
+  await expect(key).toHaveClass(/is-assigned/);
+  await page.getByRole('button',{name:'保存按键',exact:true}).click();
+  await expect(key).not.toHaveClass(/is-assigned/);await expect(page.getByText('已设置 4 键',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'普通层',exact:true}).click();await expect(page.locator('.model-key.is-assigned')).toHaveCount(0);
+  await page.getByRole('button',{name:'Fn 层',exact:true}).click();await expect(page.locator('.model-key.is-assigned')).toHaveCount(4);
+  await page.getByRole('button',{name:'设备与应用',exact:true}).click();await page.getByRole('button',{name:'断开 OG98'}).click();
+  await page.getByRole('button',{name:'键盘设置',exact:true}).click();await expect(page.locator('.model-key.is-assigned')).toHaveCount(0);
+});
+
 test('layer switching caches reads, preserves drafts and never writes automatically',async({page})=>{
   await page.goto('/');
   await page.evaluate(async()=>{

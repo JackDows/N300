@@ -2,3 +2,10 @@
 @container app (max-width:1240px){.key-detail{grid-template-columns:112px 144px minmax(0,1fr) 144px;gap:16px}.key-manual{gap:8px}.key-manual select{font-size:12px}}
 @container app (max-width:1040px){.key-detail{grid-template-columns:112px 1fr 144px}.key-manual,.key-media,.key-disabled-note{grid-column:2;grid-row:3}.key-kind{grid-column:2;grid-row:2}.key-detail__identity{grid-column:1;grid-row:2/4}.key-actions{grid-column:3;grid-row:2/4}.key-detail__footer{grid-column:2/-1}.key-tools>.editor-hint{display:none}.key-tools>.btn-ghost{margin-left:auto}.key-map-hint>span:last-child{display:none}}
 @container app (max-width:700px){.key-detail{display:flex;flex-direction:column;gap:16px}.key-detail__identity{flex-direction:row;align-items:center}.key-manual{grid-template-columns:repeat(3,minmax(0,1fr))}.key-actions{flex-direction:row-reverse;justify-content:space-between}.key-detail__footer{gap:12px}.keyboard-switches{flex-direction:column;gap:16px}.key-map-hint{font-size:12px}}
+.key-map-hint{flex-wrap:wrap;align-items:center}
+.key-map-legend,.key-map-legend>span{display:flex;align-items:center;gap:8px}
+.key-map-legend{gap:16px;flex-wrap:wrap}
+.key-map-legend i{display:inline-block;width:16px;height:16px;flex-shrink:0}
+.key-map-legend__selected{background:var(--text)}
+.key-map-legend__assigned{background:var(--accent-soft);position:relative}
+.key-map-legend__assigned::after{content:"";position:absolute;bottom:3px;left:2px;width:12px;height:2px;background:var(--text)}

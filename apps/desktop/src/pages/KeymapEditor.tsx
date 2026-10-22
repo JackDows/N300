@@ -3,7 +3,7 @@ import layout from "../../../../modules/flesports-og98/assets/layout.json";
 import {useDevice} from "../device/DeviceContext";
 import {useDeviceAction} from "../device/useDeviceAction";
 import {keyChoices,keyCode,keyName,mediaChoices} from "../device/keyCodes";
-import {KeyboardModel} from "../components/KeyboardModel";
+import {hasKeyAssignment,KeyboardModel} from "../components/KeyboardModel";
 import {getTransport} from "../device/transport";
 import {recordUiError} from "../diagnostics";
 import "./Editors.css";
@@ -18,7 +18,7 @@ const bindingLabel=(b?:Binding)=>!b?"读取后显示":b.type==="disabled"?"已�
 const firstSlot=layout.find(k=>k.label==="F12")!.slot;
 
 // Approved B: full physical key layout above a persistent editing bar. Every key uses
-// the same surface; selection only changes the chosen key. Save is the primary action.
+// the same shape; assignment marks and selection are independent. Save is the primary action.
 export function KeymapEditor({active}:{active:boolean}){
  const {keyboard,kbBusy,refreshKeyboard}=useDevice();
  const [layer,setLayer]=useState("normal"),[maps,setMaps]=useState<Record<string,Keymap>>({}),[slot,setSlot]=useState(firstSlot);
@@ -58,7 +58,7 @@ export function KeymapEditor({active}:{active:boolean}){
  return <div className="key-editor editor-panel">
   <div className="key-tools"><div className="editor-segments" role="group" aria-label="键盘层">{[["normal","普通层"],["fn","Fn 层"]].map(([value,label])=><button key={value} aria-pressed={layer===value} disabled={action.busy} onClick={()=>{setLayer(value);setRecording(false);}}>{label}</button>)}</div><span className="editor-hint">选择一个按键，设置它的功能</span><button className="btn-ghost" disabled={disabled||reading[layer]} onClick={()=>load()}>{reading[layer]?"读取中…":"同步键位"}</button></div>
   <div className="key-layout-scroll"><KeyboardModel selectedSlot={slot} keys={map?.keys} layer={layer} disabled={!map||action.busy} onSelectKey={value=>{setSlot(value);setRecording(false);action.setMessage("");}}/></div>
-  <div className="key-map-hint"><span role="status">{!keyboard.connected?"键盘未连接，重新连接后可以保存设置。":reading[layer]?"正在读取键盘上的设置…":!map?"点击同步键位重试读取。":layer==="fn"?"Fn 层 · 按住 Fn 时使用":"普通层"}</span><span>■ 当前选择 · 已改绑的按键带有标记</span></div>
+  <div className="key-map-hint"><span role="status">{!keyboard.connected?"键盘未连接，重新连接后可以保存设置。":reading[layer]?"正在读取键盘上的设置…":!map?"点击同步键位重试读取。":layer==="fn"?"Fn 层 · 按住 Fn 时使用":"普通层"}</span><div className="key-map-legend"><span><i className="key-map-legend__selected" aria-hidden="true"/>当前选择</span>{layer==="fn"?map&&<span><i className="key-map-legend__assigned" aria-hidden="true"/>已设置 {map.keys.filter(hasKeyAssignment).length} 键</span>:<span>已改绑的按键带有标记</span>}</div></div>
   <div className="keyboard-switches" aria-label="键盘偏好设置"><label><input type="checkbox" checked={keyboard.options?.winLocked??false} disabled={disabled||!keyboard.options} onChange={e=>option("winLocked",e.target.checked)}/>锁定 Win 键</label><label><input type="checkbox" checked={keyboard.options?.wasdSwapped??false} disabled={disabled||!keyboard.options} onChange={e=>option("wasdSwapped",e.target.checked)}/>WASD 与方向键互换</label></div>
   {selected&&<section className="key-detail" aria-label="选中按键设置"><div className="key-detail__heading"><h2>按键功能</h2><span>{dirty?"● 未保存":"与键盘一致"}</span></div><div className="key-detail__identity"><strong>{selected.label.replaceAll("\n"," ")==="(space)"?"Space":selected.label.replaceAll("\n"," ")}</strong><span>当前：{bindingLabel(selected.binding)}</span></div>
     <label className="key-kind">功能类型<select aria-label="按键功能" value={draft.kind} disabled={disabled} onChange={e=>edit({kind:e.target.value})}>{!["key","media","disabled"].includes(draft.kind)&&<option value={draft.kind}>保留现有功能</option>}<option value="key">按键 / 组合键</option><option value="media">媒体控制</option><option value="disabled">禁用此键</option></select></label>
