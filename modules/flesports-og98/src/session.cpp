@@ -75,11 +75,11 @@ Json Session::dispatch(const std::string& method, const Json& params) {
         }
         receiver_.reset(); devicePath_.clear();
         offline_ = params.value("offline", false); logPath_ = logFile; logError_.clear();
-        log("session.initialize", {{"offline", offline_}, {"version", "0.2.0"}});
-        return {{"version", "0.2.0"}, {"offline", offline_}};
+        log("session.initialize", {{"offline", offline_}, {"version", "0.2.1"}});
+        return {{"version", "0.2.1"}, {"offline", offline_}};
     }
     if (method == "describe") return {
-        {"version", "0.2.0"}, {"apiVersion", 1}, {"transport", "Windows USB HID / 2.4GHz"},
+        {"version", "0.2.1"}, {"apiVersion", 1}, {"transport", "Windows USB HID / 2.4GHz"},
         {"get", {"firmware", "profile", "reportRate", "lighting", "debounce", "sleep", "autoOS", "keyboardOptions"}},
         {"set", {{"brightness", {{"min", 0}, {"max", 4}, {"readback", true}}}}},
         {"modelDetection", "candidate_only; connect requires model=OG98"}};

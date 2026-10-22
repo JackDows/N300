@@ -37,7 +37,9 @@ try{
   app=await launch({executable,directory,updateConfig});
   await until(async()=>(await app.request('devices.list')).some(d=>d.id==='speaker'&&d.phase==='connected'));
   const before=await app.request('app.updates.info');assert.notEqual(before.version,version);
-  await app.request('devices.add',{id:'keyboard',moduleId:'flesports-og98',offline:true,label:'升级验收键盘'});await app.request('devices.connect',{deviceId:'keyboard'});
+  if(!(await app.request('devices.list')).some(d=>d.id==='keyboard'))
+    await app.request('devices.add',{id:'keyboard',moduleId:'flesports-og98',offline:true,label:'升级验收键盘'});
+  await app.request('devices.connect',{deviceId:'keyboard'});
   const devicesBefore=await app.request('devices.list'),pids=devicesBefore.map(d=>d.processId).filter(Boolean);
   const bindings=JSON.parse(readFileSync(join(directory,'data/devices.json'),'utf8'));
   const userFile=join(directory,'data/user-settings.json');writeFileSync(userFile,'{"acceptance":"preserve"}');

@@ -1,6 +1,8 @@
 #include <deskhub/module.hpp>
 #include <og98/og98.h>
 #include <map>
+#include <chrono>
+#include <algorithm>
 
 namespace deskhub {
 namespace {
@@ -11,7 +13,15 @@ const std::map<std::string, std::string> properties{
 class OG98 final : public Device {
     og98_context* context_ = og98_create();
     bool connected_ = false;
-    Json target_ = Json::object(), values_ = Json::object();
+    bool wanted_ = false;
+    using Clock = std::chrono::steady_clock;
+    Clock::time_point retryAt_ = Clock::now();
+    unsigned retryDelayMs_ = 1000;
+    Json target_ = Json::object(), values_ = Json::object(), connectionError_, lastPublished_;
+    static bool connectionFailure(const std::string& code) {
+        return code == "hid_io_error" || code == "device_not_responding" ||
+               code == "device_not_found" || code == "unsupported_device";
+    }
     Json call(const std::string& method, Json params = Json::object()) {
         char* text = og98_request(context_, Json{{"method", method}, {"params", params}}.dump().c_str());
         std::unique_ptr<char, decltype(&og98_free)> owner(text, og98_free);
@@ -19,14 +29,19 @@ class OG98 final : public Device {
         const auto response = Json::parse(text);
         if (!response.value("ok", false)) {
             const auto& e = response["error"];
-            if (e.value("code", "") == "hid_io_error") { connected_ = false; values_.clear(); publish(); }
+            if (connectionFailure(e.value("code", ""))) {
+                connected_ = false; values_.clear(); connectionError_ = e;
+                retryAt_ = Clock::now() + std::chrono::milliseconds(retryDelayMs_);
+                retryDelayMs_ = std::min(15000u, retryDelayMs_ * 2);
+                publish();
+            }
             throw Error(e.value("code", "device_error"), e.value("message", "OG98 error"), e.value("userMessage", "键盘暂时没有响应。"), e.value("details", Json::object()));
         }
         if (response.contains("logWarning")) emit_("diagnostic", {{"logWarning", response["logWarning"]}});
         return response["result"];
     }
-    Json snapshot() const { return {{"phase", connected_ ? "connected" : "disconnected"}, {"values", values_}, {"target", target_}, {"offline", offline_}}; }
-    void publish() { emit_("snapshot", snapshot()); }
+    Json snapshot() const { return {{"phase", connected_ ? "connected" : wanted_ ? "waiting" : "disconnected"}, {"values", values_}, {"target", target_}, {"offline", offline_}, {"unavailable", connectionError_.is_object() ? Json{{"connection", connectionError_}} : Json::object()}}; }
+    void publish() { const auto current = snapshot(); if (current != lastPublished_) { lastPublished_ = current; emit_("snapshot", current); } }
     Json valueFor(const std::string& capability, const Json& value) const {
         if (capability == "lighting.brightness") return {{"value", value["brightness"]}, {"min", 0}, {"max", 4}, {"step", 1}};
         return reading(value);
@@ -36,9 +51,29 @@ class OG98 final : public Device {
         for (const auto& [capability, property] : properties) values_[capability] = valueFor(capability, current[property]);
         publish(); return snapshot();
     }
+    Json connectNow() {
+        try {
+            if (!connected_) {
+                // A failed read can leave the receiver handle open. Reopen it,
+                // then perform only reads; never replay an interrupted setter.
+                call("disconnect");
+                const auto result = call("connect", {{"model", "OG98"}, {"path", target_.value("path", std::string())}});
+                target_["path"] = result["path"]; connected_ = true;
+            }
+            const auto current = call("status");
+            for (const auto& [capability, property] : properties) values_[capability] = valueFor(capability, current[property]);
+            connectionError_ = nullptr; retryDelayMs_ = 1000;
+            publish(); return snapshot();
+        } catch (const Error& error) {
+            if (!connectionFailure(error.data.value("code", ""))) throw;
+            emit_("diagnostic", {{"operation", "connect"}, {"error", error.data}});
+            return snapshot();
+        }
+    }
 public:
     explicit OG98(Emit emit) : Device(std::move(emit)) { if (!context_) throw std::bad_alloc(); }
     ~OG98() override { og98_destroy(context_); }
+    void tick() override { if (initialized_ && wanted_ && !connected_ && Clock::now() >= retryAt_) connectNow(); }
     Json describe() const override {
         Json capabilities = Json::array();
         for (const auto& [capability, property] : properties) {
@@ -73,13 +108,10 @@ public:
             return candidates;
         }
         if (method == "device.connect") {
-            if (!connected_) {
-                auto connection = Json{{"model", "OG98"}, {"path", target_.value("path", std::string())}};
-                const auto result = call("connect", connection); target_["path"] = result["path"]; connected_ = true;
-            }
-            return refresh();
+            wanted_ = true;
+            return connectNow();
         }
-        if (method == "device.disconnect") { call("disconnect"); connected_ = false; values_.clear(); publish(); return snapshot(); }
+        if (method == "device.disconnect") { wanted_ = false; call("disconnect"); connected_ = false; values_.clear(); connectionError_ = nullptr; publish(); return snapshot(); }
         if (method == "device.snapshot") return connected_ ? refresh() : snapshot();
         if (!connected_) throw Error("not_connected", "Device is not connected", "请先连接键盘。");
         const auto capability = stringParam(params, "capability");

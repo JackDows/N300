@@ -1,6 +1,6 @@
 # 键位、鼠标按键与宏接口
 
-DeskHub 0.6.0 使用 OG98 / G HUB 模块 0.2.0。全部调用仍经过 `devices.read/write/invoke`；模块独立进程、队列和更新边界不变。能力由 `capabilities` 判断。已有绑定不会自动改用新模块，安装后对指定实例调用 `modules.install` 的 `deviceId` 或 `devices.replace`。
+DeskHub 0.6.1 使用 N300 0.1.1、OG98 0.2.1、G HUB 0.2.0。全部调用仍经过 `devices.read/write/invoke`；模块独立进程、队列和更新边界不变。能力由 `capabilities` 判断。已有绑定不会自动改用新模块，安装后在“设备与应用”中选择“应用已安装版本”，或对指定实例调用 `modules.install` 的 `deviceId` / `devices.replace`。
 
 ## OG98 两层键位
 

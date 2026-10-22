@@ -34,7 +34,8 @@ test('desktop hosts the shared backend and the existing controls use the new API
 });
 test('keyboard and speaker remain independent inside the actual desktop process',async()=>{
   const speaker=await app.request('devices.get',{deviceId:'speaker'});
-  await app.request('devices.add',{id:'keyboard',moduleId:'flesports-og98',offline:true});await app.request('devices.connect',{deviceId:'keyboard'});
+  // No manual add/connect: startup itself must create and connect the keyboard.
+  await until(async()=>(await app.request('devices.list')).some((d:any)=>d.id==='keyboard'&&d.phase==='connected'));
   await app.request('devices.write',{deviceId:'keyboard',capability:'lighting.brightness',value:2});
   await app.page.getByRole('button',{name:'返回总览'}).click();
   await app.page.getByRole('button',{name:'键盘设置',exact:true}).click();

@@ -8,6 +8,7 @@
 #include <winrt/Windows.Devices.Bluetooth.Advertisement.h>
 #include <winrt/Windows.Devices.Bluetooth.GenericAttributeProfile.h>
 #include <winrt/Windows.Devices.Bluetooth.h>
+#include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Storage.Streams.h>
@@ -225,11 +226,33 @@ class WindowsTransport final : public Transport {
             for (auto cache : {BluetoothCacheMode::Cached, BluetoothCacheMode::Uncached}) {
                 auto result = wait(device.GetGattServicesForUuidAsync(guid(target.service), cache),
                                    remaining(), cancel);
-                success(result.Status());
+                if (result.Status() != GattCommunicationStatus::Success) {
+                    if (cache == BluetoothCacheMode::Cached) continue;
+                    throw Error("connection_failed", "Uncached GATT service discovery failed.", true,
+                                {{"stage", "services"}, {"gatt_status", static_cast<int>(result.Status())},
+                                 {"protocol_error", result.ProtocolError() ? json(result.ProtocolError().Value()) : json(nullptr)}});
+                }
                 if (result.Services().Size()) {
                     service = result.Services().GetAt(0);
+                    const auto opened = wait(service.OpenAsync(GattSharingMode::SharedReadAndWrite), remaining(), cancel);
+                    if (opened != GattOpenStatus::Success && opened != GattOpenStatus::AlreadyOpened) {
+                        const auto access = service.DeviceAccessInformation().CurrentStatus();
+                        service.Close(); service = nullptr;
+                        if (cache == BluetoothCacheMode::Cached && opened != GattOpenStatus::AccessDenied) continue;
+                        throw Error(opened == GattOpenStatus::AccessDenied ? "bluetooth_access_denied" : opened == GattOpenStatus::SharingViolation ? "device_busy" : "connection_failed",
+                                    "Windows could not open the N300 GATT control service.", true,
+                                    {{"stage", "open_service"}, {"open_status", static_cast<int>(opened)},
+                                     {"device_access", static_cast<int>(device.DeviceAccessInformation().CurrentStatus())},
+                                     {"service_access", static_cast<int>(access)}});
+                    }
                     auto chars = wait(service.GetCharacteristicsAsync(cache), remaining(), cancel);
-                    success(chars.Status());
+                    if (chars.Status() != GattCommunicationStatus::Success) {
+                        service.Close(); service = nullptr;
+                        if (cache == BluetoothCacheMode::Cached) continue;
+                        throw Error("connection_failed", "Uncached GATT characteristic discovery failed.", true,
+                                    {{"stage", "characteristics"}, {"gatt_status", static_cast<int>(chars.Status())},
+                                     {"protocol_error", chars.ProtocolError() ? json(chars.ProtocolError().Value()) : json(nullptr)}});
+                    }
                     for (auto ch : chars.Characteristics()) {
                         if (ch.Uuid() == guid(read_uuid))
                             read = ch;

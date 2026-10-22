@@ -34,7 +34,7 @@ static std::string cmd_hex(uint8_t cmd) {
     return hex(Bytes{cmd});
 }
 
-Session::Session(const json &config) : catalog(json::parse(n300_catalog)) {
+Session::Session(const json &config, std::unique_ptr<Transport> supplied_transport) : catalog(json::parse(n300_catalog)) {
     if (!config.is_object())
         throw Error("invalid_argument", "Session configuration must be an object.");
     const std::set<std::string> allowed = {"offline",
@@ -71,7 +71,7 @@ Session::Session(const json &config) : catalog(json::parse(n300_catalog)) {
         if (!address_filter.empty() && address_filter != target->address)
             target.reset();
     }
-    transport = make_transport(offline, config);
+    transport = supplied_transport ? std::move(supplied_transport) : make_transport(offline, config);
 }
 Session::~Session() {
     transport->disconnect();
@@ -141,7 +141,22 @@ void Session::ensure_connected() {
     codec = std::make_unique<Codec>(target->protocol, target->encryption);
     started = Clock::now();
     try {
-        transport->connect(*target, connect_ms, cancelled);
+        try {
+            transport->connect(*target, connect_ms, cancelled);
+        } catch (const Error &error) {
+            if (error.code != "not_found") throw;
+            // A saved address is not a Windows discovery-cache entry. Repopulate
+            // the cache for this exact device before retrying the connection.
+            const auto discovery_started = Clock::now();
+            ++scan_count;
+            const auto found = transport->scan(scan_ms, target->address, cancelled, true);
+            timings["scan_ms"] = std::chrono::duration_cast<Ms>(Clock::now() - discovery_started).count();
+            if (found.size() != 1 || found.front().address != target->address)
+                throw Error("not_found", "The saved N300 was not seen during targeted discovery.", true);
+            target = found.front();
+            codec = std::make_unique<Codec>(target->protocol, target->encryption);
+            transport->connect(*target, connect_ms, cancelled);
+        }
         auto gatt_finished = Clock::now();
         request(0xD8);
         if (!verified)

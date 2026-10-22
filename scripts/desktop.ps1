@@ -25,9 +25,16 @@ function Build-Desktop {
     Initialize-DesktopTools
     $resources=@{}
     $moduleRoot=Join-Path $projectRoot "artifacts/package/$Configuration/modules"
-    Get-ChildItem -LiteralPath $moduleRoot -File -Recurse | ForEach-Object {
-        $relative=$_.FullName.Substring($moduleRoot.Length+1).Replace('\','/')
-        $resources[$_.FullName]="modules/$relative"
+    foreach($source in Get-ChildItem -LiteralPath (Join-Path $projectRoot 'modules') -Directory) {
+        $manifestPath=Join-Path $source.FullName 'module.json'
+        if(-not(Test-Path -LiteralPath $manifestPath)){continue}
+        $manifest=Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $package=Join-Path $moduleRoot "$($manifest.id)/$($manifest.version)"
+        if(-not(Test-Path -LiteralPath (Join-Path $package 'module.json'))){throw "Build the declared module first: $($manifest.id) $($manifest.version)"}
+        Get-ChildItem -LiteralPath $package -File -Recurse | ForEach-Object {
+            $relative=$_.FullName.Substring($moduleRoot.Length+1).Replace('\','/')
+            $resources[$_.FullName]="modules/$relative"
+        }
     }
     $bundle=@{resources=$resources}
     $key=Join-Path $projectRoot '.local/keys/deskhub-updater.key'
@@ -48,7 +55,11 @@ function Build-Desktop {
     $output=Join-Path $projectRoot "artifacts/desktop/$Configuration"
     $null=New-Item -ItemType Directory -Force -Path (Join-Path $output 'modules')
     Copy-Item -LiteralPath (Join-Path $cargoOutput 'DeskHub.exe') -Destination $output -Force
-    Get-ChildItem -LiteralPath $moduleRoot | Copy-Item -Destination (Join-Path $output 'modules') -Recurse -Force
+    foreach($file in $resources.GetEnumerator()) {
+        $destination=Join-Path $output $file.Value
+        $null=New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination)
+        Copy-Item -LiteralPath $file.Key -Destination $destination -Force
+    }
     if($Configuration -eq 'Release') {
         $version=if($VersionOverride){$VersionOverride}else{(Get-Content -LiteralPath (Join-Path $projectRoot 'apps/desktop/src-tauri/tauri.conf.json') -Raw -Encoding UTF8|ConvertFrom-Json).version}
         $installers=Join-Path $projectRoot "artifacts/releases/$version"

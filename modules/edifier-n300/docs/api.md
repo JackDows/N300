@@ -179,3 +179,9 @@ stdout 不混入日志，stderr 用于诊断；关闭 stdin 后处理已接受�
 - [Windows GATT 客户端](https://learn.microsoft.com/en-us/windows/apps/develop/devices-sensors/gatt-client)：设备发现、服务、通知和连接生命周期。
 - [C++/WinRT 并发](https://learn.microsoft.com/en-us/windows/apps/develop/cpp-winrt/concurrency)：Windows Runtime 的线程与异步操作。
 - [JSON-RPC 2.0](https://www.jsonrpc.org/specification)：请求、响应、通知与批量调用格式。
+
+## 0.1.1 连接恢复
+
+保存过地址仍可能遇到 Windows 的 BLE 发现缓存失效。连接返回 `not_found` 后，模块会在同一会话内只扫描原地址，更新发现信息，再连接和握手；不会改绑到另一台音响。已连接时复用会话，不为每次读写扫描。
+
+GATT 服务以 `SharedReadAndWrite` 打开。缓存服务或特征查询失败时再查实机；占用、访问拒绝与设备未发现分别进入诊断。重连没有修改输入源的请求，也不会重放已经发出的设置指令。

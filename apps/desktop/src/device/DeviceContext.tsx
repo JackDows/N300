@@ -264,10 +264,10 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         off = c.subscribe((event) => {
           if (event.type === "devices.changed") {
             if (event.device.id === "speaker") {
-              setSnapshot((prev) => (prev && prev.revision > event.device.revision ? prev : event.device));
+              setSnapshot((prev) => (prev && (prev.generation > event.device.generation || prev.generation === event.device.generation && prev.revision > event.device.revision) ? prev : event.device));
               if (event.device.phase === "connected") setError(null);
             } else if (event.device.id === "keyboard" || event.device.moduleId === "flesports-og98") {
-              setKbSnapshot((prev) => (prev && prev.revision > event.device.revision ? prev : event.device));
+              setKbSnapshot((prev) => (prev && (prev.generation > event.device.generation || prev.generation === event.device.generation && prev.revision > event.device.revision) ? prev : event.device));
               if (event.device.phase === "connected") setKbError(null);
             }
           }
@@ -281,24 +281,40 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         });
         if (isTauri && (await c.request("app.takeActivationNotice"))) notify("程序已在运行");
-        try {
-          const all = await c.request("devices.list");
-          const existingKb = all.find((d) => d.id === "keyboard" || d.moduleId === "flesports-og98");
-          if (existingKb && !disposed) setKbSnapshot(existingKb);
-          const value = await connectSpeaker(c);
-          if (!disposed) setSnapshot(value);
-        } catch (e) {
-          recordUiError(e, "speaker.connect");
-          if (!disposed) setError(errorInfo(e));
-        } finally {
-          if (!disposed) setConnecting(false);
-        }
+        const all = await c.request("devices.list");
+        if (disposed) return;
+        const existingKb = all.find((d) => d.id === "keyboard" || d.moduleId === "flesports-og98");
+        if (existingKb) setKbSnapshot(existingKb);
+        setKbConnecting(true);
+        // Each device starts independently. A sleeping keyboard or unavailable
+        // speaker must not prevent the other device from connecting.
+        await Promise.allSettled([
+          (async () => {
+            try {
+              const value = await connectSpeaker(c);
+              if (!disposed) setSnapshot(prev => prev && (prev.generation > value.generation || prev.generation === value.generation && prev.revision > value.revision) ? prev : value);
+            } catch (e) {
+              recordUiError(e, "speaker.connect");
+              if (!disposed) setError(errorInfo(e));
+            } finally { if (!disposed) setConnecting(false); }
+          })(),
+          (async () => {
+            try {
+              const value = await ensureKeyboardConnected(c);
+              if (!disposed) setKbSnapshot(prev => prev && (prev.generation > value.generation || prev.generation === value.generation && prev.revision > value.revision) ? prev : value);
+            } catch (e) {
+              recordUiError(e, "keyboard.connect");
+              if (!disposed) setKbError(errorInfo(e));
+            } finally { if (!disposed) setKbConnecting(false); }
+          })(),
+        ]);
       })
       .catch((e) => {
         recordUiError(e, "hub.connect");
         if (!disposed) {
           setError(errorInfo(e));
           setConnecting(false);
+          setKbConnecting(false);
         }
       });
     return () => {

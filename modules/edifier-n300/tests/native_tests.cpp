@@ -1,4 +1,5 @@
 #include "protocol.hpp"
+#include "session.hpp"
 #include <chrono>
 #include <functional>
 #include <future>
@@ -86,6 +87,36 @@ int main() {
             rejected = e.details["received"] == "bad";
         }
         require(rejected, "diagnostic input");
+    });
+    test("saved address rediscovers after Windows cache eviction without replaying writes", [] {
+        class ColdCache final : public Transport {
+            std::unique_ptr<Transport> simulation = make_transport(true, json::object());
+            bool discovered = false;
+          public:
+            int scans = 0, opens = 0;
+            ColdCache() { inbox = simulation->inbox; }
+            std::vector<Target> scan(int ms, const std::string &address, const std::atomic_bool &cancel, bool fast) override {
+                require(address == "00:11:22:33:44:55", "rediscovery must stay on the saved target");
+                ++scans; discovered = true; return simulation->scan(ms, address, cancel, fast);
+            }
+            void connect(const Target &t, int ms, const std::atomic_bool &cancel) override {
+                ++opens; if (!discovered) throw Error("not_found", "Windows cache is empty", true);
+                simulation->connect(t, ms, cancel);
+            }
+            void write(const Bytes &data, int ms, const std::atomic_bool &cancel) override { simulation->write(data, ms, cancel); }
+            void disconnect() noexcept override { simulation->disconnect(); }
+            bool connected() const override { return simulation->connected(); }
+        };
+        auto transport = std::make_unique<ColdCache>(); auto *probe = transport.get();
+        Session session({{"offline", true}, {"target", {{"address", "00:11:22:33:44:55"}, {"protocol", 2}}}}, std::move(transport));
+        session.execute({{"method", "connect"}});
+        session.execute({{"method", "get"}, {"params", {{"property", "volume"}}}});
+        session.execute({{"method", "get"}, {"params", {{"property", "input"}}}});
+        require(session.snapshot()["connected"].get<bool>(), "connection recovered");
+        require(probe->scans == 1 && probe->opens == 2, "one rediscovery; warm reads reuse the session");
+        const auto diagnostics = session.diagnostics();
+        for (const auto &request : diagnostics["requests"])
+            require(request["command"] == "d8" || request["command"] == "66" || request["command"] == "61", "recovery sends only read requests");
     });
     test("vendor packet vectors", [] {
         require(hex(Codec().encode(0xD8)) == "aa01d8219c", "V1 D8");

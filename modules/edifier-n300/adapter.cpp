@@ -31,6 +31,9 @@ class N300 final : public Device {
             auto error = response["error"];
             Error failure(error.value("code", "device_error"), error.value("message", "N300 error"), "操作未完成，请检查音响连接后重试。", error.value("details", Json::object()));
             if (failure.data["code"] == "cancelled") failure.data["userMessage"] = "操作已取消。";
+            else if (failure.data["code"] == "not_found") failure.data["userMessage"] = "暂未发现音响，正在重新连接。";
+            else if (failure.data["code"] == "device_busy") failure.data["userMessage"] = "音响控制通道被占用，正在重试。";
+            else if (failure.data["code"] == "bluetooth_access_denied") failure.data["userMessage"] = "Windows 未允许访问音响，请检查蓝牙设备权限。";
             throw failure;
         }
         return response["result"];

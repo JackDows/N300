@@ -39,7 +39,7 @@ class Session {
 
   public:
     std::atomic_bool cancelled = false;
-    explicit Session(const json &config);
+    explicit Session(const json &config, std::unique_ptr<Transport> supplied_transport = {});
     ~Session();
     json execute(const json &request);
     json tick();
