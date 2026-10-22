@@ -8,7 +8,7 @@
 {"jsonrpc":"2.0","id":3,"method":"devices.read","params":{"deviceId":"speaker","capability":"audio.volume"}}
 ```
 
-方法清单与参数 Schema：[api.schema.json](../contracts/api.schema.json)。类型定义：[client.d.mts](../contracts/client.d.mts)。`moduleId` 默认选择本地最高稳定版本；同版本存在不同包时明确传 `packagePath`，指向完整模块包的目录或 `module.json`。已有设备的绑定版本不随目录变化自动替换。
+方法清单与参数 Schema：[api.schema.json](../contracts/api.schema.json)。类型定义：[client.d.mts](../contracts/client.d.mts)。`moduleId` 默认选择本地最高稳定版本；同版本存在不同包时明确传 `packagePath`，指向完整模块包的目录或 `module.json`。启动已绑定设备时，如果应用附带同模块的更高稳定版本，会先校验、握手并保存新包路径，再连接硬件；保留目标、标签和配置，不降级独立安装的更高版本。运行中的实例不会热替换。
 
 | 方法 | 主要参数 | 返回 |
 | --- | --- | --- |

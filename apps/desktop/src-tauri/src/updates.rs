@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{
     collections::{BTreeMap, BTreeSet},
+    ffi::OsString,
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -123,6 +124,23 @@ pub fn configure(context: &mut tauri::Context<tauri::Wry>) -> Result<()> {
     config["dangerousInsecureTransportProtocol"] = json!(feed.scheme() == "http");
     Ok(())
 }
+fn install_directory_argument(executable: &Path) -> Result<OsString> {
+    let directory = executable.parent().ok_or_else(|| Error::argument("Missing installation directory"))?;
+    // NSIS requires /D= to be last and unquoted, including paths with spaces.
+    // The updater plugin appends custom arguments after its managed arguments.
+    let mut argument = OsString::from("/D=");
+    argument.push(directory.as_os_str());
+    Ok(argument)
+}
+#[cfg(all(test, windows))]
+mod tests {
+    use super::*;
+    #[test]
+    fn updater_covers_the_running_installation_including_spaces_and_unicode() {
+        let executable = Path::new(r"D:\个人软件\DeskHub Tools\DeskHub.exe");
+        assert_eq!(install_directory_argument(executable).unwrap(), OsString::from(r"/D=D:\个人软件\DeskHub Tools"));
+    }
+}
 pub fn initialize(app: &AppHandle) -> Result<()> {
     let path = marker(app)?;
     let result_path = path.with_file_name("app-result.json");
@@ -204,6 +222,7 @@ pub async fn request(app: &AppHandle, method: &str, params: Value) -> Result<Val
             let path = marker(app)?;
             let update = app
                 .updater_builder()
+                .installer_arg(install_directory_argument(&std::env::current_exe()?)?)
                 .timeout(Duration::from_secs(30))
                 .on_before_exit(move || {
                     if let Ok(bytes) = std::fs::read(&path) {

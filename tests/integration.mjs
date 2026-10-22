@@ -27,6 +27,7 @@ async function fixture(version, runtimeVersion = version) {
 const v1 = await fixture('0.1.0');
 const v2 = await fixture('0.2.0');
 const mismatch = await fixture('0.3.0', '0.1.0');
+const v3 = await fixture('0.3.0');
 async function open(name, offline = true) {
   return startBackend({ executable: binary, moduleRoot, dataDirectory: join(run, name), offline });
 }
@@ -122,6 +123,57 @@ test('replacement: version handshake, corrupt package rejection, independent res
     assert.equal((await request(client, 'devices.get', 'peer')).processId, peer.processId);
     assert.equal((await request(client, 'devices.read', 'replaceable', { capability: 'test.counter' })).value, 0);
   } finally { await backend.close(); }
+});
+
+test('app bundle upgrades saved modules on startup, preserves bindings and never downgrades independent updates',async()=>{
+  const bundled=join(run,'bundle-upgrade/modules'),data=join(run,'bundle-upgrade/data');
+  await cp(v1,join(bundled,'test-device/0.1.0'),{recursive:true});
+  const launch=()=>startBackend({executable:binary,moduleRoot:bundled,dataDirectory:data,offline:true});
+  let app=await launch();
+  try{
+    await app.client.request('devices.add',{id:'device',moduleId:'test-device',label:'我的设备',target:{resourceId:'fixture:selected'},config:{userOption:'keep'}});
+    assert.equal((await request(app.client,'devices.connect','device')).moduleVersion,'0.1.0');
+  }finally{await app.close();}
+  const before=JSON.parse(await readFile(join(data,'devices.json'),'utf8')).devices[0];
+  await cp(v2,join(bundled,'test-device/0.2.0'),{recursive:true});
+  app=await launch();
+  try{
+    const connected=await request(app.client,'devices.connect','device');
+    assert.equal(connected.moduleVersion,'0.2.0');
+    assert.ok(connected.capabilities.some(c=>c.id==='test.v0.2.0'));
+    const after=JSON.parse(await readFile(join(data,'devices.json'),'utf8')).devices[0];
+    assert.notEqual(after.packagePath,before.packagePath);
+    const {packagePath:oldPath,...oldFields}=before,{packagePath:newPath,...newFields}=after;
+    assert.deepEqual(newFields,oldFields);
+    await request(app.client,'devices.replace','device',{packagePath:v3});
+  }finally{await app.close();}
+  app=await launch();
+  try{assert.equal((await request(app.client,'devices.connect','device')).moduleVersion,'0.3.0');}
+  finally{await app.close();}
+});
+
+test('invalid bundled upgrade keeps the saved binding and does not block another device',async()=>{
+  const bundled=join(run,'bundle-invalid/modules'),data=join(run,'bundle-invalid/data');
+  const launch=()=>startBackend({executable:binary,moduleRoot:bundled,dataDirectory:data,offline:true});
+  let app=await launch();
+  try{
+    await app.client.request('devices.add',{id:'device',packagePath:v1});
+    await app.client.request('devices.add',{id:'peer',moduleId:'edifier-n300',packagePath:join(moduleRoot,'edifier-n300',JSON.parse(await readFile(join(root,'modules/edifier-n300/module.json'),'utf8')).version)});
+  }finally{await app.close();}
+  const before=await readFile(join(data,'devices.json'),'utf8');
+  const candidate=join(bundled,'test-device/0.3.0');
+  await cp(mismatch,candidate,{recursive:true});
+  app=await launch();
+  try{
+    await rejects(request(app.client,'devices.connect','device'),['incompatible_module']);
+    assert.equal(await readFile(join(data,'devices.json'),'utf8'),before);
+    assert.equal((await request(app.client,'devices.connect','peer')).phase,'connected');
+    assert.equal((await request(app.client,'devices.read','peer',{capability:'audio.volume'})).value,8);
+  }finally{await app.close();}
+  await writeFile(join(candidate,'identity.json'),'{}');
+  app=await launch();
+  try{await rejects(request(app.client,'devices.connect','device'),['package_corrupt']);assert.equal(await readFile(join(data,'devices.json'),'utf8'),before);}
+  finally{await app.close();}
 });
 
 test('blocked and crashed module cannot block its peer; uncertain writes are never replayed', async () => {

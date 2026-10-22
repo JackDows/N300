@@ -398,8 +398,38 @@ impl Hub {
             old.stop();
         }
         let outcome = (|| -> Result<Prepared> {
-            let package = Package::load(&binding.package_path)?;
-            self.prepare(slot, &package, &binding, generation)
+            let current = Package::load(&binding.package_path)?;
+            let current_version = module_updates::version(&current.manifest.version)?;
+            // The app bundle is the supported baseline. A persisted package path
+            // must not keep an old module beneath a newly installed frontend.
+            // Independently installed newer modules are never downgraded.
+            let mut newer = inventory(&self.0.module_root.join(&binding.module_id))?
+                .into_iter()
+                .filter(|p| p.manifest.id == binding.module_id)
+                .filter_map(|p| module_updates::version(&p.manifest.version).ok().map(|v| (v, p)))
+                .filter(|(v, _)| v.pre.is_empty() && *v > current_version)
+                .collect::<Vec<_>>();
+            newer.sort_by(|a, b| b.0.cmp(&a.0));
+            if let Some((version, package)) = newer.first() {
+                if newer.iter().skip(1).any(|(v, p)| v == version && p.fingerprint != package.fingerprint) {
+                    return Err(Error::new("module_selection_required", "Conflicting bundled module packages", "设备模块文件冲突，请重新安装应用。"));
+                }
+                let package = package.stage(&self.0.data.join("modules"))?;
+                let mut updated = binding.clone();
+                updated.package_path = package.directory.clone();
+                // Verify runtime identity and initialize without opening hardware
+                // before changing the saved binding. Failure affects this device only.
+                let prepared = self.prepare(slot, &package, &updated, generation)?;
+                {
+                    let _configuration = self.0.configuration.lock().unwrap();
+                    self.save(Some(&updated), None)?;
+                    slot.state.lock().unwrap().binding = updated.clone();
+                }
+                self.0.logger.record("module.bundle_applied", json!({"deviceId":binding.id,"moduleId":binding.module_id,"fromVersion":current.manifest.version,"toVersion":package.manifest.version}));
+                Ok(prepared)
+            } else {
+                self.prepare(slot, &current, &binding, generation)
+            }
         })();
         match outcome {
             Ok(prepared) => {

@@ -1,5 +1,65 @@
 import {test,expect} from '@playwright/test';
 
+test('layer switching caches reads, preserves drafts and never writes automatically',async({page})=>{
+  await page.goto('/');
+  await page.evaluate(async()=>{
+    const url=performance.getEntriesByType('resource').map(e=>e.name).find(n=>new URL(n).pathname==='/src/device/transport.ts')!;
+    const c=await (await import(url)).getTransport(),request=c.request.bind(c),w=window as any;
+    w.keyRequests=[];w.holdFn=true;
+    c.request=async(method:string,params:any={})=>{
+      if(params.capability?.startsWith('keyboard.'))w.keyRequests.push({method,capability:params.capability});
+      const result=structuredClone(await request(method,params));
+      if(method==='devices.read'&&params.capability==='keyboard.fnKeymap'&&w.holdFn)await new Promise<void>(resolve=>w.releaseFn=()=>{w.holdFn=false;resolve();});
+      return result;
+    };
+  });
+  await page.getByRole('button',{name:'键盘设置',exact:true}).click();
+  const key=page.getByRole('button',{name:'按键 F12',exact:true});await expect(key).toBeEnabled();await key.click();
+  await page.getByLabel('目标按键',{exact:true}).selectOption('104');
+  await page.getByRole('button',{name:'Fn 层',exact:true}).click();
+  await expect(page.getByRole('button',{name:'读取中…',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'普通层',exact:true})).toBeEnabled();
+  await page.getByRole('button',{name:'普通层',exact:true}).click();
+  await expect(key).toBeEnabled();await expect(page.getByLabel('目标按键',{exact:true})).toHaveValue('104');
+  await expect(page.getByRole('button',{name:'保存中…',exact:true})).toHaveCount(0);
+  await page.evaluate(()=>(window as any).releaseFn());
+  for(let i=0;i<3;i++)for(const label of ['Fn 层','普通层']){
+    await page.getByRole('button',{name:label,exact:true}).click();await expect(key).toBeEnabled();
+  }
+  await expect(page.getByLabel('目标按键',{exact:true})).toHaveValue('104');
+  const calls=await page.evaluate(()=>(window as any).keyRequests);
+  expect(calls.filter((r:any)=>r.method==='devices.read'&&r.capability==='keyboard.keymap')).toHaveLength(1);
+  expect(calls.filter((r:any)=>r.method==='devices.read'&&r.capability==='keyboard.fnKeymap')).toHaveLength(1);
+  expect(calls.filter((r:any)=>['devices.write','devices.invoke'].includes(r.method))).toEqual([]);
+});
+
+test('explicit keymap refresh shows reading and stale reads cannot replace a new session',async({page})=>{
+  await page.goto('/?view=keyboard');const key=page.getByRole('button',{name:'按键 F12',exact:true});await expect(key).toBeEnabled();
+  await page.evaluate(async()=>{
+    const url=performance.getEntriesByType('resource').map(e=>e.name).find(n=>new URL(n).pathname==='/src/device/transport.ts')!;
+    const c=await (await import(url)).getTransport(),request=c.request.bind(c),w=window as any;
+    w.testClient=c;w.deferOnce=true;
+    c.request=async(method:string,params:any={})=>{
+      const result=structuredClone(await request(method,params));
+      if(method==='devices.read'&&params.capability==='keyboard.keymap'&&w.deferOnce){
+        w.deferOnce=false;result.value.keys.find((k:any)=>k.label==='F12').binding={type:'key',raw:[0,0,104,0],modifier:0,key:104,second:0};
+        await new Promise<void>(resolve=>w.releaseOldRead=resolve);
+      }
+      return result;
+    };
+  });
+  await page.getByRole('button',{name:'同步键位',exact:true}).click();
+  await expect(page.getByRole('button',{name:'读取中…',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'保存按键',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'保存中…',exact:true})).toHaveCount(0);
+  await page.waitForFunction(()=>typeof (window as any).releaseOldRead==='function');
+  await page.evaluate(async()=>{const w=window as any;await w.testClient.request('devices.restart',{deviceId:'keyboard'});await w.testClient.request('devices.connect',{deviceId:'keyboard'});});
+  await expect(key).toBeEnabled();await expect(page.getByText('当前：F12',{exact:true})).toBeVisible();
+  await page.evaluate(()=>(window as any).releaseOldRead());
+  await expect(page.getByText('当前：F13',{exact:true})).toHaveCount(0);
+  await expect(page.getByText('当前：F12',{exact:true})).toBeVisible();
+});
+
 test('keyboard edits both layers, restores one key and retains settings after reopening',async({page})=>{
   await page.goto('/?view=keyboard');
   const key=page.getByRole('button',{name:'按键 F12',exact:true});await expect(key).toBeEnabled();await key.click();

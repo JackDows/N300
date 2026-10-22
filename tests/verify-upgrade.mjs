@@ -55,7 +55,17 @@ try{
   await until(async()=>{const devices=await after.request('devices.list');return ['speaker','keyboard','mouse'].every(id=>devices.some(d=>d.id===id&&d.phase==='connected'));},{timeout:30000});
   const saved=JSON.parse(readFileSync(join(directory,'data/devices.json'),'utf8'));
   assert.equal(saved.schemaVersion,bindings.schemaVersion);
-  for(const binding of bindings.devices)assert.deepEqual(saved.devices.find(d=>d.id===binding.id),binding,'Existing device binding changed during upgrade');
+  for(const binding of bindings.devices){
+    const {packagePath:beforePath,...beforeFields}=binding;
+    const {packagePath:afterPath,...afterFields}=saved.devices.find(d=>d.id===binding.id);
+    assert.deepEqual(afterFields,beforeFields,'Device target or settings changed during upgrade');
+    if(beforePath!==afterPath){
+      const old=JSON.parse(readFileSync(join(beforePath,'module.json'),'utf8'));
+      const current=JSON.parse(readFileSync(join(afterPath,'module.json'),'utf8'));
+      assert.equal(current.id,old.id);
+      assert.notEqual(current.version,old.version,'A bundle upgrade must change the module version');
+    }
+  }
   assert.equal(readFileSync(userFile,'utf8'),'{"acceptance":"preserve"}');
   assert.equal(await after.page.evaluate(()=>localStorage.getItem('deskhub-upgrade-check')),'preserve');
   assert.ok(pids.every(pid=>!alive(pid)),'An old module process survived the installer');
